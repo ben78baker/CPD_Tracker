@@ -31,7 +31,7 @@
 		<string>_dartobservatory._tcp</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Camera is used to scan QR codes and capture CPD evidence photos.</string>
+	<string>We need camera access to scan QR codes.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>This app uses the local network for Flutter debugging in development.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

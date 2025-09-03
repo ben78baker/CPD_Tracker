@@ -37,7 +37,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
   late final bool _editing;
 
   final _repo = EntryRepository();
-  final _settings = SettingsStore();
+final _settings = SettingsStore.instance;
 
   @override
   void initState() {

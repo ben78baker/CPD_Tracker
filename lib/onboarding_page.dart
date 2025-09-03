@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'home_page.dart';
+import 'settings_store.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -16,11 +15,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final _email = TextEditingController();
   final _profession = TextEditingController();
 
-  String _cap(String s) {
-    final t = s.trim();
-    if (t.isEmpty) return '';
-    return t[0].toUpperCase() + t.substring(1).toLowerCase();
-  }
 
   @override
   void dispose() {
@@ -34,16 +28,32 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_name', _name.text.trim());
-    await prefs.setString('company', _company.text.trim());
-    await prefs.setString('address', _address.text.trim());
-    await prefs.setString('email', _email.text.trim());
-    await prefs.setStringList('professions', <String>[_cap(_profession.text)]);
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomePage()),
-    );
+
+    try {
+      // Save profile fields via SettingsStore
+      await SettingsStore.instance.saveProfile(
+        name: _name.text.trim(),
+        company: _company.text.trim(),
+        address: _address.text.trim(),
+        email: _email.text.trim(),
+      );
+
+      // Persist first profession using centralized normalization + dedupe
+      await SettingsStore.instance.addProfession(_profession.text);
+
+      // Mark onboarding complete
+      await SettingsStore.instance.setOnboardingComplete(true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Saved locally. Some settings may sync on next launch.')),
+        );
+      }
+    } finally {
+      if (!mounted) return;
+      // Navigate to Home by route name (avoids direct import dependency)
+      Navigator.of(context).pushReplacementNamed('/home');
+    }
   }
 
   @override

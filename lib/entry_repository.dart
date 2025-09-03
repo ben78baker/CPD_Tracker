@@ -1,10 +1,11 @@
-import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models.dart';
 
 class EntryRepository {
   static const _kEntries = 'entries_json_list'; // list<String> (json per entry)
   static const _kNextId = 'next_entry_id';
+  
 
     Future<void> _saveAll(List<CpdEntry> entries) async {
     final prefs = await SharedPreferences.getInstance();

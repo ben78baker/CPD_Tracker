@@ -14,7 +14,7 @@ class CpdRecordsPage extends StatefulWidget {
 
 class _CpdRecordsPageState extends State<CpdRecordsPage> {
   final _repo = EntryRepository();
-  final _settings = SettingsStore();
+  final _settings = SettingsStore.instance;
   List<CpdEntry> _entries = [];
   String _fmt = 'dd/MM/yyyy';
 

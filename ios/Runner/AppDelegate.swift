@@ -3,23 +3,20 @@ import Flutter
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
-
+  lazy var flutterEngine = FlutterEngine(name: "cpd_engine")
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
+    // Boot a dedicated FlutterEngine and register plugins against this engine
+    flutterEngine.run()
+    GeneratedPluginRegistrant.register(with: flutterEngine)
 
-    // ensure a window exists and attach Flutter VC
-    if self.window == nil {
-      self.window = UIWindow(frame: UIScreen.main.bounds)
-    }
-    if self.window?.rootViewController == nil {
-      let flutterVC = FlutterViewController(project: nil, nibName: nil, bundle: nil)
-      self.window?.rootViewController = flutterVC
-      self.window?.makeKeyAndVisible()
-    }
+    // Attach a FlutterViewController backed by the same engine
+    self.window = UIWindow(frame: UIScreen.main.bounds)
+    self.window?.rootViewController = FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
+    self.window?.makeKeyAndVisible()
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

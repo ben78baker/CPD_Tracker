@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'settings_store.dart';
 import 'add_entry_page.dart';
 import 'edit_details_page.dart';
 import 'qr_scan_page.dart';
@@ -12,7 +12,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<String> _professions = const <String>[];
+  List<String> _professions = <String>[];
+  List<String> _deleted = <String>[];
 
   String _suggestTitleFromScan(String s) {
   final uri = Uri.tryParse(s);
@@ -33,6 +34,7 @@ Future<void> _scanQrAndPrefill(String profession) async {
   final result = await Navigator.of(context).push<String>(
     MaterialPageRoute(builder: (_) => QrScanPage(profession: profession)),
   );
+  if (!mounted) return;
   if (result != null && result.isNotEmpty) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -48,22 +50,21 @@ Future<void> _scanQrAndPrefill(String profession) async {
 }
 
   @override
-  void initState() { super.initState(); _load(); }
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+}
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() => _professions = prefs.getStringList('professions') ?? <String>[]);
+    final active = await SettingsStore.instance.loadActiveProfessions();
+    final deleted = await SettingsStore.instance.loadDeletedProfessions();
+    if (!mounted) return;
+    setState(() {
+      _professions = List.of(active);
+      _deleted = List.of(deleted);
+    });
   }
 
-  String _cap(String s) {
-    final t = s.trim();
-    return t.isEmpty ? '' : t[0].toUpperCase() + t.substring(1).toLowerCase();
-  }
-
-  Future<void> _saveProfessions() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('professions', _professions);
-  }
 
   Future<void> _addProfessionDialog() async {
     final controller = TextEditingController();
@@ -85,6 +86,9 @@ Future<void> _scanQrAndPrefill(String profession) async {
               if (_professions.map((e) => e.toLowerCase()).contains(val.toLowerCase())) {
                 return 'That profession already exists';
               }
+              if (_deleted.map((e) => e.toLowerCase()).contains(val.toLowerCase())) {
+                return 'That name is in Deleted. Restore it instead.';
+              }
               return null;
             },
           ),
@@ -94,7 +98,7 @@ Future<void> _scanQrAndPrefill(String profession) async {
           FilledButton(
             onPressed: () {
               if (formKey.currentState!.validate()) {
-                Navigator.pop(ctx, _cap(controller.text));
+                Navigator.pop(ctx, controller.text);
               }
             },
             child: const Text('Add'),
@@ -102,9 +106,18 @@ Future<void> _scanQrAndPrefill(String profession) async {
         ],
       ),
     );
+    if (!mounted) return;
     if (result != null && result.isNotEmpty) {
-      setState(() => _professions.add(result));
-      await _saveProfessions();
+      // Persist using centralized normalize+dedupe+sort
+      await SettingsStore.instance.addProfession(result);
+      // Reload from store to reflect canonical formatting
+      final refreshed = await SettingsStore.instance.loadActiveProfessions();
+      final deleted = await SettingsStore.instance.loadDeletedProfessions();
+      if (!mounted) return;
+      setState(() {
+        _professions = List.of(refreshed);
+        _deleted = List.of(deleted);
+      });
     }
   }
 
@@ -138,7 +151,7 @@ Future<void> _scanQrAndPrefill(String profession) async {
           FilledButton(
             onPressed: () {
               if (formKey.currentState!.validate()) {
-                Navigator.pop(ctx, _cap(controller.text));
+                Navigator.pop(ctx, controller.text);
               }
             },
             child: const Text('Save'),
@@ -146,9 +159,19 @@ Future<void> _scanQrAndPrefill(String profession) async {
         ],
       ),
     );
+    if (!mounted) return;
     if (result != null && result.isNotEmpty) {
-      setState(() => _professions[index] = result);
-      await _saveProfessions();
+      // Update local list, then save via centralized save (which normalizes/dedupes/sorts)
+      final next = List<String>.of(_professions);
+      next[index] = result;
+      await SettingsStore.instance.saveProfessions(next);
+      final refreshed = await SettingsStore.instance.loadActiveProfessions();
+      final deleted = await SettingsStore.instance.loadDeletedProfessions();
+      if (!mounted) return;
+      setState(() {
+        _professions = List.of(refreshed);
+        _deleted = List.of(deleted);
+      });
     }
   }
 
@@ -165,17 +188,18 @@ Future<void> _scanQrAndPrefill(String profession) async {
         ],
       ),
     );
+    if (!mounted) return;
     if (confirmed == true) {
-      setState(() => _professions.removeAt(index));
-      await _saveProfessions();
+      final name = _professions[index];
+      await SettingsStore.instance.softDeleteProfession(name);
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Moved "$name" to Deleted')),
+      );
     }
   }
 
-  void _openAddEntry(String profession) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => AddEntryPage(profession: profession)),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -193,11 +217,17 @@ Future<void> _scanQrAndPrefill(String profession) async {
                   MaterialPageRoute(builder: (_) => const EditDetailsPage()),
                 );
                 if (mounted) setState(() {});
+              } else if (value == 'view_deleted') {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const DeletedProfessionsPage()),
+                );
+                await _load();
               }
             },
             itemBuilder: (ctx) => const [
               PopupMenuItem(value: 'add_profession', child: Text('Add Profession')),
               PopupMenuItem(value: 'edit_details', child: Text('Edit Personal Details')),
+              PopupMenuItem(value: 'view_deleted', child: Text('View Deleted Professions')),
             ],
           ),
         ],
@@ -320,6 +350,114 @@ class _ProfessionCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class DeletedProfessionsPage extends StatefulWidget {
+  const DeletedProfessionsPage({super.key});
+  @override
+  State<DeletedProfessionsPage> createState() => _DeletedProfessionsPageState();
+}
+
+class _DeletedProfessionsPageState extends State<DeletedProfessionsPage> {
+  List<String> _deleted = <String>[];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final items = await SettingsStore.instance.loadDeletedProfessions();
+    if (!mounted) return;
+    setState(() { _deleted = items; _loading = false; });
+  }
+
+  Future<void> _restore(String name) async {
+    await SettingsStore.instance.restoreProfession(name);
+    await _load();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Restored "$name"')),
+    );
+  }
+
+  Future<void> _deleteForever(String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Permanently delete?'),
+        content: Text('Delete "$name" and all its records? This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    // TODO: also delete DB records tied to this profession once DatabaseHelper support exists
+    await SettingsStore.instance.removeProfession(name);
+    await SettingsStore.instance.restoreProfession(name); // ensure it’s no longer marked deleted
+    await _load();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Deleted "$name" permanently (records not yet removed)')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Deleted Professions')),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _deleted.isEmpty
+              ? const Center(child: Text('No deleted professions'))
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _deleted.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final name = _deleted[index];
+                    return Card(
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(name, style: Theme.of(context).textTheme.titleMedium),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    onPressed: () => _restore(name),
+                                    icon: const Icon(Icons.restore),
+                                    label: const Text('Restore'),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => _deleteForever(name),
+                                    icon: const Icon(Icons.delete_forever),
+                                    label: const Text('Delete Permanently'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
