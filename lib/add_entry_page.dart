@@ -4,6 +4,7 @@ import 'entry_repository.dart';
 import 'models.dart';
 import 'settings_store.dart';
 
+
 class AddEntryPage extends StatefulWidget {
   const AddEntryPage({
     super.key,
@@ -57,6 +58,7 @@ final _settings = SettingsStore.instance;
       _attachments.addAll(widget.prefillAttachments ?? const <String>[]);
       _date = widget.prefillDate ?? DateTime.now();
     }
+    
     _loadFormat();
   }
 
@@ -76,13 +78,37 @@ final _settings = SettingsStore.instance;
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final picked = await showDatePicker(
       context: context,
-      initialDate: _date,
+      initialDate: _date.isAfter(today) ? today : _date,
       firstDate: DateTime(now.year - 10),
-      lastDate: DateTime(now.year + 10),
+      lastDate: today, // ⛔️ do not allow future dates
     );
-    if (picked != null) setState(() => _date = picked);
+    if (picked != null) {
+      if (picked.isAfter(today)) {
+        await _showFutureDateWarning();
+        return;
+      }
+      setState(() => _date = picked);
+    }
+  }
+
+  Future<void> _showFutureDateWarning() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Future date not allowed'),
+        content: const Text('You can only add CPD entries dated today or earlier.'),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   String? _validateTimeField(String? v, {required bool minutes}) {
@@ -126,6 +152,13 @@ final _settings = SettingsStore.instance;
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    if (_date.isAfter(today)) {
+      await _showFutureDateWarning();
+      return;
+    }
 
     final hours = int.tryParse(_hours.text.trim()) ?? 0;
     final minutes = int.tryParse(_minutes.text.trim()) ?? 0;
