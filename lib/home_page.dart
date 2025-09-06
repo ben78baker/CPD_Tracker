@@ -295,7 +295,10 @@ class _ProfessionCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       name,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                          ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -326,7 +329,7 @@ class _ProfessionCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: FilledButton.icon(
                       onPressed: onScan,
                       icon: const Icon(Icons.qr_code_scanner),
                       label: const Text('Scan QR'),
@@ -340,7 +343,7 @@ class _ProfessionCard extends StatelessWidget {
               // View records full-width
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
+                    child: FilledButton.icon(
                   onPressed: onView,
                   icon: const Icon(Icons.list),
                   label: const Text('View Records'),
