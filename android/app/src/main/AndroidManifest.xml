@@ -43,4 +43,24 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+    <queries>
+        <!-- Browsers for http/https -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- Dialer for tel: -->
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+        </intent>
+        <!-- Mail apps for mailto: -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+    </queries>
 </manifest>

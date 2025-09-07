@@ -8,6 +8,8 @@ import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cross_file/cross_file.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CpdRecordsPage extends StatefulWidget {
   const CpdRecordsPage({super.key, required this.profession});
@@ -73,6 +75,72 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     }
   }
 
+  bool _isImagePath(String p) {
+    final lower = p.toLowerCase();
+    return lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.heic') || lower.endsWith('.gif') || lower.endsWith('.bmp') || lower.endsWith('.webp');
+  }
+  bool _isUrl(String s) {
+  try {
+    final uri = Uri.parse(s.trim());
+    return uri.hasScheme &&
+        (uri.scheme == 'http' ||
+         uri.scheme == 'https' ||
+         uri.scheme == 'mailto' ||
+         uri.scheme == 'tel');
+  } catch (_) {
+    return false;
+  }
+}
+
+Future<void> _openUrl(String s) async {
+  final uri = Uri.parse(s.trim());
+  if (await canLaunchUrl(uri)) {
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the link.')),
+      );
+    }
+  } else if (mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No app available to open this link.')),
+    );
+  }
+}
+
+  Future<void> _openAttachmentPath(String path) async {
+    try {
+      final res = await OpenFilex.open(path);
+      if (res.type != ResultType.done && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Can\'t open this file on this device (${res.message}).')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Open failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _shareAttachmentPath(String path) async {
+  try {
+    if (_isUrl(path)) {
+      await Share.share(path.trim()); // share URL as text
+      return;
+    }
+    await Share.shareXFiles([XFile(path)]);
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Share failed: $e')),
+      );
+    }
+  }
+}
+
   void _showAttachments(CpdEntry e) {
     if (e.attachments.isEmpty) {
       showDialog(
@@ -84,21 +152,179 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       );
       return;
     }
+
+    final files = e.attachments.where((p) => p.trim().isNotEmpty).toList();
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Attachments'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: e.attachments.length,
-            itemBuilder: (ctx, i) => ListTile(
-              title: Text(e.attachments[i]),
+      builder: (ctx) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Expanded(child: Text('Attachments')),
+              if (files.length > 1)
+                FilledButton.icon(
+                  onPressed: () async {
+                    Navigator.of(ctx).pop();
+
+                    final xfiles = <XFile>[];
+                    final urls = <String>[];
+
+                    for (final raw in files) {
+                      final p = raw.trim();
+                      if (_isUrl(p)) {
+                        urls.add(p);
+                        continue;
+                      }
+                      if (p.startsWith('/') && File(p).existsSync()) {
+                        xfiles.add(XFile(p));
+                      }
+                    }
+
+                    try {
+                      if (xfiles.isNotEmpty && urls.isNotEmpty) {
+                        await Share.shareXFiles(xfiles, text: urls.join('\n'));
+                      } else if (xfiles.isNotEmpty) {
+                        await Share.shareXFiles(xfiles);
+                      } else if (urls.isNotEmpty) {
+                        await Share.share(urls.join('\n'));
+                      } else {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('No shareable files or links found.')),
+                          );
+                        }
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Share failed: $e')),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.ios_share),
+                  label: const Text('Share all'),
+                ),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: files.length,
+              itemBuilder: (ctx, i) {
+                final path = files[i];
+                final isUrl = _isUrl(path);
+                final exists = path.startsWith('/') && File(path).existsSync();
+                final isImg = exists && _isImagePath(path);
+
+                Widget leading;
+                if (isUrl) {
+                   leading = const Icon(Icons.link_outlined);
+                 } else if (isImg) {
+                   leading = ClipRRect(
+                     borderRadius: BorderRadius.circular(6),
+                     child: Image.file(
+                       File(path),
+                       width: 48,
+                       height: 48,
+                       fit: BoxFit.cover,
+                     ),
+                   );
+                 } else {
+                   leading = const Icon(Icons.insert_drive_file);
+                 }
+
+                return ListTile(
+                  leading: leading,
+                  title: Text(path, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  onTap: () async {
+                    if (isUrl) {
+                      await _openUrl(path);
+                      return;
+                    }
+                    if (exists) {
+                      // Images open in full preview; other files via OpenFilex
+                      if (isImg) {
+                        showDialog(
+                          context: context,
+                          builder: (ivCtx) => Dialog(
+                            insetPadding: const EdgeInsets.all(16),
+                            child: InteractiveViewer(
+                              child: Image.file(File(path), fit: BoxFit.contain),
+                            ),
+                          ),
+                        );
+                      } else {
+                        await _openAttachmentPath(path);
+                      }
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('File not found on device.')),
+                        );
+                      }
+                    }
+                  },
+                  onLongPress: () async {
+                    // Long-press menu: Share (implemented). Remove: to be wired when repository supports editing attachments here.
+                    final action = await showModalBottomSheet<String>(
+                      context: context,
+                      showDragHandle: true,
+                      builder: (bCtx) => SafeArea(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.ios_share),
+                              title: const Text('Share this attachment'),
+                              onTap: () => Navigator.pop(bCtx, 'share'),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.delete_outline),
+                              title: const Text('Remove from record'),
+                              onTap: () => Navigator.pop(bCtx, 'remove'),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
+                      ),
+                    );
+
+                    if (action == 'share') {
+                      if (isUrl) {
+                        await _shareAttachmentPath(path); // share URL text
+                      } else if (exists) {
+                        await _shareAttachmentPath(path); // share file
+                      } else if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('File not found on device.')),
+                        );
+                      }
+                    } else if (action == 'remove') {
+                      // Persisting removal requires repository support. For now, remove from UI and notify.
+                      Navigator.of(ctx).pop();
+                      final idx = e.attachments.indexOf(path);
+                      if (idx >= 0) {
+                        setState(() {
+                          e.attachments.removeAt(idx);
+                        });
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Attachment removed from view (persist on edit).')),
+                          );
+                        }
+                        // TODO: add repository method to persist attachment removal on the entry.
+                      }
+                    }
+                  },
+                );
+              },
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -391,14 +617,15 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                         const SizedBox(height: 8),
                         Text(e.details),
                         const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: FilledButton.icon(
-                            onPressed: () => _showAttachments(e),
-                            icon: const Icon(Icons.attachment),
-                            label: const Text('Attachments'),
+                        if (e.attachments.isNotEmpty)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: FilledButton.icon(
+                              onPressed: () => _showAttachments(e),
+                              icon: const Icon(Icons.attachment),
+                              label: const Text('Attachments'),
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
