@@ -7,13 +7,11 @@ class SettingsStore {
 
   // Always returns a non-null SharedPreferences instance, with simple backoff retries
 Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
-  Object? lastError;
   for (var i = 0; i < attempts; i++) {
     try {
       // On iOS there can be a brief method-channel race just after app start
       return await SharedPreferences.getInstance();
     } catch (e) {
-      lastError = e;
       await Future.delayed(Duration(milliseconds: 150 * (i + 1)));
     }
   }

@@ -6,6 +6,10 @@ import 'settings_store.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'utils/date_utils.dart';
+import 'widgets/attachment_tile.dart';
+import 'utils/attachment_io.dart';
+import 'widgets/duration_fields.dart';
 
 
 class AddEntryPage extends StatefulWidget {
@@ -32,12 +36,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
   final _details = TextEditingController();
-  final _hours = TextEditingController(text: '0');
-  final _minutes = TextEditingController(text: '0');
-  final _hoursFocus = FocusNode();
-  final _minutesFocus = FocusNode();
   final List<String> _attachments = <String>[];
   bool _pickingAttachment = false;
+
+  int _hoursVal = 0;
+  int _minutesVal = 0;
 
   DateTime _date = DateTime.now();
   String _dateFormat = 'dd/MM/yyyy';
@@ -45,6 +48,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   final _repo = EntryRepository();
 final _settings = SettingsStore.instance;
+
 
   @override
   void initState() {
@@ -55,26 +59,19 @@ final _settings = SettingsStore.instance;
       final e = widget.existingEntry!;
       _title.text = e.title;
       _details.text = e.details;
-      _hours.text = e.hours.toString();
-      _minutes.text = e.minutes.toString();
       _attachments.addAll(e.attachments);
+      _hoursVal = e.hours;
+      _minutesVal = e.minutes;
       _date = e.date;
     } else {
       _title.text = widget.prefillTitle ?? '';
       _attachments.addAll(widget.prefillAttachments ?? const <String>[]);
-      _date = widget.prefillDate ?? DateTime.now();
+      final now = DateTime.now();
+      _date = dateOnly(widget.prefillDate ?? now);
+      _hoursVal = 0;
+      _minutesVal = 0;
     }
     
-    _hoursFocus.addListener(() {
-      if (_hoursFocus.hasFocus) {
-        _hours.selection = TextSelection(baseOffset: 0, extentOffset: _hours.text.length);
-      }
-    });
-    _minutesFocus.addListener(() {
-      if (_minutesFocus.hasFocus) {
-        _minutes.selection = TextSelection(baseOffset: 0, extentOffset: _minutes.text.length);
-      }
-    });
 
     _loadFormat();
   }
@@ -86,30 +83,28 @@ final _settings = SettingsStore.instance;
 
   @override
   void dispose() {
-    _hoursFocus.dispose();
-    _minutesFocus.dispose();
     _title.dispose();
     _details.dispose();
-    _hours.dispose();
-    _minutes.dispose();
     super.dispose();
   }
 
   Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final today = dateOnly(DateTime.now());
+    final initial = dateOnly(_date);
+    // ignore: use_build_context_synchronously
     final picked = await showDatePicker(
       context: context,
-      initialDate: _date.isAfter(today) ? today : _date,
-      firstDate: DateTime(now.year - 10),
+      initialDate: initial.isAfter(today) ? today : initial,
+      firstDate: DateTime(today.year - 10),
       lastDate: today, // ⛔️ do not allow future dates
     );
+    if (!mounted) return;
     if (picked != null) {
-      if (picked.isAfter(today)) {
+      if (dateOnly(picked).isAfter(today)) {
         await _showFutureDateWarning();
         return;
       }
-      setState(() => _date = picked);
+      setState(() => _date = dateOnly(picked));
     }
   }
 
@@ -130,18 +125,6 @@ final _settings = SettingsStore.instance;
     );
   }
 
-  String? _validateTimeField(String? v, {required bool minutes}) {
-    final t = (v ?? '').trim();
-    if (t.isEmpty) return 'Required';
-    final n = int.tryParse(t);
-    if (n == null) return 'Numbers only';
-    if (minutes) {
-      if (n < 0 || n > 59) return '0–59';
-    } else {
-      if (n < 0) return '≥ 0';
-    }
-    return null;
-  }
 
   Future<void> _addAttachment() async {
     if (_pickingAttachment) return; // guard against double-taps
@@ -185,6 +168,7 @@ final _settings = SettingsStore.instance;
           ),
         ),
       );
+      if (!mounted) return;
 
       if (choice == null) return;
 
@@ -210,17 +194,24 @@ final _settings = SettingsStore.instance;
             }
           }
         } else if (choice == 'qr') {
-          final result = await Navigator.of(context).pushNamed<String>('/scan');
-          if (result != null && result.trim().isNotEmpty && mounted) {
-            setState(() => _attachments.add(result.trim()));
+          // Navigate without a generic; accept whatever the route returns.
+          final dynamic r = await Navigator.of(context).pushNamed('/scan');
+          if (!mounted) return;
+
+          final String? result = (r is String && r.trim().isNotEmpty) ? r.trim() : null;
+          if (result != null) {
+            setState(() => _attachments.add(result));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No QR data captured.')),
+            );
           }
         }
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Attachment failed: $e')),
-          );
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Attachment failed: $e')),
+        );
       }
     } finally {
       _pickingAttachment = false;
@@ -234,24 +225,30 @@ final _settings = SettingsStore.instance;
     FocusScope.of(context).unfocus();
     await Future.delayed(const Duration(milliseconds: 50));
 
-    if (!_formKey.currentState!.validate()) return;
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    if (_date.isAfter(today)) {
+    final today = dateOnly(DateTime.now());
+    final selected = dateOnly(_date);
+    if (selected.isAfter(today)) {
       await _showFutureDateWarning();
       return;
     }
 
-    final hours = int.tryParse(_hours.text.trim()) ?? 0;
-    final minutes = int.tryParse(_minutes.text.trim()) ?? 0;
+    final hours = _hoursVal;
+    final minutes = _minutesVal;
+
+    if (_title.text.trim().isEmpty && _details.text.trim().isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a title or details.')),
+      );
+      return;
+    }
 
     if (_editing) {
       final orig = widget.existingEntry!;
       final updated = CpdEntry(
         id: orig.id,
         profession: widget.profession,
-        date: _date,
+        date: selected,
         title: _title.text.trim(),
         details: _details.text.trim(),
         hours: hours,
@@ -263,7 +260,7 @@ final _settings = SettingsStore.instance;
     } else {
       await _repo.createAndSave(
         profession: widget.profession,
-        date: _date,
+        date: selected,
         title: _title.text.trim(),
         details: _details.text.trim(),
         hours: hours,
@@ -328,31 +325,15 @@ final _settings = SettingsStore.instance;
               // Time
               Text('Time', style: Theme.of(context).textTheme.labelMedium),
               const SizedBox(height: 4),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _hours,
-                      focusNode: _hoursFocus,
-                      decoration: const InputDecoration(labelText: 'Hours'),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (v) => _validateTimeField(v, minutes: false),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _minutes,
-                      focusNode: _minutesFocus,
-                      decoration: const InputDecoration(labelText: 'Minutes'),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (v) => _validateTimeField(v, minutes: true),
-                    ),
-                  ),
-                ],
+              DurationFields(
+                hours: _hoursVal,
+                minutes: _minutesVal,
+                onChanged: (h, m) => setState(() {
+                  _hoursVal = h;
+                  _minutesVal = m;
+                }),
               ),
+
               const SizedBox(height: 16),
 
               // Attachments
@@ -368,52 +349,10 @@ final _settings = SettingsStore.instance;
               else
                 ..._attachments.asMap().entries.map((entry) {
                   final i = entry.key;
-                  final pathOrText = entry.value;
-
-                  bool isImagePath(String p) {
-                    final lower = p.toLowerCase();
-                    return lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.heic');
-                  }
-
-                  Widget leading;
-                  VoidCallback? onTap;
-
-                  if (pathOrText.startsWith('/') && isImagePath(pathOrText) && File(pathOrText).existsSync()) {
-                    leading = ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.file(
-                        File(pathOrText),
-                        width: 48,
-                        height: 48,
-                        fit: BoxFit.cover,
-                      ),
-                    );
-                    onTap = () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => Dialog(
-                          insetPadding: const EdgeInsets.all(16),
-                          child: InteractiveViewer(
-                            child: Image.file(File(pathOrText), fit: BoxFit.contain),
-                          ),
-                        ),
-                      );
-                    };
-                  } else {
-                    leading = const Icon(Icons.insert_drive_file);
-                    onTap = null;
-                  }
-
-                  return ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: leading,
-                    title: Text(pathOrText, maxLines: 2, overflow: TextOverflow.ellipsis),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => _removeAttachment(i),
-                    ),
-                    onTap: onTap,
+                  final value = entry.value;
+                  return AttachmentTile(
+                    value: value,
+                    onRemove: () => _removeAttachment(i),
                   );
                 }),
 

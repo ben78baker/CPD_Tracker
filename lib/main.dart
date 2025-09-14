@@ -7,6 +7,31 @@ import 'settings_store.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Debug-only: render any widget build exception on-screen so a blank body doesn't hide errors.
+  assert(() {
+    FlutterError.onError = (FlutterErrorDetails details) {
+      // Still print to console for full stacks
+      FlutterError.dumpErrorToConsole(details);
+    };
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          appBar: AppBar(title: const Text('Build exception')),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                details.exceptionAsString(),
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ),
+        ),
+      );
+    };
+    return true;
+  }());
   runApp(const MyApp());
 }
 
