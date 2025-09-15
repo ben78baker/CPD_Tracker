@@ -41,16 +41,22 @@ Future<void> exportRecordsCsv({
     sb.writeln('"Company:",""'); // TODO: populate from settings
     sb.writeln('"Email:",""');
     sb.writeln('"Profession:","${profession.replaceAll('"', '""')}"');
-    sb.writeln('"Period:","$fromStr – $toStr"');
+    sb.writeln('"Period:","$fromStr to $toStr"');
     sb.writeln('"Total Time:","${th}h ${tm}m"');
+    final withAttachments = filtered.where((e) => e.attachments.isNotEmpty).length;
+    sb.writeln('"Attachments:","' +
+        (withAttachments > 0
+            ? '$withAttachments record(s) include attachments; available upon request'
+            : 'None in this export') +
+        '"');
     sb.writeln('');
-    sb.writeln('Date,Title,Hours,Minutes,Details,Attachments');
+    sb.writeln('Date,Title,Hours,Minutes,Details,Has Attachments');
     for (final e in filtered) {
       final dateStr = formatDate(e.date, dateFormat).replaceAll(',', ' ');
       final title = e.title.replaceAll('"', '""');
       final details = e.details.replaceAll('\n', ' ').replaceAll('"', '""');
-      final attachments = e.attachments.join('|').replaceAll('"', '""');
-      sb.writeln('"$dateStr","$title",${e.hours},${e.minutes},"$details","$attachments"');
+      final has = e.attachments.isNotEmpty ? 'Yes' : 'No';
+      sb.writeln('"$dateStr","$title",${e.hours},${e.minutes},"$details","$has"');
     }
 
     // Write to temp file
@@ -63,18 +69,19 @@ Future<void> exportRecordsCsv({
     final file = File(path);
     await file.writeAsBytes(utf8.encode(sb.toString()), flush: true);
 
-    // Share
-    // ignore: deprecated_member_use
-    await Share.shareXFiles(
-      [
-        XFile(
-          file.path,
-          mimeType: 'text/csv',
-          name: file.uri.pathSegments.last,
-        ),
-      ],
-      text:
-          'CPD entries for $profession ($fromStr to $toStr) — Total ${th}h ${tm}m',
+    // Share using Share Plus instance API
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [
+          XFile(
+            file.path,
+            mimeType: 'text/csv',
+            name: file.uri.pathSegments.last,
+          ),
+        ],
+        text: 'CPD entries for $profession ($fromStr to $toStr) — Total ${th}h ${tm}m',
+        subject: 'CPD entries for $profession',
+      ),
     );
   } catch (err) {
     if (context.mounted) {

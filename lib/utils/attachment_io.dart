@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:share_plus/share_plus.dart';
 
 bool isImagePath(String p) => p.toLowerCase().endsWith('.png') ||
     p.toLowerCase().endsWith('.jpg') ||
@@ -147,5 +148,92 @@ Future<String?> downloadToAppDir(BuildContext context, String url) async {
       );
     }
     return null;
+  }
+}
+
+String _sanitizeFileName(String s) {
+  final cleaned = s.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
+  return cleaned.isEmpty ? 'file' : cleaned;
+}
+
+/// Shares a record's attachments (local files + URLs) along with a small
+/// manifest so the recipient can link files back to the record.
+///
+/// [attachments] may contain local file paths and/or URLs.
+Future<void> shareAttachmentsForRecord(
+  BuildContext context, {
+  required String profession,
+  required DateTime date,
+  required String title,
+  String details = '',
+  required List<String> attachments,
+}) async {
+  try {
+    // Separate local file paths and URLs
+    final files = <XFile>[];
+    final urls = <String>[];
+    for (final a in attachments) {
+      if (isUrl(a)) {
+        urls.add(a);
+      } else if (fileExists(a)) {
+        files.add(XFile(a, name: p.basename(a)));
+      }
+    }
+
+    // Build a small manifest.txt to describe the bundle
+    final buf = StringBuffer();
+    buf.writeln('CPD Attachment Bundle');
+    buf.writeln('Profession: $profession');
+    buf.writeln('Date: ${date.toIso8601String().split('T').first}');
+    buf.writeln('Title: $title');
+    if (details.trim().isNotEmpty) {
+      buf.writeln('Details: ' + details.replaceAll('\n', ' '));
+    }
+    buf.writeln('');
+    if (files.isNotEmpty) {
+      buf.writeln('Included files:');
+      for (final f in files) {
+        buf.writeln('  • ' + (f.name ?? p.basename(f.path)));
+      }
+    } else {
+      buf.writeln('Included files: (none)');
+    }
+    buf.writeln('');
+    if (urls.isNotEmpty) {
+      buf.writeln('Links:');
+      for (final u in urls) {
+        buf.writeln('  • ' + u);
+      }
+    } else {
+      buf.writeln('Links: (none)');
+    }
+
+    // Write manifest and optional links file to temp
+    final dir = await getTemporaryDirectory();
+    final base = _sanitizeFileName('${date.toIso8601String().split('T').first}_${title}');
+    final manifestPath = p.join(dir.path, '${base}_manifest.txt');
+    final manifestFile = File(manifestPath);
+    await manifestFile.writeAsString(buf.toString());
+
+    final shareFiles = <XFile>[...files, XFile(manifestFile.path, name: p.basename(manifestFile.path))];
+
+    final subject = 'CPD attachments • $profession • ${date.toIso8601String().split('T').first}';
+    final body = urls.isEmpty
+        ? 'Attachments for "$title" ($profession).'
+        : 'Attachments for "$title" ($profession). Links included in manifest.';
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: shareFiles,
+        subject: subject,
+        text: body,
+      ),
+    );
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Share failed: $e')),
+      );
+    }
   }
 }

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'entry_repository.dart';
 import 'models.dart';
 import 'settings_store.dart';
 import 'add_entry_page.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path/path.dart' as p;
 import 'utils/attachment_io.dart';
 import 'widgets/period_picker.dart' show showPeriodPicker;
 import 'utils/date_utils.dart';
 import 'utils/csv_exporter.dart';
+import 'utils/pdf_exporter.dart';
 import 'widgets/record_card.dart';
 import 'widgets/attachments_dialog.dart';
 import 'widgets/share_format_sheet.dart';
@@ -79,10 +82,35 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
   Future<void> _shareAttachmentPath(String path) async {
     try {
       if (isUrl(path)) {
-        await Share.share(path.trim());
+        await SharePlus.instance.share(
+          ShareParams(
+            text: path.trim(),
+            subject: 'CPD link',
+          ),
+        );
         return;
       }
-      await Share.shareXFiles([XFile(path)]);
+      if (await File(path).exists()) {
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [
+              XFile(
+                path,
+                // mimeType optional; let the platform infer
+                name: p.basename(path),
+              ),
+            ],
+            text: 'CPD attachment',
+            subject: 'CPD attachment',
+          ),
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('File not found.')),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -179,16 +207,44 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       try {
         debugPrint('Exporting PDF for ${widget.profession} range ${picked.start} – ${picked.end}');
         await exportRecordsPdf(
-          context,
           profession: widget.profession,
           entries: _entries,
           range: picked,
           userName: userName,
           company: company,
           email: email,
+          includeAttachments: false,
         );
       } catch (err, st) {
         debugPrint('PDF export failed: $err');
+        debugPrint(st.toString());
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Export failed: $err')),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _exporting = false);
+      }
+    } else if (sel == 'pdf_bundle') {
+      setState(() => _exporting = true);
+      final Map<String, String> profile = await _settings.loadProfile();
+      final String userName = profile['name']?.trim() ?? '';
+      final String company  = profile['company']?.trim() ?? '';
+      final String email    = profile['email']?.trim() ?? '';
+      try {
+        debugPrint('Exporting PDF Bundle for ${widget.profession} range ${picked.start} – ${picked.end}');
+        await exportRecordsPdf(
+          profession: widget.profession,
+          entries: _entries,
+          range: picked,
+          userName: userName,
+          company: company,
+          email: email,
+          includeAttachments: true,
+        );
+      } catch (err, st) {
+        debugPrint('PDF Bundle export failed: $err');
         debugPrint(st.toString());
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -248,18 +304,15 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                     title: 'Attachments',
                     enableLongPressActions: true,
                     onShareOne: (path) => _shareAttachmentPath(path),
-                    onRemoveIndex: (idx) {
-                      setState(() {
-                        if (idx >= 0 && idx < e.attachments.length) {
-                          e.attachments.removeAt(idx);
-                        }
-                      });
-                      _repo.updateEntry(e);
+                    onRemoveIndex: (idx) async {
+                      if (idx < 0 || idx >= e.attachments.length) return;
+                      // Remove from the model and persist
+                      e.attachments.removeAt(idx);
+                      await _repo.updateEntry(e);
                       if (mounted) {
+                        setState(() {});
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Attachment removed.'),
-                          ),
+                          const SnackBar(content: Text('Attachment removed.')),
                         );
                       }
                     },

@@ -18,7 +18,7 @@ Future<void> showAttachmentsDialog({
   /// Optional callback when a single item is shared via long-press.
   Future<void> Function(String path)? onShareOne,
   /// Optional callback when an item is removed; receives its index from the *original* list.
-  ValueChanged<int>? onRemoveIndex,
+  Future<void> Function(int)? onRemoveIndex,
 }) async {
   if (attachments.isEmpty) {
     await showDialog(
@@ -107,12 +107,37 @@ Future<void> showAttachmentsDialog({
                     onShare: onShareOne == null ? null : () => onShareOne(path),
                     onRemove: onRemoveIndex == null
                         ? null
-                        : () {
-                            // Map current index back to original list index, then remove.
+                        : () async {
+                            // Ask user to confirm removal first
+                            final confirm = await showDialog<bool>(
+                              context: ctx,
+                              builder: (dctx) => AlertDialog(
+                                title: const Text('Remove attachment?'),
+                                content: const Text('Do you want to remove this attachment?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(dctx, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () => Navigator.pop(dctx, true),
+                                    child: const Text('Remove'),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm != true) return; // cancelled
+
+                            // Map current index back to original list index, then invoke parent removal
                             final originalIdx = original.indexOf(path);
                             if (originalIdx >= 0) {
-                              onRemoveIndex(originalIdx);
-                              setState(() => original.removeAt(originalIdx));
+                              try {
+                                await onRemoveIndex(originalIdx);
+                              } finally {
+                                // Reflect removal in the dialog's local view only after parent handled it
+                                setState(() => original.removeAt(originalIdx));
+                              }
                             }
                           },
                   );

@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'entry_repository.dart';
 import 'models.dart';
 import 'settings_store.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'utils/date_utils.dart';
 import 'widgets/attachment_tile.dart';
-import 'utils/attachment_io.dart';
 import 'widgets/duration_fields.dart';
 
 
@@ -352,7 +349,33 @@ final _settings = SettingsStore.instance;
                   final value = entry.value;
                   return AttachmentTile(
                     value: value,
-                    onRemove: () => _removeAttachment(i),
+                    onRemove: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Remove attachment?'),
+                          content: const Text('Do you want to remove this attachment?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('Remove'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        _removeAttachment(i);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Attachment removed.')),
+                          );
+                        }
+                      }
+                    },
                   );
                 }),
 

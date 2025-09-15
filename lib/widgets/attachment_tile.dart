@@ -13,7 +13,7 @@ class AttachmentTile extends StatelessWidget {
   });
 
   final String value;
-  final VoidCallback? onRemove;
+  final Future<void> Function()? onRemove;
   final bool enableLongPressActions;
   final Future<void> Function()? onShare;
 
@@ -63,7 +63,13 @@ class AttachmentTile extends StatelessWidget {
         title: Text(p.basename(value), maxLines: 2, overflow: TextOverflow.ellipsis),
         trailing: onRemove == null
             ? null
-            : IconButton(icon: const Icon(Icons.close), onPressed: onRemove),
+            : IconButton(
+                tooltip: 'Remove',
+                icon: const Icon(Icons.close),
+                onPressed: () async {
+                  await onRemove?.call();
+                },
+              ),
         onTap: handleTap,
         onLongPress: !enableLongPressActions ? null : () async {
           final action = await showModalBottomSheet<String>(
@@ -88,7 +94,7 @@ class AttachmentTile extends StatelessWidget {
             ),
           );
           if (action == 'share') await onShare?.call();
-          if (action == 'remove') onRemove?.call();
+          if (action == 'remove') await onRemove?.call();
         },
       ),
     );
