@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // debugPrint
 import 'entry_repository.dart';
 import 'models.dart';
 import 'settings_store.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
+import 'utils/attachment_io.dart';
 import 'utils/date_utils.dart';
 import 'widgets/attachment_tile.dart';
 import 'widgets/duration_fields.dart';
@@ -174,20 +177,32 @@ final _settings = SettingsStore.instance;
           final picker = ImagePicker();
           final shot = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
           if (shot != null && mounted) {
-            setState(() => _attachments.add(shot.path));
+            final saved = await importAttachmentToApp(context, shot.path, displayName: p.basename(shot.path));
+            if (saved != null && mounted) {
+              setState(() => _attachments.add(saved));
+              debugPrint('[AddEntry] added (app path): $saved');
+            }
           }
         } else if (choice == 'gallery') {
           final picker = ImagePicker();
           final img = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
           if (img != null && mounted) {
-            setState(() => _attachments.add(img.path));
+            final saved = await importAttachmentToApp(context, img.path, displayName: p.basename(img.path));
+            if (saved != null && mounted) {
+              setState(() => _attachments.add(saved));
+              debugPrint('[AddEntry] added (app path): $saved');
+            }
           }
         } else if (choice == 'file') {
           final res = await FilePicker.platform.pickFiles(allowMultiple: false);
           if (res != null && res.files.isNotEmpty) {
             final path = res.files.single.path;
             if (path != null && mounted) {
-              setState(() => _attachments.add(path));
+              final saved = await importAttachmentToApp(context, path, displayName: p.basename(path));
+              if (saved != null && mounted) {
+                setState(() => _attachments.add(saved));
+                debugPrint('[AddEntry] added (app path): $saved');
+              }
             }
           }
         } else if (choice == 'qr') {
@@ -197,7 +212,17 @@ final _settings = SettingsStore.instance;
 
           final String? result = (r is String && r.trim().isNotEmpty) ? r.trim() : null;
           if (result != null) {
-            setState(() => _attachments.add(result));
+            // If it looks like a web URL, store as-is; otherwise try to import to app dir
+            if (isUrl(result)) {
+              setState(() => _attachments.add(result));
+              debugPrint('[AddEntry] added (url): $result');
+            } else {
+              final saved = await importAttachmentToApp(context, result);
+              if (saved != null && mounted) {
+                setState(() => _attachments.add(saved));
+                debugPrint('[AddEntry] added (app path): $saved');
+              }
+            }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('No QR data captured.')),
@@ -218,13 +243,18 @@ final _settings = SettingsStore.instance;
   void _removeAttachment(int i) => setState(() => _attachments.removeAt(i));
 
   Future<void> _save() async {
+    debugPrint('[AddEntry] _save() pressed');
+    debugPrint('[AddEntry] title.len=${_title.text.trim().length} details.len=${_details.text.trim().length}');
+
     // Ensure keyboard is dismissed before saving / navigating
     FocusScope.of(context).unfocus();
     await Future.delayed(const Duration(milliseconds: 50));
 
     final today = dateOnly(DateTime.now());
     final selected = dateOnly(_date);
+    debugPrint('[AddEntry] date selected: $selected');
     if (selected.isAfter(today)) {
+      debugPrint('[AddEntry] abort: future date');
       await _showFutureDateWarning();
       return;
     }
@@ -233,6 +263,7 @@ final _settings = SettingsStore.instance;
     final minutes = _minutesVal;
 
     if (_title.text.trim().isEmpty && _details.text.trim().isEmpty) {
+      debugPrint('[AddEntry] abort: empty title & details');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a title or details.')),
@@ -253,8 +284,13 @@ final _settings = SettingsStore.instance;
         attachments: List<String>.from(_attachments),
         deleted: orig.deleted,
       );
+      debugPrint('[AddEntry] saving UPDATE with ${updated.attachments.length} attachments');
+      for (final a in updated.attachments) { debugPrint('  • $a'); }
       await _repo.updateEntry(updated);
     } else {
+      final listToSave = List<String>.from(_attachments);
+      debugPrint('[AddEntry] saving CREATE with ${listToSave.length} attachments');
+      for (final a in listToSave) { debugPrint('  • $a'); }
       await _repo.createAndSave(
         profession: widget.profession,
         date: selected,
@@ -262,15 +298,18 @@ final _settings = SettingsStore.instance;
         details: _details.text.trim(),
         hours: hours,
         minutes: minutes,
-        attachments: List<String>.from(_attachments),
+        attachments: listToSave,
       );
     }
+
+    debugPrint('[AddEntry] DB write complete');
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(_editing ? 'Entry updated' : 'Entry saved')),
     );
     Navigator.pop(context);
+    debugPrint('[AddEntry] pop complete');
   }
 
   @override
@@ -386,7 +425,7 @@ final _settings = SettingsStore.instance;
               ),
               const SizedBox(height: 8),
               const Text(
-                'Note: Attachments won’t be shown in shared reports; a note will indicate evidence is available on request.',
+                'Note: Attachments are saved into the app and shown as thumbnails in the PDF. Use “PDF + attachments (bundle)” to share original files.',
                 style: TextStyle(fontSize: 12),
               ),
             ],

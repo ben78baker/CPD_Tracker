@@ -45,7 +45,8 @@ class RecordCard extends StatelessWidget {
     try {
       return DateFormat(dateFormat).format(d);
     } catch (_) {
-      return DateFormat('dd/MM/yyyy').format(d);
+      // Fallback to a locale-aware short date instead of a hard-coded pattern
+      return DateFormat.yMd().format(d);
     }
   }
 
@@ -152,12 +153,31 @@ class RecordCard extends StatelessWidget {
   }
 
   static String _formatDuration(int h, int m) {
-    final buf = StringBuffer();
-    if (h > 0) buf.write('${h}h');
-    if (h > 0 && m > 0) buf.write(' ');
-    if (m > 0) buf.write('${m}m');
-    if (h == 0 && m == 0) return '0m';
-    return buf.toString();
+    if (h == 0 && m == 0) {
+      return Intl.message('0m', name: 'zeroMinutes');
+    }
+
+    final parts = <String>[];
+    if (h > 0) {
+      parts.add(Intl.plural(
+        h,
+        one: '$h hour',
+        other: '$h hours',
+        name: 'hoursPlural',
+        args: [h],
+      ));
+    }
+    if (m > 0) {
+      parts.add(Intl.plural(
+        m,
+        one: '$m minute',
+        other: '$m minutes',
+        name: 'minutesPlural',
+        args: [m],
+      ));
+    }
+
+    return parts.join(' ');
   }
 }
 

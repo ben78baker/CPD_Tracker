@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'entry_repository.dart';
 import 'models.dart';
@@ -100,7 +101,6 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                 name: p.basename(path),
               ),
             ],
-            text: 'CPD attachment',
             subject: 'CPD attachment',
           ),
         );
@@ -213,7 +213,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           userName: userName,
           company: company,
           email: email,
-          includeAttachments: false,
+          includeAttachments: true,
         );
       } catch (err, st) {
         debugPrint('PDF export failed: $err');
@@ -234,14 +234,13 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       final String email    = profile['email']?.trim() ?? '';
       try {
         debugPrint('Exporting PDF Bundle for ${widget.profession} range ${picked.start} – ${picked.end}');
-        await exportRecordsPdf(
+        await exportRecordsBundleZip(
           profession: widget.profession,
           entries: _entries,
           range: picked,
           userName: userName,
           company: company,
           email: email,
-          includeAttachments: true,
         );
       } catch (err, st) {
         debugPrint('PDF Bundle export failed: $err');

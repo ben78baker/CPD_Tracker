@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter/foundation.dart';
+
 
 bool isImagePath(String p) => p.toLowerCase().endsWith('.png') ||
     p.toLowerCase().endsWith('.jpg') ||
@@ -105,6 +107,104 @@ Future<void> openFile(BuildContext context, String path) async {
 
 bool fileExists(String p) => File(p).existsSync();
 
+Future<String> _currentDocsPath() async {
+  final docs = await getApplicationDocumentsDirectory();
+  return docs.path;
+}
+
+/// Turn an absolute path under Documents into a relative like `attachments/file.ext`.
+Future<String> toAppRelative(String absolutePath) async {
+  final docsPath = await _currentDocsPath();
+  if (absolutePath.startsWith(docsPath)) {
+    return p.relative(absolutePath, from: docsPath);
+  }
+  return absolutePath;
+}
+
+/// Resolve a stored path to the current container's absolute path.
+/// - URLs: returned unchanged
+/// - Absolute paths with `/Documents/`: rebase onto current Documents dir
+/// - Relative paths: joined to current Documents dir
+Future<String> resolveStoredPath(String stored) async {
+  if (isUrl(stored)) return stored;
+  final docsPath = await _currentDocsPath();
+  if (stored.startsWith('/')) {
+    final i = stored.indexOf('/Documents/');
+    if (i != -1) {
+      final tail = stored.substring(i + '/Documents/'.length);
+      return p.join(docsPath, tail);
+    }
+    return stored; // some other absolute path
+  }
+  return p.join(docsPath, stored);
+}
+
+/// Ensure and return the app's attachments directory inside Documents.
+Future<Directory> getAppAttachmentsDir() async {
+  final docs = await getApplicationDocumentsDirectory();
+  final dir = Directory(p.join(docs.path, 'attachments'));
+  if (!dir.existsSync()) {
+    dir.createSync(recursive: true);
+  }
+  return dir;
+}
+
+/// Copy a local file into the app's attachments directory and return the new path.
+/// If [preferredName] is supplied it will be used (sanitized) for the filename; otherwise
+/// we derive it from the source path. A timestamp is appended to avoid collisions.
+Future<String> copyLocalToAppDir(String sourcePath, {String? preferredName}) async {
+  final dir = await getAppAttachmentsDir();
+  final baseNoExt = preferredName != null && preferredName.isNotEmpty
+      ? _sanitizeFileName(p.basenameWithoutExtension(preferredName))
+      : _sanitizeFileName(p.basenameWithoutExtension(sourcePath));
+  final ext = p.extension(preferredName?.isNotEmpty == true ? preferredName! : sourcePath);
+  final ts = DateTime.now().millisecondsSinceEpoch;
+  final destPath = p.join(dir.path, '${baseNoExt}_$ts$ext');
+  await File(sourcePath).copy(destPath);
+  return await toAppRelative(destPath);
+}
+
+/// Import an attachment (local path or URL) into the app's attachments directory.
+/// Returns the saved local path, or null on failure. Shows a SnackBar on error.
+Future<String?> importAttachmentToApp(BuildContext context, String attachment, {String? displayName}) async {
+  try {
+    if (isUrl(attachment)) {
+      // For URLs, try to download if it looks like a file. Otherwise just open in browser.
+      if (isLikelyFileUrl(attachment)) {
+        return await downloadToAppDir(context, attachment);
+      } else {
+        await openUrl(context, attachment);
+        return null;
+      }
+    }
+
+    // Local path — copy into app dir if it exists
+    if (fileExists(attachment)) {
+      final saved = await copyLocalToAppDir(attachment, preferredName: displayName);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Saved to Attachments: ${p.basename(saved)}')),
+        );
+      }
+      return saved;
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Attachment not found on device.')),
+      );
+    }
+    return null;
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Import failed: $e')),
+      );
+    }
+    return null;
+  }
+}
+
 /// Downloads a file-like URL into the app's documents/attachments folder and returns the saved path.
 /// Shows a SnackBar on failure. Returns null if the URL cannot be fetched.
 Future<String?> downloadToAppDir(BuildContext context, String url) async {
@@ -120,11 +220,7 @@ Future<String?> downloadToAppDir(BuildContext context, String url) async {
       return null;
     }
 
-    final dir = await getApplicationDocumentsDirectory();
-    final attachmentsDir = Directory(p.join(dir.path, 'attachments'));
-    if (!attachmentsDir.existsSync()) {
-      attachmentsDir.createSync(recursive: true);
-    }
+    final attachmentsDir = await getAppAttachmentsDir();
 
     var name = _filenameFromUrl(uri);
     if (!name.contains('.')) {
@@ -140,7 +236,7 @@ Future<String?> downloadToAppDir(BuildContext context, String url) async {
         SnackBar(content: Text('Saved to Attachments: ${p.basename(savePath)}')),
       );
     }
-    return savePath;
+    return await toAppRelative(savePath);
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -175,8 +271,11 @@ Future<void> shareAttachmentsForRecord(
     for (final a in attachments) {
       if (isUrl(a)) {
         urls.add(a);
-      } else if (fileExists(a)) {
-        files.add(XFile(a, name: p.basename(a)));
+      } else {
+        final abs = await resolveStoredPath(a);
+        if (fileExists(abs)) {
+          files.add(XFile(abs, name: p.basename(abs)));
+        }
       }
     }
 
@@ -187,13 +286,13 @@ Future<void> shareAttachmentsForRecord(
     buf.writeln('Date: ${date.toIso8601String().split('T').first}');
     buf.writeln('Title: $title');
     if (details.trim().isNotEmpty) {
-      buf.writeln('Details: ' + details.replaceAll('\n', ' '));
+      buf.writeln('Details: ${details.replaceAll('\n', ' ')}');
     }
     buf.writeln('');
     if (files.isNotEmpty) {
       buf.writeln('Included files:');
       for (final f in files) {
-        buf.writeln('  • ' + (f.name ?? p.basename(f.path)));
+        buf.writeln('  • ${f.name}');
       }
     } else {
       buf.writeln('Included files: (none)');
@@ -202,7 +301,7 @@ Future<void> shareAttachmentsForRecord(
     if (urls.isNotEmpty) {
       buf.writeln('Links:');
       for (final u in urls) {
-        buf.writeln('  • ' + u);
+        buf.writeln('  • $u');
       }
     } else {
       buf.writeln('Links: (none)');
@@ -210,7 +309,7 @@ Future<void> shareAttachmentsForRecord(
 
     // Write manifest and optional links file to temp
     final dir = await getTemporaryDirectory();
-    final base = _sanitizeFileName('${date.toIso8601String().split('T').first}_${title}');
+    final base = _sanitizeFileName('${date.toIso8601String().split('T').first}_$title');
     final manifestPath = p.join(dir.path, '${base}_manifest.txt');
     final manifestFile = File(manifestPath);
     await manifestFile.writeAsString(buf.toString());
@@ -233,6 +332,41 @@ Future<void> shareAttachmentsForRecord(
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Share failed: $e')),
+      );
+    }
+  }
+}
+
+/// Open an attachment referenced by a stored path or URL.
+/// - For http/https/mailto/tel links, launches the appropriate external app.
+/// - For local files, resolves relative or old-absolute paths to the current
+///   app container and opens with the platform default handler.
+Future<void> openAttachment(BuildContext context, String stored) async {
+  try {
+    // URLs: open in browser / dialer / mail
+    if (isUrl(stored)) {
+      await openUrl(context, stored);
+      return;
+    }
+
+    // Local file: resolve to current container
+    final abs = await resolveStoredPath(stored);
+    if (!fileExists(abs)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('File not found: ${p.basename(stored)}')),
+        );
+      }
+      return;
+    }
+
+    // Use the existing file opener (OpenFilex)
+    await openFile(context, abs);
+  } catch (e) {
+    debugPrint('[Attach] openAttachment failed: $e');
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to open attachment: $e')),
       );
     }
   }
