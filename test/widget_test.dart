@@ -14,7 +14,7 @@ void main() {
     });
 
     // Build the app
-    await tester.pumpWidget(const MyApp(startOnboarding: false));
+    await tester.pumpWidget(const MyApp());
 
     // Let the first frame and microtasks complete
     await tester.pump();

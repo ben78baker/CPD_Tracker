@@ -44,11 +44,9 @@ Future<void> exportRecordsCsv({
     sb.writeln('"Period:","$fromStr to $toStr"');
     sb.writeln('"Total Time:","${th}h ${tm}m"');
     final withAttachments = filtered.where((e) => e.attachments.isNotEmpty).length;
-    sb.writeln('"Attachments:","' +
-        (withAttachments > 0
+    sb.writeln('"Attachments:","${withAttachments > 0
             ? '$withAttachments record(s) include attachments; available upon request'
-            : 'None in this export') +
-        '"');
+            : 'None in this export'}"');
     sb.writeln('');
     sb.writeln('Date,Title,Hours,Minutes,Details,Has Attachments');
     for (final e in filtered) {

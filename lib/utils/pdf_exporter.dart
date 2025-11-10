@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:archive/archive.dart';
 import 'package:archive/archive_io.dart';
@@ -22,8 +23,13 @@ Future<File> buildRecordsPdf({
   String? company,
   String? email,
   bool includeAttachments = false,
+  String? attachmentsInlineNote,
 }) async {
   final doc = pw.Document();
+
+  final font = await PdfGoogleFonts.notoSansRegular();
+  final boldFont = await PdfGoogleFonts.notoSansBold();
+  final italicFont = await PdfGoogleFonts.notoSansItalic();
 
   // Normalise & sort by date ascending
   final list = [...entries]..sort((a, b) => a.date.compareTo(b.date));
@@ -66,6 +72,14 @@ Future<File> buildRecordsPdf({
     pw.MultiPage(
       pageFormat: PdfPageFormat.a4.landscape,
       margin: const pw.EdgeInsets.all(20),
+      footer: (context) => pw.Container(
+        alignment: pw.Alignment.centerRight,
+        margin: const pw.EdgeInsets.only(top: 10),
+        child: pw.Text(
+          'Page ${context.pageNumber} of ${context.pagesCount}',
+          style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey600),
+        ),
+      ),
       build: (ctx) {
         final rows = <pw.Widget>[];
 
@@ -73,14 +87,14 @@ Future<File> buildRecordsPdf({
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('CPD Records', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-              if ((userName ?? '').isNotEmpty) pw.Text(userName ?? ''),
-              if ((company ?? '').isNotEmpty) pw.Text(company ?? ''),
-              if ((email ?? '').isNotEmpty) pw.Text(email ?? ''),
+              pw.Text('CPD Records', style: pw.TextStyle(font: boldFont, fontSize: 20)),
+              if ((userName ?? '').isNotEmpty) pw.Text('Name: ${userName ?? ''}', style: pw.TextStyle(font: font)),
+              if ((company ?? '').isNotEmpty) pw.Text('Company: ${company ?? ''}', style: pw.TextStyle(font: font)),
+              if ((email ?? '').isNotEmpty) pw.Text('Email: ${email ?? ''}', style: pw.TextStyle(font: font)),
               pw.SizedBox(height: 8),
-              pw.Text('Profession: $profession'),
-              pw.Text('Period: ${periodText()}'),
-              pw.Text('Total Time: ${totalText()}'),
+              pw.Text('Profession: $profession', style: pw.TextStyle(font: font)),
+              pw.Text('Period: ${periodText()}', style: pw.TextStyle(font: font)),
+              pw.Text('Total Time: ${totalText()}', style: pw.TextStyle(font: boldFont)),
               pw.SizedBox(height: 12),
             ],
           ),
@@ -93,7 +107,7 @@ Future<File> buildRecordsPdf({
 
           rows.add(
             pw.Container(
-              margin: const pw.EdgeInsets.only(bottom: 6),
+              margin: const pw.EdgeInsets.only(bottom: 10),
               padding: const pw.EdgeInsets.all(6),
               decoration: pw.BoxDecoration(
                 border: pw.Border.all(color: PdfColors.grey300),
@@ -102,24 +116,23 @@ Future<File> buildRecordsPdf({
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  // Inline header: date + title (left), attachment notice (right when present)
+                  // Inline header: date + title (left), attachment notice (right for PDF-only mode)
                   () {
                     final hasAtt = e.attachments.isNotEmpty;
+                    final note = attachmentsInlineNote;
                     return pw.Row(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         pw.Expanded(
                           child: pw.Text(
                             '$dateStr  -  ${e.title}',
-                            style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                            style: pw.TextStyle(font: boldFont, fontSize: 13),
                           ),
                         ),
-                        if (hasAtt)
+                        if (hasAtt && note != null)
                           pw.Text(
-                            includeAttachments
-                                ? 'Attachments/Evidence below'
-                                : 'Attachments/Evidence available on request',
-                            style: pw.TextStyle(fontStyle: pw.FontStyle.italic),
+                            note,
+                            style: pw.TextStyle(font: italicFont, fontSize: 11),
                           ),
                       ],
                     );
@@ -127,7 +140,7 @@ Future<File> buildRecordsPdf({
                   pw.SizedBox(height: 4),
                   // Details-focused table (no attachments column)
                   pw.TableHelper.fromTextArray(
-                    headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    headerStyle: pw.TextStyle(font: boldFont),
                     cellPadding: const pw.EdgeInsets.symmetric(vertical: 2, horizontal: 4),
                     headers: const ['Hours', 'Minutes', 'Details'],
                     data: [
@@ -137,13 +150,13 @@ Future<File> buildRecordsPdf({
                     columnWidths: {
                       0: const pw.FlexColumnWidth(0.9),
                       1: const pw.FlexColumnWidth(1.0),
-                      2: const pw.FlexColumnWidth(4.0), // details gets priority width
+                      2: const pw.FlexColumnWidth(4.0),
                     },
+                    cellStyle: pw.TextStyle(font: font),
                   ),
-                  // Inline attachments (images as thumbnails; others as names; URLs clickable)
-                  if (e.attachments.isNotEmpty) ...[
+                  if (includeAttachments && e.attachments.isNotEmpty) ...[
                     pw.SizedBox(height: 6),
-                    pw.Text('Attachments / Evidence:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.Text('Attachments / Evidence:', style: pw.TextStyle(font: boldFont)),
                     pw.SizedBox(height: 4),
                     () {
                       final attWidgets = <pw.Widget>[];
@@ -152,7 +165,6 @@ Future<File> buildRecordsPdf({
                         final exists = !_isUrl(a) && _fileExistsSync(resolved);
                         debugPrint('[PDF] att: $a -> $resolved exists=$exists');
                         if (_isUrl(a)) {
-                          // Clickable web link
                           attWidgets.add(
                             pw.Container(
                               margin: const pw.EdgeInsets.only(right: 6, bottom: 6),
@@ -160,13 +172,12 @@ Future<File> buildRecordsPdf({
                                 destination: a,
                                 child: pw.Text(
                                   a,
-                                  style: pw.TextStyle(color: PdfColors.blue, decoration: pw.TextDecoration.underline),
+                                  style: pw.TextStyle(font: font, color: PdfColors.blue, decoration: pw.TextDecoration.underline),
                                 ),
                               ),
                             ),
                           );
                         } else if (_looksLikeImage(resolved) && _fileExistsSync(resolved)) {
-                          // Local image thumbnail
                           try {
                             final bytes = File(resolved).readAsBytesSync();
                             attWidgets.add(
@@ -185,11 +196,10 @@ Future<File> buildRecordsPdf({
                               ),
                             );
                           } catch (_) {
-                            // Fallback to filename if image bytes cannot be read
                             final name = p.basename(resolved);
                             final size = _fileSizeSync(resolved);
                             final label = size == null ? name : '$name (${_prettySize(size)})';
-                            attWidgets.add(pw.Text(label));
+                            attWidgets.add(pw.Text(label, style: pw.TextStyle(font: font)));
                           }
                         } else if (_fileExistsSync(resolved)) {
                           final name = p.basename(resolved);
@@ -198,15 +208,14 @@ Future<File> buildRecordsPdf({
                           attWidgets.add(
                             pw.Container(
                               margin: const pw.EdgeInsets.only(right: 6, bottom: 6),
-                              child: pw.Text(label),
+                              child: pw.Text(label, style: pw.TextStyle(font: font)),
                             ),
                           );
                         } else {
-                          // Missing or unknown
                           attWidgets.add(
                             pw.Container(
                               margin: const pw.EdgeInsets.only(right: 6, bottom: 6),
-                              child: pw.Text(p.basename(resolved)),
+                              child: pw.Text(p.basename(resolved), style: pw.TextStyle(font: font)),
                             ),
                           );
                         }
@@ -218,6 +227,7 @@ Future<File> buildRecordsPdf({
               ),
             ),
           );
+          rows.add(pw.Divider(color: PdfColors.grey300, height: 14, thickness: 0.5));
         }
 
         return rows;
@@ -239,6 +249,7 @@ Future<void> exportRecordsPdf({
   String? email,
   bool includeAttachments = false,
 }) async {
+  // Always produce a PDF without inline attachments, always show the inline note for records with attachments.
   final file = await buildRecordsPdf(
     profession: profession,
     entries: entries,
@@ -246,7 +257,8 @@ Future<void> exportRecordsPdf({
     userName: userName,
     company: company,
     email: email,
-    includeAttachments: includeAttachments,
+    includeAttachments: false,
+    attachmentsInlineNote: 'Attachments/Evidence available on request',
   );
 
   // debug
@@ -283,6 +295,7 @@ Future<void> exportRecordsBundleZip({
     company: company,
     email: email,
     includeAttachments: false,
+    attachmentsInlineNote: 'For Attachments & Evidence see ZIP File',
   );
 
 // Resolve stored attachment paths (relative or old absolute) to current container
@@ -301,51 +314,65 @@ String resolve(String stored) {
   return p.join(docsPath, stored);
 }
 
-  // 2) Gather attachments
-  final localPaths = <String>[];
-  final urls = <String>[];
+  // 2) Gather attachments grouped by record date and safe, truncated title
+  final localsByFolder = <String, List<String>>{}; // folder -> local file paths
+  final urlsByFolder = <String, List<String>>{};   // folder -> url strings
   for (final e in entries) {
+    if (e.attachments.isEmpty) continue;
+    // Folder per record, named by record date and safe, truncated title to avoid illegal characters
+    final datePart = formatDate(e.date, 'yyyy-MM-dd');
+    final titlePartFull = _safeFileName(e.title);
+    final titlePart = titlePartFull.length > 40 ? titlePartFull.substring(0, 40) : titlePartFull;
+    final folder = p.join('attachments', '$datePart - $titlePart');
     for (final a in e.attachments) {
       if (_isUrl(a)) {
-       urls.add(a);
-     } else {
-       final resolved = resolve(a);
-       if (_fileExistsSync(resolved)) localPaths.add(resolved);
-     }
+        (urlsByFolder[folder] ??= <String>[]).add(a);
+      } else {
+        final resolved = resolve(a);
+        if (_fileExistsSync(resolved)) {
+          (localsByFolder[folder] ??= <String>[]).add(resolved);
+        }
+      }
     }
   }
-
-  debugPrint('[Bundle] locals: ${localPaths.length}, urls: ${urls.length}');
+  // Counters for logging
+  final localCount = localsByFolder.values.fold<int>(0, (sum, l) => sum + l.length);
+  final urlCount   = urlsByFolder.values.fold<int>(0, (sum, l) => sum + l.length);
+  debugPrint('[Bundle] locals: $localCount, urls: $urlCount, folders: ${localsByFolder.length + urlsByFolder.length}');
 
   // 3) Create ZIP archive
   final arch = Archive();
 
-  // Add PDF summary
+  // Add PDF summary at root
   arch.addFile(ArchiveFile.stream(
     p.basename(pdfFile.path),
     InputFileStream(pdfFile.path),
   ));
 
-  // Add local attachments under attachments/
-  for (final path in localPaths) {
-    final nameInZip = p.join('attachments', p.basename(path));
-    arch.addFile(ArchiveFile.stream(
-      nameInZip,
-      InputFileStream(path),
-    ));
+  // Add local attachments grouped into per-record folders
+  for (final entry in localsByFolder.entries) {
+    final folder = entry.key;
+    for (final path in entry.value) {
+      final nameInZip = p.join(folder, p.basename(path));
+      arch.addFile(ArchiveFile.stream(
+        nameInZip,
+        InputFileStream(path),
+      ));
+    }
   }
 
-  // Add link manifest if needed
-  if (urls.isNotEmpty) {
+  // Add per-folder link manifests
+  for (final entry in urlsByFolder.entries) {
+    final folder = entry.key;
     final buf = StringBuffer('CPD Attachment Links\n\n');
     if (range != null) {
       buf.writeln('Period: ${formatDate(range.start, 'dd/MM/yyyy')} to ${formatDate(range.end, 'dd/MM/yyyy')}\n');
     }
-    for (final u in urls) {
+    for (final u in entry.value) {
       buf.writeln(u);
     }
     final manifestBytes = utf8.encode(buf.toString());
-    arch.addFile(ArchiveFile('attachments/links.txt', manifestBytes.length, manifestBytes));
+    arch.addFile(ArchiveFile('$folder/links.txt', manifestBytes.length, manifestBytes));
   }
 
   final encoded = ZipEncoder().encode(arch);

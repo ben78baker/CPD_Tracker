@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'utils/attachment_io.dart';
+import 'settings_store.dart';
 
 class QrScanPage extends StatefulWidget {
   const QrScanPage({super.key, required this.profession});
@@ -71,37 +72,41 @@ class _QrScanPageState extends State<QrScanPage> {
                 ),
               );
 
-              if (!mounted) return;
+              if (!context.mounted) return;
               switch (action) {
                 case 'attach':
                   final saved = await downloadToAppDir(context, code);
-                  if (saved != null && mounted) {
+                  if (!context.mounted) return; // guard after await
+                  if (saved != null) {
                     Navigator.pop(context, saved); // return file path to add as attachment
                     return;
                   }
                   // If download failed, fall back to returning the URL
-                  if (mounted) Navigator.pop(context, code);
+                  Navigator.pop(context, code);
                   return;
                 case 'open':
                   await openUrl(context, code);
-                  if (mounted) Navigator.pop(context, code); // also return URL so it's kept with the entry
+                  if (!context.mounted) return;
+                  Navigator.pop(context, code); // also return URL so it's kept with the entry
                   return;
                 case 'keep':
                 default:
-                  if (mounted) Navigator.pop(context, code);
+                  if (context.mounted) Navigator.pop(context, code);
                   return;
               }
             }
 
-            // Non-file URL or plain text: show reminder (once), then return the code.
-            if (_showPrompt) {
+            // Non-file URL or plain text: show reminder only if user hasn't dismissed it.
+            final dismissed = await SettingsStore.instance.isQrHintDismissed();
+            if (!context.mounted) return;
+            if (!dismissed && _showPrompt) {
               bool dontShowAgain = false;
-              await showDialog(
+              final res = await showDialog<bool>(
                 context: context,
                 barrierDismissible: false,
-                builder: (context) {
+                builder: (ctx) {
                   return StatefulBuilder(
-                    builder: (context, setState) => AlertDialog(
+                    builder: (ctx, setSt) => AlertDialog(
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -114,9 +119,7 @@ class _QrScanPageState extends State<QrScanPage> {
                             title: const Text("Don't show this message again"),
                             value: dontShowAgain,
                             onChanged: (val) {
-                              setState(() {
-                                dontShowAgain = val ?? false;
-                              });
+                              setSt(() { dontShowAgain = val ?? false; });
                             },
                           ),
                         ],
@@ -124,10 +127,7 @@ class _QrScanPageState extends State<QrScanPage> {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            if (dontShowAgain) {
-                              setState(() { _showPrompt = false; });
-                            }
-                            Navigator.of(context).pop();
+                            Navigator.of(ctx).pop(dontShowAgain); // return checkbox state
                           },
                           child: const Text('OK'),
                         ),
@@ -136,8 +136,14 @@ class _QrScanPageState extends State<QrScanPage> {
                   );
                 }
               );
+              if (!context.mounted) return;
+              if (res == true) {
+                setState(() { _showPrompt = false; });
+                await SettingsStore.instance.setQrHintDismissed(true);
+                if (!context.mounted) return;
+              }
             }
-            if (mounted) Navigator.pop(context, code);
+            Navigator.pop(context, code);
           }
         },
       ),

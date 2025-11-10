@@ -5,6 +5,7 @@ import 'edit_details_page.dart';
 import 'qr_scan_page.dart';
 import 'cpd_records_page.dart';
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
@@ -14,6 +15,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<String> _professions = <String>[];
   List<String> _deleted = <String>[];
+
+  Map<String, (int minutes, String cycle)?> _targets = <String, (int, String)?>{};
 
   String _suggestTitleFromScan(String s) {
   final uri = Uri.tryParse(s);
@@ -36,18 +39,23 @@ Future<void> _scanQrAndPrefill(String profession) async {
   );
   if (!mounted) return;
   if (result != null && result.isNotEmpty) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AddEntryPage(
-          profession: profession,
-          prefillDate: DateTime.now(),
-          prefillAttachments: [result],
-          prefillTitle: _suggestTitleFromScan(result),
-        ),
+  final saved = await Navigator.of(context).push<bool>(
+    MaterialPageRoute(
+      builder: (_) => AddEntryPage(
+        profession: profession,
+        prefillDate: DateTime.now(),
+        prefillAttachments: [result],
+        prefillTitle: _suggestTitleFromScan(result),
       ),
-    );
+    ),
+  );
+  if (!mounted) return;
+  if (saved == true) {
+    setState(() { _progressBump++; }); // only bump if an entry was actually saved
   }
-}
+}}
+
+int _progressBump = 0; // increment to force _TargetProgress to refresh
 
   @override
 void initState() {
@@ -58,13 +66,250 @@ void initState() {
   Future<void> _load() async {
     final active = await SettingsStore.instance.loadActiveProfessions();
     final deleted = await SettingsStore.instance.loadDeletedProfessions();
-    if (!mounted) return;
-    setState(() {
-      _professions = List.of(active);
-      _deleted = List.of(deleted);
-    });
+    final targets = <String, (int, String)?>{};
+  for (final p in active) {
+    targets[p] = await SettingsStore.instance.getTarget(p);
   }
 
+  if (!mounted) return;
+  setState(() {
+    _professions = List.of(active);
+    _deleted = List.of(deleted);
+    _targets = targets; // NEW
+  });
+}
+  // --- Target helpers -------------------------------------------------------
+  int _scaleMinutes(int minutes, String fromCycle, String toCycle) {
+  if (fromCycle == toCycle) return minutes;
+
+  const wPerY = 52.0;
+  const mPerY = 12.0;
+  const wPerM = wPerY / mPerY; // ~4.3333
+
+  double mins = minutes.toDouble();
+  double factor = 1.0;
+
+  if (fromCycle == 'week' && toCycle == 'year') {
+    factor = wPerY;
+  } else if (fromCycle == 'year' && toCycle == 'week') {
+    factor = 1 / wPerY;
+  } else if (fromCycle == 'month' && toCycle == 'year') {
+    factor = mPerY;
+  } else if (fromCycle == 'year' && toCycle == 'month') {
+    factor = 1 / mPerY;
+  } else if (fromCycle == 'week' && toCycle == 'month') {
+    factor = wPerM;
+  } else if (fromCycle == 'month' && toCycle == 'week') {
+    factor = 1 / wPerM;
+  }
+
+  return (mins * factor).round();
+}
+
+  Future<void> _editTarget(String profession) async {
+    final current = _targets[profession];
+    int minutes = current?.$1 ?? 60; // default 1h
+    String cycle = current?.$2 ?? 'week';
+
+    final hoursCtrl = TextEditingController(text: (minutes ~/ 60).toString());
+    final minsCtrl = TextEditingController(text: (minutes % 60).toString());
+    String selected = cycle;
+
+    final res = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) => AlertDialog(
+          title: Text('Set Target for $profession'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: selected,
+                items: const [
+                  DropdownMenuItem(value: 'week', child: Text('per week')),
+                  DropdownMenuItem(value: 'month', child: Text('per month')),
+                  DropdownMenuItem(value: 'year', child: Text('per year')),
+                ],
+                onChanged: (v) {
+                  if (v == null) return;
+                  final h = int.tryParse(hoursCtrl.text) ?? 0;
+                  final m = int.tryParse(minsCtrl.text) ?? 0;
+                  final total = h * 60 + m;
+                  final scaled = _scaleMinutes(total, selected, v);
+                  setSt(() {
+                    selected = v;
+                    hoursCtrl.text = (scaled ~/ 60).toString();
+                    minsCtrl.text = (scaled % 60).toString();
+                  });
+                },
+                decoration: const InputDecoration(labelText: 'Target period'),
+              ),
+              const SizedBox(height: 12),
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: hoursCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Hours'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: minsCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Minutes'),
+                  ),
+                ),
+              ]),
+            ],
+          ),
+          actions: [
+           TextButton(
+           onPressed: () async {
+            await SettingsStore.instance.clearTarget(profession);
+            if (!mounted) return;
+            setState(() {
+            _targets = Map.of(_targets)..remove(profession);
+            });
+           if (context.mounted) Navigator.pop(ctx, false);
+           },
+           child: const Text('Disable'),
+          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save')),
+         ],
+        ),
+      ),
+    );
+
+    if (res == true) {
+      final h = int.tryParse(hoursCtrl.text) ?? 0;
+      final m = int.tryParse(minsCtrl.text) ?? 0;
+      minutes = h * 60 + m;
+      await SettingsStore.instance.setTarget(profession, minutes: minutes, cycle: selected);
+      if (!mounted) return;
+      setState(() {
+        _targets = Map.of(_targets)..[profession] = (minutes, selected);
+      });
+    }
+  }
+
+  /// Edit the week start preference (locale/monday/saturday/sunday)
+  Future<void> _editWeekStart() async {
+    String current = 'locale';
+    try {
+      current = await SettingsStore.instance.getWeekStart();
+    } catch (_) {}
+    if (!mounted) return;
+    String choice = current;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) => AlertDialog(
+          title: const Text('Week starts on'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: choice,
+                items: const [
+                  DropdownMenuItem(value: 'locale', child: Text('Use locale default')),
+                  DropdownMenuItem(value: 'monday', child: Text('Monday')),
+                  DropdownMenuItem(value: 'saturday', child: Text('Saturday')),
+                  DropdownMenuItem(value: 'sunday', child: Text('Sunday')),
+                ],
+                onChanged: (v) {
+                  if (v != null) setSt(() => choice = v);
+                },
+                decoration: const InputDecoration(labelText: 'Week starts on'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (saved == true) {
+      if (choice == 'locale') {
+        await SettingsStore.instance.clearWeekStart();
+      } else {
+        await SettingsStore.instance.setWeekStart(choice);
+      }
+      if (!mounted) return;
+      setState(() {
+        _progressBump++;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Week start updated')),
+      );
+    }
+  }
+
+  Future<int> _computeCompletedMinutes(String profession, String cycle) async {
+    final now = DateTime.now();
+    DateTime start, end;
+
+    switch (cycle) {
+      case 'week': {
+      // BEFORE the await
+    final todayMidnight = DateTime(now.year, now.month, now.day);
+    final firstDayIndexLocale =
+      MaterialLocalizations.of(context).firstDayOfWeekIndex; // 0=Sun..6=Sat
+
+        String pref = 'monday';
+          try {
+           pref = await SettingsStore.instance.getWeekStart();
+          } catch (_) {
+            // ignore and use default/locale
+          }
+
+        int firstWeekday;
+          if (pref == 'sunday') {
+           firstWeekday = DateTime.sunday;     // 7
+          } else if (pref == 'saturday') {
+            firstWeekday = DateTime.saturday;   // 6
+           } else if (pref == 'monday') {
+              firstWeekday = DateTime.monday;     // 1
+        } else {
+       // use the value we hoisted before the await
+     final idx = firstDayIndexLocale;    // 0=Sun..6=Sat
+    firstWeekday = (idx == 0) ? DateTime.sunday : idx + 1;
+  }
+
+  int diff = (now.weekday - firstWeekday) % 7;
+  if (diff < 0) diff += 7;
+
+  start = todayMidnight.subtract(Duration(days: diff));
+  end   = start.add(const Duration(days: 7));
+  break;
+}
+      case 'month':
+        start = DateTime(now.year, now.month, 1);
+        end = (now.month == 12)
+            ? DateTime(now.year + 1, 1, 1)
+            : DateTime(now.year, now.month + 1, 1);
+        break;
+      case 'year':
+      default:
+        start = DateTime(now.year, 1, 1);
+        end = DateTime(now.year + 1, 1, 1);
+        break;
+    }
+
+    // Delegates to SettingsStore (currently stubbed to 0 until DB wiring)
+    return SettingsStore.instance.sumMinutesForRange(profession, start, end);
+  }
 
   Future<void> _addProfessionDialog() async {
     final controller = TextEditingController();
@@ -210,15 +455,25 @@ void initState() {
           PopupMenuButton<String>(
             tooltip: 'Menu',
             onSelected: (value) async {
+              final nav = Navigator.of(context);
+              final scaffold = ScaffoldMessenger.of(context);
               if (value == 'add_profession') {
                 await _addProfessionDialog();
               } else if (value == 'edit_details') {
-                await Navigator.of(context).push(
+                await nav.push(
                   MaterialPageRoute(builder: (_) => const EditDetailsPage()),
                 );
                 if (mounted) setState(() {});
+              } else if (value == 'week_start') {
+                await _editWeekStart();
+              } else if (value == 'reset_tips') {
+                await SettingsStore.instance.resetQrHint();
+                if (!mounted) return;
+                scaffold.showSnackBar(
+                  const SnackBar(content: Text('Tips restored')),
+                );
               } else if (value == 'view_deleted') {
-                await Navigator.of(context).push(
+                await nav.push(
                   MaterialPageRoute(builder: (_) => const DeletedProfessionsPage()),
                 );
                 await _load();
@@ -227,6 +482,8 @@ void initState() {
             itemBuilder: (ctx) => const [
               PopupMenuItem(value: 'add_profession', child: Text('Add Profession')),
               PopupMenuItem(value: 'edit_details', child: Text('Edit Personal Details')),
+              PopupMenuItem(value: 'week_start', child: Text('Set Week Start Day')),
+              PopupMenuItem(value: 'reset_tips', child: Text('Reset Tips')),
               PopupMenuItem(value: 'view_deleted', child: Text('View Deleted Professions')),
             ],
           ),
@@ -240,15 +497,24 @@ void initState() {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final name = _professions[index];
-                return _ProfessionCard(
+                 return _ProfessionCard(
                   name: name,
-                  onAdd: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => AddEntryPage(profession: name)),
-                  ),
+                  target: _targets[name],
+                  computeCompleted: (cycle) => _computeCompletedMinutes(name, cycle),
+                  onSetTarget: () => _editTarget(name),
+                  onAdd: () async {
+                    final saved = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute(builder: (_) => AddEntryPage(profession: name)),
+                    );
+                    if (mounted && saved == true) {
+                      setState(() { _progressBump++; }); // force progress refresh only if saved
+                    }
+                  },
                   onScan: () => _scanQrAndPrefill(name),
                   onView: () => _openRecords(name),
                   onRename: () => _renameProfession(index),
                   onDelete: () => _deleteProfession(index),
+                  refreshToken: _progressBump,
                 );
               },
             ),
@@ -264,14 +530,22 @@ class _ProfessionCard extends StatelessWidget {
     required this.onView,
     required this.onRename,
     required this.onDelete,
+    required this.target,
+    required this.computeCompleted,
+    required this.onSetTarget,
+    required this.refreshToken,
   });
-
+  final int refreshToken;
   final String name;
   final VoidCallback onAdd;
   final VoidCallback onScan;
   final VoidCallback onView;
   final VoidCallback onRename;
   final VoidCallback onDelete;
+
+  final (int minutes, String cycle)? target;
+  final Future<int> Function(String cycle) computeCompleted;
+  final VoidCallback onSetTarget;
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +556,6 @@ class _ProfessionCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: onView, // tap card → view records
         child: Padding(
           padding: pad,
           child: Column(
@@ -299,12 +572,14 @@ class _ProfessionCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  PopupMenuButton<String>(
+                                    PopupMenuButton<String>(
                     onSelected: (value) {
+                      if (value == 'set_target') onSetTarget();
                       if (value == 'rename') onRename();
                       if (value == 'delete') onDelete();
                     },
                     itemBuilder: (ctx) => const [
+                      PopupMenuItem(value: 'set_target', child: Text('Set/Edit Target')),
                       PopupMenuItem(value: 'rename', child: Text('Rename Profession')),
                       PopupMenuItem(value: 'delete', child: Text('Delete Profession')),
                     ],
@@ -345,6 +620,14 @@ class _ProfessionCard extends StatelessWidget {
                   icon: const Icon(Icons.list),
                   label: const Text('View Records'),
                 ),
+              ),
+              const SizedBox(height: 12),
+              _TargetProgress(
+                key: ValueKey('$name-$refreshToken'),
+                target: target,
+                computeCompleted: computeCompleted,
+                onSetTarget: onSetTarget,
+                refreshToken: refreshToken,
               ),
             ],
           ),
@@ -458,6 +741,140 @@ class _DeletedProfessionsPageState extends State<DeletedProfessionsPage> {
                     );
                   },
                 ),
+    );
+  }
+}
+class _TargetProgress extends StatefulWidget {
+  const _TargetProgress({
+    super.key,
+    required this.target,
+    required this.computeCompleted,
+    required this.onSetTarget,
+    required this.refreshToken,
+  });
+  
+
+  final (int minutes, String cycle)? target;
+  final Future<int> Function(String cycle) computeCompleted;
+  final VoidCallback onSetTarget;
+  final int refreshToken;
+
+  @override
+  State<_TargetProgress> createState() => _TargetProgressState();
+}
+
+class _TargetProgressState extends State<_TargetProgress> {
+  (int minutes, String cycle)? _t;
+  int _completed = 0;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _t = widget.target;
+    _refresh();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TargetProgress oldWidget) {
+    super.didUpdateWidget(oldWidget);
+     if (oldWidget.target != widget.target ||
+      oldWidget.refreshToken != widget.refreshToken) {
+      _t = widget.target;
+     _refresh();
+    }
+  }
+
+  Future<void> _refresh() async {
+    final t = _t;
+    if (t == null) return;
+    setState(() => _loading = true);
+    final mins = await widget.computeCompleted(t.$2);
+    if (!mounted) return;
+    setState(() {
+      _completed = mins;
+      _loading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = _t;
+    if (_loading) {
+  return const Padding(
+    padding: EdgeInsets.symmetric(vertical: 8.0),
+    child: LinearProgressIndicator(minHeight: 10),
+  );
+}
+    if (t == null) {
+    return OutlinedButton.icon(
+      onPressed: widget.onSetTarget,
+      icon: const Icon(Icons.flag_outlined),
+      label: const Text('Set/Edit Target'),
+    );
+}
+
+    final total = t.$1; // minutes
+    final cycle = t.$2; // 'week' | 'month' | 'year'
+    final ratio = total <= 0 ? 0.0 : (_completed / total).clamp(0.0, 1.0);
+
+    final remaining = (total - _completed).clamp(0, total);
+    final remainingH = remaining ~/ 60;
+    final remainingM = remaining % 60;
+    final cycleLabel = switch (cycle) {
+      'week'  => 'this week',
+      'month' => 'this month',
+      _ => 'this year',
+    };
+
+    return Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Text(
+      remaining == 0
+          ? 'Target achieved $cycleLabel 🎉'
+          : '$remainingH hrs, $remainingM mins remaining $cycleLabel',
+    ),
+    const SizedBox(height: 6),
+    ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: LinearProgressIndicator(
+        minHeight: 10,
+        value: ratio,
+      ),
+    ),
+    FutureBuilder<String>(
+      future: SettingsStore.instance.getWeekStart(),
+      builder: (context, snapshot) {
+        final val = snapshot.data ?? 'locale';
+        String? label;
+        switch (val) {
+          case 'monday':
+            label = 'Week starts on Monday';
+            break;
+          case 'sunday':
+            label = 'Week starts on Sunday';
+            break;
+          case 'saturday':
+            label = 'Week starts on Saturday';
+            break;
+          default:
+            label = null; // hide when following device locale
+        }
+        if (label == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontSize: (Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14) - 2,
+                  color: Colors.grey[600],
+                ),
+          ),
+        );
+      },
+    ),
+      ],
     );
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'entry_repository.dart';
 import 'models.dart';
@@ -50,11 +49,13 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
   }
 
   Future<void> _edit(CpdEntry e) async {
+    if (!mounted) return; // guard before using context
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => AddEntryPage(profession: e.profession, existingEntry: e),
       ),
     );
+    if (!mounted) return; // guard after the await
     _load();
   }
 
@@ -74,10 +75,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         ],
       ),
     );
-    if (confirm == true) {
-      await _repo.setDeleted(e.id, !e.deleted);
-      _load();
-    }
+    if (!context.mounted) return;
+    if (confirm != true) return;
+    await _repo.setDeleted(e.id, !e.deleted);
+    if (!mounted) return;
+    _load();
   }
 
   Future<void> _shareAttachmentPath(String path) async {
@@ -142,14 +144,17 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
   }
 
   Future<void> _onShareTapped() async {
+    if (!mounted) return; // guard before async UI
     final picked = await _pickRangeSimple(context);
+    if (!mounted) return; // guard after async UI
     if (picked == null) return;
-    setState(() => _lastRange = picked); // NEW: store to show in AppBar
 
-    if (!mounted) return;
+    setState(() => _lastRange = picked); // remember picked range in AppBar
 
     // Choose format via shared sheet (CSV now, PDF later)
+    if (!mounted) return; // guard before async UI
     final choice = await showShareFormatSheet(context);
+    if (!mounted) return; // guard after async UI
 
     debugPrint('Share format choice: $choice');
     if (choice == null) {
@@ -158,7 +163,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     }
 
     final sel = choice.trim().toLowerCase();
-    debugPrint('Normalized share format choice: ' + sel);
+    debugPrint('Normalized share format choice: $sel');
 
     final hasAny = _entries.any((e) {
       final d = dateOnly(e.date);
@@ -176,6 +181,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     }
 
     if (sel == 'csv') {
+      if (!mounted) return;
       setState(() => _exporting = true);
       try {
         debugPrint('Exporting CSV for ${widget.profession} range ${picked.start} – ${picked.end}');
@@ -186,6 +192,8 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           entries: _entries,
           range: picked,
         );
+        if (!mounted) return;
+        Navigator.of(context).popUntil((route) => route is PageRoute);
       } catch (err, st) {
         debugPrint('CSV export failed: $err');
         debugPrint(st.toString());
@@ -198,6 +206,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         if (mounted) setState(() => _exporting = false);
       }
     } else if (sel == 'pdf') {
+      if (!mounted) return;
       setState(() => _exporting = true);
       // Load user profile (name/company/email) from SettingsStore
       final Map<String, String> profile = await _settings.loadProfile();
@@ -215,6 +224,8 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           email: email,
           includeAttachments: true,
         );
+        if (!mounted) return;
+        Navigator.of(context).popUntil((route) => route is PageRoute);
       } catch (err, st) {
         debugPrint('PDF export failed: $err');
         debugPrint(st.toString());
@@ -227,6 +238,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         if (mounted) setState(() => _exporting = false);
       }
     } else if (sel == 'pdf_bundle') {
+      if (!mounted) return;
       setState(() => _exporting = true);
       final Map<String, String> profile = await _settings.loadProfile();
       final String userName = profile['name']?.trim() ?? '';
@@ -242,6 +254,8 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           company: company,
           email: email,
         );
+        if (!mounted) return;
+        Navigator.of(context).popUntil((route) => route is PageRoute);
       } catch (err, st) {
         debugPrint('PDF Bundle export failed: $err');
         debugPrint(st.toString());
@@ -254,7 +268,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         if (mounted) setState(() => _exporting = false);
       }
     } else {
-      debugPrint('Unknown share format returned: ' + sel);
+      debugPrint('Unknown share format returned: $sel');
     }
   }
 
@@ -308,12 +322,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                       // Remove from the model and persist
                       e.attachments.removeAt(idx);
                       await _repo.updateEntry(e);
-                      if (mounted) {
-                        setState(() {});
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Attachment removed.')),
-                        );
-                      }
+                      if (!context.mounted) return; // guard immediately after await
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Attachment removed.')),
+                      );
                     },
                   ),
                 );

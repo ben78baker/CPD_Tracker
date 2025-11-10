@@ -96,4 +96,27 @@ class EntryRepository {
     final all = await loadAll();
     return all.where((e) => e.profession.toLowerCase() == profession.toLowerCase() && !e.deleted).toList();
   }
+  /// Sum of minutes for [profession] where entry date is in [start, end)
+/// and entry is not deleted.
+Future<int> sumMinutesForRange(String profession, DateTime start, DateTime end) async {
+  final all = await loadAll();
+  final p = profession.toLowerCase();
+
+  int total = 0;
+  for (final e in all) {
+    if (e.deleted) continue;
+    if (e.profession.toLowerCase() != p) continue;
+
+    final d = e.date;
+final inRange = !d.isBefore(start) && d.isBefore(end); // [start, end)
+if (!inRange) continue;
+
+// Coalesce hours/minutes to ints even if null/strings
+final h = e.hours;
+final m = e.minutes;
+
+total += (h * 60) + m;
+  }
+  return total;
+}
 }

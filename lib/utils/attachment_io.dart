@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
-import 'package:flutter/foundation.dart';
 
 
 bool isImagePath(String p) => p.toLowerCase().endsWith('.png') ||
@@ -74,34 +73,34 @@ Future<void> openUrl(BuildContext context, String s) async {
   final uri = Uri.parse(s.trim());
   if (await canLaunchUrl(uri)) {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!ok && context.mounted) {
+    if (!ok) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not open link.')),
       );
     }
   } else {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No app available to open link.')),
-      );
-    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No app available to open link.')),
+    );
   }
 }
 
 Future<void> openFile(BuildContext context, String path) async {
   try {
     final res = await OpenFilex.open(path);
-    if (res.type != ResultType.done && context.mounted) {
+    if (!context.mounted) return;
+    if (res.type != ResultType.done) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Can't open this file (${res.message}).")),
       );
     }
   } catch (e) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Open failed: $e')),
-      );
-    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Open failed: $e')),
+    );
   }
 }
 
@@ -181,26 +180,23 @@ Future<String?> importAttachmentToApp(BuildContext context, String attachment, {
     // Local path — copy into app dir if it exists
     if (fileExists(attachment)) {
       final saved = await copyLocalToAppDir(attachment, preferredName: displayName);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved to Attachments: ${p.basename(saved)}')),
-        );
-      }
+      if (!context.mounted) return saved;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Saved to Attachments: ${p.basename(saved)}')),
+      );
       return saved;
     }
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Attachment not found on device.')),
-      );
-    }
+    if (!context.mounted) return null;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Attachment not found on device.')),
+    );
     return null;
   } catch (e) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Import failed: $e')),
-      );
-    }
+    if (!context.mounted) return null;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Import failed: $e')),
+    );
     return null;
   }
 }
@@ -212,11 +208,10 @@ Future<String?> downloadToAppDir(BuildContext context, String url) async {
     final uri = Uri.parse(url);
     final resp = await http.get(uri);
     if (resp.statusCode != 200) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download failed (${resp.statusCode}).')),
-        );
-      }
+      if (!context.mounted) return null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Download failed (${resp.statusCode}).')),
+      );
       return null;
     }
 
@@ -231,18 +226,16 @@ Future<String?> downloadToAppDir(BuildContext context, String url) async {
     final file = File(savePath);
     await file.writeAsBytes(resp.bodyBytes);
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saved to Attachments: ${p.basename(savePath)}')),
-      );
-    }
+    if (!context.mounted) return await toAppRelative(savePath);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Saved to Attachments: ${p.basename(savePath)}')),
+    );
     return await toAppRelative(savePath);
   } catch (e) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Download error: $e')),
-      );
-    }
+    if (!context.mounted) return null;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Download error: $e')),
+    );
     return null;
   }
 }
@@ -329,11 +322,10 @@ Future<void> shareAttachmentsForRecord(
       ),
     );
   } catch (e) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Share failed: $e')),
-      );
-    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Share failed: $e')),
+    );
   }
 }
 
@@ -361,13 +353,13 @@ Future<void> openAttachment(BuildContext context, String stored) async {
     }
 
     // Use the existing file opener (OpenFilex)
+    if (!context.mounted) return;
     await openFile(context, abs);
   } catch (e) {
     debugPrint('[Attach] openAttachment failed: $e');
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to open attachment: $e')),
-      );
-    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Unable to open attachment: $e')),
+    );
   }
 }

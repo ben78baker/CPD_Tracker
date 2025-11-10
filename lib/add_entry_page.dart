@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart'; // debugPrint
+// debugPrint
 import 'entry_repository.dart';
 import 'models.dart';
 import 'settings_store.dart';
@@ -91,7 +91,6 @@ final _settings = SettingsStore.instance;
   Future<void> _pickDate() async {
     final today = dateOnly(DateTime.now());
     final initial = dateOnly(_date);
-    // ignore: use_build_context_synchronously
     final picked = await showDatePicker(
       context: context,
       initialDate: initial.isAfter(today) ? today : initial,
@@ -134,6 +133,7 @@ final _settings = SettingsStore.instance;
       // Dismiss keyboard to avoid visual overlap / blocked taps
       FocusScope.of(context).unfocus();
       await Future.delayed(const Duration(milliseconds: 50));
+      if (!mounted) return; // guard after async gap before using context
 
       // Bottom sheet with common attachment sources
       final choice = await showModalBottomSheet<String>(
@@ -168,6 +168,7 @@ final _settings = SettingsStore.instance;
           ),
         ),
       );
+      if (!context.mounted) return;
       if (!mounted) return;
 
       if (choice == null) return;
@@ -308,7 +309,8 @@ final _settings = SettingsStore.instance;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(_editing ? 'Entry updated' : 'Entry saved')),
     );
-    Navigator.pop(context);
+    debugPrint('[AddEntry] save complete → popping true');
+    Navigator.pop(context, true);
     debugPrint('[AddEntry] pop complete');
   }
 
@@ -406,14 +408,13 @@ final _settings = SettingsStore.instance;
                           ],
                         ),
                       );
-                      if (confirm == true) {
-                        _removeAttachment(i);
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Attachment removed.')),
-                          );
-                        }
-                      }
+                      if (!context.mounted) return; // guard directly after the await
+                      if (confirm != true) return;
+                      _removeAttachment(i);
+                      if (!context.mounted) return; // final guard just before context use
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Attachment removed.')),
+                      );
                     },
                   );
                 }),

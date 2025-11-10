@@ -15,6 +15,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final _email = TextEditingController();
   final _profession = TextEditingController();
 
+  // Onboarding choice for week start (default to device locale)
+  String _weekStart = 'locale'; // 'monday' | 'sunday' | 'saturday' | 'locale'
 
   @override
   void dispose() {
@@ -41,19 +43,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
       // Persist first profession using centralized normalization + dedupe
       await SettingsStore.instance.addProfession(_profession.text);
 
+      // Save preferred week start
+      await SettingsStore.instance.setWeekStart(_weekStart);
+
       // Mark onboarding complete
       await SettingsStore.instance.setOnboardingComplete(true);
     } catch (e) {
+      // Show a non-blocking notice; still continue to Home afterwards
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Saved locally. Some settings may sync on next launch.')),
         );
       }
-    } finally {
-      if (!mounted) return;
-      // Navigate to Home by route name (avoids direct import dependency)
-      Navigator.of(context).pushReplacementNamed('/home');
     }
+
+    // Navigate after work completes; avoid returning from a finally block
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed('/home');
   }
 
   @override
@@ -111,7 +117,26 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Please enter a profession' : null,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              Text('Week starts on', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              DropdownButtonFormField<String>(
+                initialValue: _weekStart,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'locale', child: Text('Use device locale (recommended)')),
+                  DropdownMenuItem(value: 'monday', child: Text('Monday')),
+                  DropdownMenuItem(value: 'sunday', child: Text('Sunday')),
+                  DropdownMenuItem(value: 'saturday', child: Text('Saturday')),
+                ],
+                onChanged: (v) {
+                  if (v != null) setState(() => _weekStart = v);
+                },
+              ),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(

@@ -1,5 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'entry_repository.dart';
+
 
 class SettingsStore {
   SettingsStore._();
@@ -36,6 +39,31 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
   Future<void> setDateFormat(String fmt) async {
     final prefs = await _prefsWithRetry();
     await prefs.setString(_kDateFormat, fmt);
+  }
+
+  // -------------------------------
+  // Week start preference
+  // Values: 'monday' | 'sunday' | 'saturday' | 'locale'
+  // -------------------------------
+  static const _kWeekStart = 'week_start';
+
+  /// Returns saved preference or 'locale' if unset
+  Future<String> getWeekStart() async {
+    final prefs = await _prefsWithRetry();
+    return prefs.getString(_kWeekStart) ?? 'locale';
+  }
+
+  /// Persist week start preference
+  Future<void> setWeekStart(String value) async {
+    // Expect one of: 'monday' | 'sunday' | 'saturday' | 'locale'
+    final prefs = await _prefsWithRetry();
+    await prefs.setString(_kWeekStart, value);
+  }
+
+  /// Clear week start preference so locale default is used
+  Future<void> clearWeekStart() async {
+    final prefs = await _prefsWithRetry();
+    await prefs.remove(_kWeekStart);
   }
     static const _kProfessions = 'professions';
   static const _kDeletedProfessions = 'deleted_professions';
@@ -182,6 +210,30 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
   }
 
   // -------------------------------
+  // QR scan tip: "Don’t show again" flag
+  // -------------------------------
+  static const _kQrHintDismissed = 'qr_hint_dismissed';
+
+  /// Has the user opted out of seeing the QR reminder tip?
+  Future<bool> isQrHintDismissed() async {
+    final prefs = await _prefsWithRetry();
+    return prefs.getBool(_kQrHintDismissed) ?? false;
+    
+  }
+
+  /// Persist the user's choice for the QR reminder tip
+  Future<void> setQrHintDismissed(bool value) async {
+    final prefs = await _prefsWithRetry();
+    await prefs.setBool(_kQrHintDismissed, value);
+  }
+
+  /// Optional helper to re-enable the tip from a settings screen
+  Future<void> resetQrHint() async {
+    final prefs = await _prefsWithRetry();
+    await prefs.remove(_kQrHintDismissed);
+  }
+
+  // -------------------------------
   // Basic profile fields (optional)
   // -------------------------------
   static const _kProfileName = 'profile_name';
@@ -211,4 +263,52 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
       'email': prefs.getString(_kProfileEmail) ?? '',
     };
   }
+  static const _kTargetsKey = 'targets_v1';
+
+/// Cycle options
+static const targetCycles = ['week', 'month', 'year'];
+
+/// Load map: profession -> { minutes: int, cycle: 'week'|'month'|'year' }
+Future<Map<String, Map<String, dynamic>>> loadTargets() async {
+  final prefs = await SharedPreferences.getInstance();
+  final raw = prefs.getString(_kTargetsKey);
+  if (raw == null || raw.isEmpty) return {};
+  try {
+    final decoded = json.decode(raw);
+    if (decoded is Map<String, dynamic>) {
+      return decoded.map((k, v) => MapEntry(k, (v as Map).cast<String, dynamic>()));
+    }
+  } catch (_) {}
+  return {};
+}
+
+/// Return (minutes, cycle) or null if not set.
+Future<(int minutes, String cycle)?> getTarget(String profession) async {
+  final map = await loadTargets();
+  final item = map[profession];
+  if (item == null) return null;
+  final mins = (item['minutes'] ?? 0) as int;
+  final cycle = (item['cycle'] ?? 'week') as String;
+  return (mins, cycle);
+}
+
+/// Save/overwrite target for a profession.
+Future<void> setTarget(String profession, {required int minutes, required String cycle}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final map = await loadTargets();
+  map[profession] = {'minutes': minutes, 'cycle': cycle};
+  await prefs.setString(_kTargetsKey, json.encode(map));
+}
+
+/// Remove target for a profession.
+Future<void> clearTarget(String profession) async {
+  final prefs = await SharedPreferences.getInstance();
+  final map = await loadTargets();
+  map.remove(profession);
+  await prefs.setString(_kTargetsKey, json.encode(map));
+}
+Future<int> sumMinutesForRange(String profession, DateTime start, DateTime end) async {
+  final repo = EntryRepository();
+  return repo.sumMinutesForRange(profession, start, end);
+}
 }
