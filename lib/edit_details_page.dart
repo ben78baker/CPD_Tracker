@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'settings_store.dart';
 
 class EditDetailsPage extends StatefulWidget {
   const EditDetailsPage({super.key});
@@ -14,19 +14,48 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
   final _address = TextEditingController();
   final _email = TextEditingController();
 
+  bool _loading = true;
+
   @override
   void initState() {
     super.initState();
-    _load();
+    _loadProfile();
   }
 
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    _name.text = prefs.getString('user_name') ?? '';
-    _company.text = prefs.getString('company') ?? '';
-    _address.text = prefs.getString('address') ?? '';
-    _email.text = prefs.getString('email') ?? '';
-    if (mounted) setState(() {});
+  Future<void> _loadProfile() async {
+    try {
+      final profile = await SettingsStore.instance.loadProfile();
+      _name.text = profile['name'] ?? '';
+      _company.text = profile['company'] ?? '';
+      _address.text = profile['address'] ?? '';
+      _email.text = profile['email'] ?? '';
+    } catch (e) {
+      debugPrint('[EditDetails] Failed to load profile: $e');
+    }
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+    });
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    try {
+      await SettingsStore.instance.saveProfile(
+        name: _name.text.trim(),
+        company: _company.text.trim(),
+        address: _address.text.trim(),
+        email: _email.text.trim(),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save details. Please try again.')),
+      );
+    }
   }
 
   @override
@@ -38,30 +67,23 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
     super.dispose();
   }
 
-  Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_name', _name.text.trim());
-    await prefs.setString('company', _company.text.trim());
-    await prefs.setString('address', _address.text.trim());
-    await prefs.setString('email', _email.text.trim());
-    if (!mounted) return;
-    Navigator.pop(context);
-  }
-
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Edit personal details')),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Details')),
+      appBar: AppBar(title: const Text('Edit personal details')),
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text('Update your details',
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 12),
               TextFormField(
                 controller: _name,
                 textCapitalization: TextCapitalization.words,
@@ -88,19 +110,18 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
                 validator: (v) {
                   final t = v?.trim() ?? '';
                   if (t.isEmpty) return null;
-                  return RegExp(r'^.+@.+\..+$').hasMatch(t)
-                      ? null
-                      : 'Enter a valid email';
+                  final ok = RegExp(r'^.+@.+\..+$').hasMatch(t);
+                  return ok ? null : 'Enter a valid email';
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: _save,
                   child: const Text('Save'),
                 ),
-              )
+              ),
             ],
           ),
         ),
