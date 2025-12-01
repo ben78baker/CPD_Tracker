@@ -37,8 +37,8 @@ Future<void> exportRecordsCsv({
     final sb = StringBuffer();
     final fromStr = formatDate(range.start, dateFormat).replaceAll(',', ' ');
     final toStr = formatDate(range.end, dateFormat).replaceAll(',', ' ');
-    sb.writeln('"Name:",""'); // TODO: populate from settings
-    sb.writeln('"Company:",""'); // TODO: populate from settings
+    sb.writeln('"Name:",""');
+    sb.writeln('"Company:",""');
     sb.writeln('"Email:",""');
     sb.writeln('"Profession:","${profession.replaceAll('"', '""')}"');
     sb.writeln('"Period:","$fromStr to $toStr"');
@@ -68,6 +68,7 @@ Future<void> exportRecordsCsv({
     await file.writeAsBytes(utf8.encode(sb.toString()), flush: true);
 
     // Share using Share Plus instance API
+    const origin = Rect.fromLTWH(0, 0, 1, 1);
     await SharePlus.instance.share(
       ShareParams(
         files: [
@@ -79,6 +80,7 @@ Future<void> exportRecordsCsv({
         ],
         text: 'CPD entries for $profession ($fromStr to $toStr) — Total ${th}h ${tm}m',
         subject: 'CPD entries for $profession',
+        sharePositionOrigin: origin,
       ),
     );
   } catch (err) {

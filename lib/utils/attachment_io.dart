@@ -258,6 +258,23 @@ Future<void> shareAttachmentsForRecord(
   required List<String> attachments,
 }) async {
   try {
+    // On iPad we must supply a non-zero origin rect for the share sheet popover.
+    // Derive it from the current context's RenderBox if available, otherwise
+    // fall back to a small rect in the center of the screen.
+    Rect origin;
+    final renderObject = context.findRenderObject();
+    if (renderObject is RenderBox && renderObject.hasSize) {
+      final offset = renderObject.localToGlobal(Offset.zero);
+      origin = offset & renderObject.size;
+    } else {
+      final size = MediaQuery.of(context).size;
+      origin = Rect.fromLTWH(
+        size.width / 2 - 0.5,
+        size.height / 2 - 0.5,
+        1,
+        1,
+      );
+    }
     // Separate local file paths and URLs
     final files = <XFile>[];
     final urls = <String>[];
@@ -314,11 +331,13 @@ Future<void> shareAttachmentsForRecord(
         ? 'Attachments for "$title" ($profession).'
         : 'Attachments for "$title" ($profession). Links included in manifest.';
 
+
     await SharePlus.instance.share(
       ShareParams(
         files: shareFiles,
         subject: subject,
         text: body,
+        sharePositionOrigin: origin,
       ),
     );
   } catch (e) {

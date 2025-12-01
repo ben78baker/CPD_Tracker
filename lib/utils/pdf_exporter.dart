@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:flutter/material.dart' show DateTimeRange;
+import 'package:flutter/material.dart' show DateTimeRange, Rect;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -267,10 +267,12 @@ Future<void> exportRecordsPdf({
   } catch (_) {}
 
   final filename = p.basename(file.path);
+  const origin = Rect.fromLTWH(0, 0, 1, 1);
   await SharePlus.instance.share(
     ShareParams(
       subject: 'CPD records',
       files: [XFile(file.path, mimeType: 'application/pdf', name: filename)],
+      sharePositionOrigin: origin,
     ),
   );
 }
@@ -389,6 +391,7 @@ String resolve(String stored) {
 
   // 5) Share the ZIP
   debugPrint('[Bundle] sharing zip…');
+  const origin = Rect.fromLTWH(0, 0, 1, 1);
   await SharePlus.instance.share(
     ShareParams(
       subject: 'CPD records bundle',
@@ -399,6 +402,7 @@ String resolve(String stored) {
           name: p.basename(zipFile.path),
         ),
       ],
+      sharePositionOrigin: origin,
     ),
   );
   debugPrint('[Bundle] share invoked');
