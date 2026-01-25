@@ -3,6 +3,8 @@ import 'home_page.dart';
 import 'qr_scan_page.dart';
 import 'onboarding_page.dart';
 import 'settings_store.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 
 
 void main() async {
@@ -46,36 +48,49 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'CPD Tracker',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1565C0)),
-        useMaterial3: true,
-      ),
-      home: FutureBuilder<bool>(
-        future: _shouldStartOnboarding(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (snapshot.hasError) {
-            return const OnboardingPage();
-          }
-          final startOnboarding = snapshot.data ?? true;
-          return startOnboarding ? const OnboardingPage() : const HomePage();
-        },
-      ),
-      routes: {
-        '/onboarding': (_) => const OnboardingPage(),
-        '/home': (_) => const HomePage(),
-        '/scan': (_) => const QrScanPage(profession: ''),
+    return ValueListenableBuilder<Locale?>(
+      valueListenable: SettingsStore.instance.locale,
+      builder: (context, forcedLocale, _) {
+        return MaterialApp(
+          locale: forcedLocale,
+          title: 'CPD Tracker',
+          debugShowCheckedModeBanner: false,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1565C0)),
+            useMaterial3: true,
+          ),
+          home: FutureBuilder<bool>(
+            future: _shouldStartOnboarding(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError) {
+                return const OnboardingPage();
+              }
+              final startOnboarding = snapshot.data ?? true;
+              return startOnboarding ? const OnboardingPage() : const HomePage();
+            },
+          ),
+          routes: {
+            '/onboarding': (_) => const OnboardingPage(),
+            '/home': (_) => const HomePage(),
+            '/scan': (_) => const QrScanPage(profession: ''),
+          },
+          onUnknownRoute: (_) => MaterialPageRoute(
+            builder: (_) => const HomePage(),
+          ),
+        );
       },
-      onUnknownRoute: (_) => MaterialPageRoute(
-        builder: (_) => const HomePage(),
-      ),
     );
   }
 }

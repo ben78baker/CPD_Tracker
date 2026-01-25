@@ -1,7 +1,6 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../l10n/app_localizations.dart';
 import '../models.dart';
 
 /// A reusable card for rendering a single CPD entry.
@@ -69,41 +68,47 @@ class RecordCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    entry.title.isEmpty ? '(No title)' : entry.title,
+                    entry.title.isEmpty
+                        ? AppLocalizations.of(context)!.noTitle
+                        : entry.title,
                     style: Theme.of(context).textTheme.titleMedium,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                PopupMenuButton<String>(
-                  onSelected: (v) {
-                    if (v == 'edit') {
-                      onEdit?.call();
-                    } else if (v == 'delete') {
-                      onDelete?.call();
-                    }
-                  },
-                  itemBuilder: (ctx) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: ListTile(
-                        leading: Icon(Icons.edit_outlined),
-                        title: Text('Edit'),
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
+                Material(
+                  color: Colors.transparent,
+                  child: PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (v) {
+                      if (v == 'edit') {
+                        onEdit?.call();
+                      } else if (v == 'delete') {
+                        onDelete?.call();
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          leading: const Icon(Icons.edit_outlined),
+                          title: Text(AppLocalizations.of(ctx)!.edit),
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
                       ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: ListTile(
-                        leading: Icon(Icons.delete_outline),
-                        title: Text('Delete'),
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: ListTile(
+                          leading: const Icon(Icons.delete_outline),
+                          title: Text(AppLocalizations.of(ctx)!.delete),
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
                       ),
-                    ),
-                  ],
-                )
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -114,7 +119,10 @@ class RecordCard extends StatelessWidget {
               runSpacing: 6,
               children: [
                 _Chip(icon: Icons.event, label: dateStr),
-                _Chip(icon: Icons.timer_outlined, label: _formatDuration(entry.hours, entry.minutes)),
+                _Chip(
+                  icon: Icons.timer_outlined,
+                  label: _formatDuration(context, entry.hours, entry.minutes),
+                ),
               ],
             ),
 
@@ -134,12 +142,18 @@ class RecordCard extends StatelessWidget {
                   FilledButton.icon(
                     onPressed: onViewAttachments,
                     icon: const Icon(Icons.attach_file),
-                    label: Text('Attachments (${entry.attachments.length})'),
+                    label: Text(
+                      AppLocalizations.of(
+                        context,
+                      )!.attachmentsCount(entry.attachments.length),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   if (onShareAll != null)
                     IconButton(
-                      tooltip: 'Share all attachments',
+                      tooltip: AppLocalizations.of(
+                        context,
+                      )!.shareAllAttachments,
                       icon: const Icon(Icons.ios_share),
                       onPressed: onShareAll,
                     ),
@@ -152,29 +166,19 @@ class RecordCard extends StatelessWidget {
     );
   }
 
-  static String _formatDuration(int h, int m) {
+  static String _formatDuration(BuildContext context, int h, int m) {
+    final loc = AppLocalizations.of(context)!;
+
     if (h == 0 && m == 0) {
-      return Intl.message('0m', name: 'zeroMinutes');
+      return loc.zeroMinutes;
     }
 
     final parts = <String>[];
     if (h > 0) {
-      parts.add(Intl.plural(
-        h,
-        one: '$h hour',
-        other: '$h hours',
-        name: 'hoursPlural',
-        args: [h],
-      ));
+      parts.add(loc.hoursPlural(h));
     }
     if (m > 0) {
-      parts.add(Intl.plural(
-        m,
-        one: '$m minute',
-        other: '$m minutes',
-        name: 'minutesPlural',
-        args: [m],
-      ));
+      parts.add(loc.minutesPlural(m));
     }
 
     return parts.join(' ');
@@ -196,11 +200,7 @@ class _Chip extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 6),
-          Text(label),
-        ],
+        children: [Icon(icon, size: 16), const SizedBox(width: 6), Text(label)],
       ),
     );
   }

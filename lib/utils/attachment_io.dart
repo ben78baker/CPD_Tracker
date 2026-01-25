@@ -7,8 +7,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
+import '../l10n/app_localizations.dart';
 
-bool isImagePath(String p) => p.toLowerCase().endsWith('.png') ||
+bool isImagePath(String p) =>
+    p.toLowerCase().endsWith('.png') ||
     p.toLowerCase().endsWith('.jpg') ||
     p.toLowerCase().endsWith('.jpeg') ||
     p.toLowerCase().endsWith('.heic') ||
@@ -19,7 +21,11 @@ bool isImagePath(String p) => p.toLowerCase().endsWith('.png') ||
 bool isUrl(String s) {
   try {
     final u = Uri.parse(s.trim());
-    return u.hasScheme && (u.scheme == 'http' || u.scheme == 'https' || u.scheme == 'mailto' || u.scheme == 'tel');
+    return u.hasScheme &&
+        (u.scheme == 'http' ||
+            u.scheme == 'https' ||
+            u.scheme == 'mailto' ||
+            u.scheme == 'tel');
   } catch (_) {
     return false;
   }
@@ -30,8 +36,23 @@ bool isLikelyFileUrl(String s) {
   if (!isUrl(s)) return false;
   final lower = s.toLowerCase();
   const exts = [
-    '.pdf', '.png', '.jpg', '.jpeg', '.heic', '.gif', '.bmp', '.webp',
-    '.csv', '.txt', '.rtf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'
+    '.pdf',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.heic',
+    '.gif',
+    '.bmp',
+    '.webp',
+    '.csv',
+    '.txt',
+    '.rtf',
+    '.doc',
+    '.docx',
+    '.ppt',
+    '.pptx',
+    '.xls',
+    '.xlsx',
   ];
   return exts.any((e) => lower.contains(e));
 }
@@ -41,7 +62,8 @@ String _filenameFromUrl(Uri uri, {String fallbackPrefix = 'download'}) {
   final seg = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
   if (seg.contains('.') && seg.length <= 200) return seg;
   // Otherwise try a query parameter like ?filename=...
-  final qName = uri.queryParameters['filename'] ?? uri.queryParameters['file'] ?? '';
+  final qName =
+      uri.queryParameters['filename'] ?? uri.queryParameters['file'] ?? '';
   if (qName.isNotEmpty && qName.contains('.')) return qName;
   // Fallback unique name
   final ts = DateTime.now().millisecondsSinceEpoch;
@@ -70,37 +92,40 @@ String _extFromContentType(String? ct) {
 }
 
 Future<void> openUrl(BuildContext context, String s) async {
+  final loc = AppLocalizations.of(context)!;
   final uri = Uri.parse(s.trim());
   if (await canLaunchUrl(uri)) {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open link.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(loc.couldNotOpenLink)));
     }
   } else {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No app available to open link.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(loc.noAppToOpenLink)));
   }
 }
 
 Future<void> openFile(BuildContext context, String path) async {
   try {
+    final loc = AppLocalizations.of(context)!;
     final res = await OpenFilex.open(path);
     if (!context.mounted) return;
     if (res.type != ResultType.done) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Can't open this file (${res.message}).")),
+        SnackBar(content: Text(loc.cantOpenThisFile(res.message))),
       );
     }
   } catch (e) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Open failed: $e')),
-    );
+    final loc = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('${loc.openFailed}: $e')));
   }
 }
 
@@ -151,12 +176,17 @@ Future<Directory> getAppAttachmentsDir() async {
 /// Copy a local file into the app's attachments directory and return the new path.
 /// If [preferredName] is supplied it will be used (sanitized) for the filename; otherwise
 /// we derive it from the source path. A timestamp is appended to avoid collisions.
-Future<String> copyLocalToAppDir(String sourcePath, {String? preferredName}) async {
+Future<String> copyLocalToAppDir(
+  String sourcePath, {
+  String? preferredName,
+}) async {
   final dir = await getAppAttachmentsDir();
   final baseNoExt = preferredName != null && preferredName.isNotEmpty
       ? _sanitizeFileName(p.basenameWithoutExtension(preferredName))
       : _sanitizeFileName(p.basenameWithoutExtension(sourcePath));
-  final ext = p.extension(preferredName?.isNotEmpty == true ? preferredName! : sourcePath);
+  final ext = p.extension(
+    preferredName?.isNotEmpty == true ? preferredName! : sourcePath,
+  );
   final ts = DateTime.now().millisecondsSinceEpoch;
   final destPath = p.join(dir.path, '${baseNoExt}_$ts$ext');
   await File(sourcePath).copy(destPath);
@@ -165,7 +195,11 @@ Future<String> copyLocalToAppDir(String sourcePath, {String? preferredName}) asy
 
 /// Import an attachment (local path or URL) into the app's attachments directory.
 /// Returns the saved local path, or null on failure. Shows a SnackBar on error.
-Future<String?> importAttachmentToApp(BuildContext context, String attachment, {String? displayName}) async {
+Future<String?> importAttachmentToApp(
+  BuildContext context,
+  String attachment, {
+  String? displayName,
+}) async {
   try {
     if (isUrl(attachment)) {
       // For URLs, try to download if it looks like a file. Otherwise just open in browser.
@@ -179,23 +213,31 @@ Future<String?> importAttachmentToApp(BuildContext context, String attachment, {
 
     // Local path — copy into app dir if it exists
     if (fileExists(attachment)) {
-      final saved = await copyLocalToAppDir(attachment, preferredName: displayName);
+      final saved = await copyLocalToAppDir(
+        attachment,
+        preferredName: displayName,
+      );
+      final loc = AppLocalizations.of(context)!;
       if (!context.mounted) return saved;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Saved to Attachments: ${p.basename(saved)}')),
+        SnackBar(content: Text(loc.savedToAttachments(p.basename(saved)))),
       );
       return saved;
     }
 
     if (!context.mounted) return null;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Attachment not found on device.')),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.attachmentNotFoundOnDevice),
+      ),
     );
     return null;
   } catch (e) {
     if (!context.mounted) return null;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Import failed: $e')),
+      SnackBar(
+        content: Text('${AppLocalizations.of(context)!.importFailed}: $e'),
+      ),
     );
     return null;
   }
@@ -205,12 +247,13 @@ Future<String?> importAttachmentToApp(BuildContext context, String attachment, {
 /// Shows a SnackBar on failure. Returns null if the URL cannot be fetched.
 Future<String?> downloadToAppDir(BuildContext context, String url) async {
   try {
+    final loc = AppLocalizations.of(context)!;
     final uri = Uri.parse(url);
     final resp = await http.get(uri);
     if (resp.statusCode != 200) {
       if (!context.mounted) return null;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Download failed (${resp.statusCode}).')),
+        SnackBar(content: Text(loc.downloadFailedStatus(resp.statusCode))),
       );
       return null;
     }
@@ -228,14 +271,15 @@ Future<String?> downloadToAppDir(BuildContext context, String url) async {
 
     if (!context.mounted) return await toAppRelative(savePath);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Saved to Attachments: ${p.basename(savePath)}')),
+      SnackBar(content: Text(loc.savedToAttachments(p.basename(savePath)))),
     );
     return await toAppRelative(savePath);
   } catch (e) {
     if (!context.mounted) return null;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Download error: $e')),
-    );
+    final loc = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('${loc.downloadError}: $e')));
     return null;
   }
 }
@@ -258,6 +302,7 @@ Future<void> shareAttachmentsForRecord(
   required List<String> attachments,
 }) async {
   try {
+    final loc = AppLocalizations.of(context)!;
     // On iPad we must supply a non-zero origin rect for the share sheet popover.
     // Derive it from the current context's RenderBox if available, otherwise
     // fall back to a small rect in the center of the screen.
@@ -268,12 +313,7 @@ Future<void> shareAttachmentsForRecord(
       origin = offset & renderObject.size;
     } else {
       final size = MediaQuery.of(context).size;
-      origin = Rect.fromLTWH(
-        size.width / 2 - 0.5,
-        size.height / 2 - 0.5,
-        1,
-        1,
-      );
+      origin = Rect.fromLTWH(size.width / 2 - 0.5, size.height / 2 - 0.5, 1, 1);
     }
     // Separate local file paths and URLs
     final files = <XFile>[];
@@ -291,46 +331,53 @@ Future<void> shareAttachmentsForRecord(
 
     // Build a small manifest.txt to describe the bundle
     final buf = StringBuffer();
-    buf.writeln('CPD Attachment Bundle');
-    buf.writeln('Profession: $profession');
-    buf.writeln('Date: ${date.toIso8601String().split('T').first}');
-    buf.writeln('Title: $title');
+    buf.writeln(loc.cpdAttachmentBundleTitle);
+    buf.writeln('${loc.professionLabel}: $profession');
+    buf.writeln('${loc.dateLabel}: ${date.toIso8601String().split('T').first}');
+    buf.writeln('${loc.titleLabel}: $title');
     if (details.trim().isNotEmpty) {
-      buf.writeln('Details: ${details.replaceAll('\n', ' ')}');
+      buf.writeln('${loc.detailsLabel}: ${details.replaceAll('\n', ' ')}');
     }
     buf.writeln('');
     if (files.isNotEmpty) {
-      buf.writeln('Included files:');
+      buf.writeln(loc.includedFiles);
       for (final f in files) {
         buf.writeln('  • ${f.name}');
       }
     } else {
-      buf.writeln('Included files: (none)');
+      buf.writeln(loc.includedFilesNone);
     }
     buf.writeln('');
     if (urls.isNotEmpty) {
-      buf.writeln('Links:');
+      buf.writeln(loc.links);
       for (final u in urls) {
         buf.writeln('  • $u');
       }
     } else {
-      buf.writeln('Links: (none)');
+      buf.writeln(loc.linksNone);
     }
 
     // Write manifest and optional links file to temp
     final dir = await getTemporaryDirectory();
-    final base = _sanitizeFileName('${date.toIso8601String().split('T').first}_$title');
+    final base = _sanitizeFileName(
+      '${date.toIso8601String().split('T').first}_$title',
+    );
     final manifestPath = p.join(dir.path, '${base}_manifest.txt');
     final manifestFile = File(manifestPath);
     await manifestFile.writeAsString(buf.toString());
 
-    final shareFiles = <XFile>[...files, XFile(manifestFile.path, name: p.basename(manifestFile.path))];
+    final shareFiles = <XFile>[
+      ...files,
+      XFile(manifestFile.path, name: p.basename(manifestFile.path)),
+    ];
 
-    final subject = 'CPD attachments • $profession • ${date.toIso8601String().split('T').first}';
+    final subject = loc.cpdAttachmentsShareSubject(
+      profession,
+      date.toIso8601String().split('T').first,
+    );
     final body = urls.isEmpty
-        ? 'Attachments for "$title" ($profession).'
-        : 'Attachments for "$title" ($profession). Links included in manifest.';
-
+        ? loc.attachmentsForTitleBody(title, profession)
+        : loc.attachmentsForTitleWithLinksBody(title, profession);
 
     await SharePlus.instance.share(
       ShareParams(
@@ -343,7 +390,9 @@ Future<void> shareAttachmentsForRecord(
   } catch (e) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Share failed: $e')),
+      SnackBar(
+        content: Text('${AppLocalizations.of(context)!.shareFailed}: $e'),
+      ),
     );
   }
 }
@@ -365,7 +414,13 @@ Future<void> openAttachment(BuildContext context, String stored) async {
     if (!fileExists(abs)) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('File not found: ${p.basename(stored)}')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.fileNotFoundWithName(p.basename(stored)),
+            ),
+          ),
         );
       }
       return;
@@ -378,7 +433,11 @@ Future<void> openAttachment(BuildContext context, String stored) async {
     debugPrint('[Attach] openAttachment failed: $e');
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Unable to open attachment: $e')),
+      SnackBar(
+        content: Text(
+          '${AppLocalizations.of(context)!.unableToOpenAttachment}: $e',
+        ),
+      ),
     );
   }
 }

@@ -1,7 +1,6 @@
-
-
 import 'package:flutter/material.dart';
 import 'attachment_tile.dart';
+import '../l10n/app_localizations.dart';
 
 /// Shows a dialog listing attachments (paths or URLs).
 /// - Tapping an item opens it (image preview / file viewer / link launcher).
@@ -9,20 +8,25 @@ import 'attachment_tile.dart';
 Future<void> showAttachmentsDialog({
   required BuildContext context,
   required List<String> attachments,
-  String title = 'Attachments',
+  String? title,
   bool enableLongPressActions = true,
+
   /// Optional callback when a single item is shared via long-press.
   Future<void> Function(String path)? onShareOne,
+
   /// Optional callback when an item is removed; receives its index from the *original* list.
   Future<void> Function(int)? onRemoveIndex,
 }) async {
   if (attachments.isEmpty) {
     await showDialog(
       context: context,
-      builder: (ctx) => const AlertDialog(
-        title: Text('Attachments'),
-        content: Text('No items have been added.'),
-      ),
+      builder: (ctx) {
+        final loc = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(loc.attachments),
+          content: Text(loc.noItemsAdded),
+        );
+      },
     );
     return;
   }
@@ -40,7 +44,9 @@ Future<void> showAttachmentsDialog({
           return AlertDialog(
             title: Row(
               children: [
-                Expanded(child: Text(title)),
+                Expanded(
+                  child: Text(title ?? AppLocalizations.of(ctx)!.attachments),
+                ),
               ],
             ),
             content: SizedBox(
@@ -61,16 +67,28 @@ Future<void> showAttachmentsDialog({
                             final confirm = await showDialog<bool>(
                               context: ctx,
                               builder: (dctx) => AlertDialog(
-                                title: const Text('Remove attachment?'),
-                                content: const Text('Do you want to remove this attachment?'),
+                                title: Text(
+                                  AppLocalizations.of(
+                                    dctx,
+                                  )!.removeAttachmentTitle,
+                                ),
+                                content: Text(
+                                  AppLocalizations.of(
+                                    dctx,
+                                  )!.removeAttachmentBody,
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(dctx, false),
-                                    child: const Text('Cancel'),
+                                    child: Text(
+                                      AppLocalizations.of(dctx)!.cancel,
+                                    ),
                                   ),
                                   FilledButton(
                                     onPressed: () => Navigator.pop(dctx, true),
-                                    child: const Text('Remove'),
+                                    child: Text(
+                                      AppLocalizations.of(dctx)!.remove,
+                                    ),
                                   ),
                                 ],
                               ),

@@ -1,0 +1,326 @@
+{
+  "@@locale": "pt",
+
+  "appTitle": "Rastreador de Progresso de CPD",
+
+  "homeTitle": "Suas profissões",
+  "addNew": "Adicionar",
+  "newEntry": "Novo registro",
+
+  "scanQrCode": "Escanear QR",
+  "save": "Salvar",
+  "cancel": "Cancelar",
+
+  "menuTooltip": "Menu",
+  "tipsRestored": "Dicas restauradas",
+
+  "addProfession": "Adicionar profissão",
+  "editPersonalDetails": "Editar dados pessoais",
+  "setWeekStartDay": "Definir início da semana",
+  "resetTips": "Redefinir dicas",
+  "viewDeletedProfessions": "Ver profissões excluídas",
+
+  "noProfessionsYet": "Ainda não há profissões. Menu → Adicionar.",
+  "renameProfession": "Renomear profissão",
+  "deleteProfession": "Excluir profissão",
+  "addEntry": "Adicionar registro",
+  "scanQr": "Escanear QR",
+  "viewRecords": "Ver registros",
+
+  "setEditTarget": "Definir / editar meta",
+
+  "delete": "Excluir",
+  "weekStartUpdated": "Início da semana atualizado",
+
+  "language": "Idioma",
+  "followSystemLanguage": "Usar idioma do sistema",
+
+  "english": "Inglês",
+  "french": "Francês",
+  "german": "Alemão",
+  "spanish": "Espanhol",
+  "portuguese": "Português (Brasil)",
+  "hindi": "हिंदी",
+
+  "welcome": "Bem-vindo",
+  "setupYourDetails": "Configurar seus dados",
+
+  "nameOptional": "Nome (opcional)",
+  "companyOptional": "Empresa (opcional)",
+  "addressOptional": "Endereço (opcional)",
+  "emailOptional": "E-mail (opcional)",
+
+  "enterValidEmail": "Digite um e-mail válido",
+
+  "firstProfessionRequired": "Primeira profissão (obrigatório)",
+  "professionExample": "ex.: Eletricista",
+  "enterProfession": "Digite uma profissão",
+
+  "weekStartsOn": "A semana começa em",
+  "useDeviceLocaleRecommended": "Usar idioma do dispositivo (recomendado)",
+  "monday": "Segunda-feira",
+  "sunday": "Domingo",
+  "saturday": "Sábado",
+
+  "continueLabel": "Continuar",
+
+  "savedLocallyNotice": "Salvo localmente. Algumas configurações serão sincronizadas na próxima abertura.",
+
+  "detectedDownloadableFile": "Link de download detectado",
+  "whatWouldYouLikeToDo": "O que você gostaria de fazer?",
+  "attachToEntry": "Anexar a este registro",
+  "downloadAndSave": "Baixar e salvar em Anexos",
+  "openLink": "Abrir link",
+  "keepAsUrlOnly": "Manter apenas como URL",
+
+  "qrCertificateReminder": "Para obter qualquer certificado de CPD, siga o link do QR escaneado quando quiser e adicione o certificado a este registro.",
+  "dontShowAgain": "Não mostrar esta mensagem novamente",
+  "ok": "OK",
+  "couldNotSaveDetails": "Não foi possível salvar os dados. Tente novamente.",
+
+  "restoreRecordTitle": "Restaurar registro?",
+  "deleteRecordTitle": "Excluir registro?",
+  "restoreRecordConfirm": "Deseja restaurar este registro?",
+  "deleteRecordConfirm": "Deseja excluir este registro?",
+  "restore": "Restaurar",
+
+  "cpdLinkSubject": "Link de CPD",
+  "cpdAttachmentSubject": "Anexo de CPD",
+  "fileNotFound": "Arquivo não encontrado.",
+  "shareFailed": "Falha ao compartilhar",
+  "noRecordsInSelectedPeriod": "Nenhum registro no período selecionado.",
+  "exportFailed": "Falha na exportação",
+
+  "periodLabel": "Período",
+  "noCpdRecordsYet": "Ainda não há registros de CPD.",
+  "attachments": "Anexos",
+  "attachmentRemoved": "Anexo removido.",
+  "shareExport": "Compartilhar / Exportar",
+
+  "futureDateNotAllowedTitle": "Data futura não permitida",
+  "futureDateNotAllowedBody": "Você só pode adicionar registros de CPD com data de hoje ou anterior.",
+  "takePhoto": "Tirar foto",
+  "photoLibrary": "Biblioteca de fotos",
+  "chooseFile": "Escolher arquivo",
+  "noQrDataCaptured": "Nenhum dado de QR capturado.",
+  "attachmentFailed": "Falha ao anexar",
+  "enterTitleOrDetails": "Digite um título ou detalhes.",
+  "entryUpdated": "Registro atualizado",
+  "entrySaved": "Registro salvo",
+  "editEntry": "Editar registro",
+
+  "professionLabel": "Profissão",
+  "dateLabel": "Data",
+  "titleLabel": "Título",
+  "enterTitle": "Digite um título",
+  "detailsLabel": "Detalhes",
+  "timeLabel": "Duração",
+
+  "attachmentsEvidence": "Anexos (evidência)",
+  "add": "Adicionar",
+  "noAttachmentsAdded": "Nenhum anexo adicionado.",
+  "removeAttachmentTitle": "Remover anexo?",
+  "removeAttachmentBody": "Deseja remover este anexo?",
+  "remove": "Remover",
+  "saveChanges": "Salvar alterações",
+  "saveEntry": "Salvar registro",
+  "attachmentsNote": "Observação: os anexos são salvos no app e exibidos como miniaturas no PDF. Use “PDF + anexos (pacote)” para compartilhar os arquivos originais.",
+
+  "csvEditable": "CSV (editável)",
+  "pdfReadOnly": "PDF (somente leitura)",
+  "pdfAttachmentsBundle": "PDF + anexos (pacote)",
+  "pdfAttachmentsBundleSubtitle": "PDF dos registros, PDF do índice e todos os arquivos",
+
+  "noTitle": "(Sem título)",
+  "edit": "Editar",
+  "shareAllAttachments": "Compartilhar todos os anexos",
+  "zeroMinutes": "0 min",
+
+  "attachmentsCount": "Anexos ({count})",
+  "@attachmentsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "hoursPlural": "{count,plural, =1{{count} hora} other{{count} horas}}",
+  "@hoursPlural": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "minutesPlural": "{count,plural, =1{{count} minuto} other{{count} minutos}}",
+  "@minutesPlural": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "shareAll": "Compartilhar tudo",
+  "selectPeriod": "Selecionar período",
+  "fromLabel": "De",
+  "toLabel": "Até",
+
+  "hoursLabel": "Horas",
+  "minutesLabel": "Minutos",
+
+  "required": "Obrigatório",
+  "numbersOnly": "Somente números",
+  "mustBeZeroOrMore": "Deve ser ≥ 0",
+  "tooLarge": "Muito grande",
+  "zeroToFiftyNine": "0–59",
+
+  "selectDate": "Selecionar data",
+
+  "noItemsAdded": "Nenhum item foi adicionado.",
+
+  "link": "Link",
+  "imageAttachment": "Anexo (imagem)",
+  "fileAttachment": "Anexo (arquivo)",
+  "shareThisAttachment": "Compartilhar este anexo",
+
+  "allTime": "Todo o período",
+  "toWord": "até",
+  "pageOf": "Página {page} de {total}",
+  "@pageOf": {
+    "placeholders": {
+      "page": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "cpdRecordsTitle": "Registros de CPD",
+  "nameLabel": "Nome",
+  "companyLabel": "Empresa",
+  "emailLabel": "E-mail",
+  "totalTimeLabel": "Tempo total",
+
+  "attachmentsEvidenceLabel": "Anexos / Evidências:",
+  "attachmentsInlineNotePdf": "Anexos/Evidências disponíveis mediante solicitação",
+  "attachmentsInlineNoteZip": "Para Anexos e Evidências, consulte o arquivo ZIP",
+
+  "cpdRecordsShareSubject": "Registros de CPD",
+  "cpdRecordsBundleShareSubject": "Pacote de registros de CPD",
+
+  "attachmentLinksTitle": "Links de anexos de CPD",
+  "linksFileName": "links.txt",
+
+  "csvNoAttachmentsInExport": "Nenhum nesta exportação",
+  "csvDateHeader": "Data",
+  "csvTitleHeader": "Título",
+  "csvHasAttachmentsHeader": "Tem anexos",
+  "yes": "Sim",
+  "no": "Não",
+
+  "csvRecordsWithAttachments": "{count,plural, =1{{count} registro inclui anexos; disponíveis mediante solicitação} other{{count} registros incluem anexos; disponíveis mediante solicitação}}",
+  "@csvRecordsWithAttachments": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "cpdEntriesShareSubject": "Registros de CPD de {profession}",
+  "@cpdEntriesShareSubject": {
+    "placeholders": { "profession": {} }
+  },
+
+  "cpdEntriesShareText": "Registros de CPD de {profession} ({from} até {to}) — Total {hours}h {minutes}m",
+  "@cpdEntriesShareText": {
+    "placeholders": {
+      "profession": {},
+      "from": {},
+      "to": {},
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "couldNotOpenLink": "Não foi possível abrir o link.",
+  "noAppToOpenLink": "Nenhum app disponível para abrir o link.",
+
+  "cantOpenThisFile": "Não é possível abrir este arquivo ({message}).",
+  "@cantOpenThisFile": { "placeholders": { "message": {} } },
+
+  "openFailed": "Falha ao abrir",
+  "savedToAttachments": "Salvo em Anexos: {filename}",
+  "@savedToAttachments": { "placeholders": { "filename": {} } },
+
+  "attachmentNotFoundOnDevice": "Anexo não encontrado no dispositivo.",
+  "importFailed": "Falha ao importar",
+
+  "downloadFailedStatus": "Falha no download ({status}).",
+  "@downloadFailedStatus": { "placeholders": { "status": { "type": "int" } } },
+  "downloadError": "Erro de download",
+
+  "cpdAttachmentBundleTitle": "Pacote de anexos de CPD",
+  "includedFiles": "Arquivos incluídos:",
+  "includedFilesNone": "Arquivos incluídos: (nenhum)",
+  "links": "Links:",
+  "linksNone": "Links: (nenhum)",
+
+  "cpdAttachmentsShareSubject": "Anexos de CPD • {profession} • {date}",
+  "@cpdAttachmentsShareSubject": { "placeholders": { "profession": {}, "date": {} } },
+
+  "attachmentsForTitleBody": "Anexos para \"{title}\" ({profession}).",
+  "@attachmentsForTitleBody": { "placeholders": { "title": {}, "profession": {} } },
+
+  "attachmentsForTitleWithLinksBody": "Anexos para \"{title}\" ({profession}). Links incluídos no manifesto.",
+  "@attachmentsForTitleWithLinksBody": { "placeholders": { "title": {}, "profession": {} } },
+
+  "fileNotFoundWithName": "Arquivo não encontrado: {filename}",
+  "@fileNotFoundWithName": { "placeholders": { "filename": {} } },
+
+  "unableToOpenAttachment": "Não foi possível abrir o anexo",
+
+  "exportFilePrefix": "registros_cpd",
+
+  "deletedProfessionsTitle": "Profissões excluídas",
+  "noDeletedProfessions": "Nenhuma profissão excluída",
+  "deletePermanently": "Excluir permanentemente",
+  "professionRestored": "Profissão restaurada",
+  "permanentlyDeleteTitle": "Excluir permanentemente?",
+  "permanentlyDeleteBody": "Excluir \"{name}\" e todos os registros? Isso não pode ser desfeito.",
+  "@permanentlyDeleteBody": { "placeholders": { "name": {} } },
+  "professionDeletedPermanently": "\"{name}\" excluída permanentemente (registros ainda não removidos)",
+  "@professionDeletedPermanently": { "placeholders": { "name": {} } },
+
+  "thisWeek": "esta semana",
+  "thisMonth": "este mês",
+  "thisYear": "este ano",
+
+  "targetAchieved": "Meta atingida {cycle} 🎉",
+  "@targetAchieved": { "placeholders": { "cycle": {} } },
+
+  "timeRemaining": "Faltam {hours} h e {minutes} min {cycle}",
+  "@timeRemaining": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" },
+      "cycle": {}
+    }
+  },
+
+  "weekStartsOnDay": "A semana começa em {day}",
+  "@weekStartsOnDay": { "placeholders": { "day": {} } },
+
+  "setTargetForProfession": "Definir meta para {profession}",
+  "@setTargetForProfession": { "placeholders": { "profession": {} } },
+
+  "perWeek": "por semana",
+  "perMonth": "por mês",
+  "perYear": "por ano",
+
+  "targetPeriod": "Período da meta",
+  "disable": "Desativar",
+
+  "addProfessionDialogTitle": "Adicionar profissão",
+  "enterProfessionHint": "Digite a profissão",
+  "pleaseEnterProfession": "Digite uma profissão",
+  "professionAlreadyExists": "Essa profissão já existe",
+  "professionInDeletedRestoreInstead": "Esse nome está em Excluídas. Restaure-o em vez disso.",
+
+  "renameProfessionTitle": "Renomear profissão",
+  "pleaseEnterName": "Digite um nome",
+
+  "deleteProfessionTitle": "Excluir profissão?",
+  "removeProfessionConfirm": "Remover \"{name}\"?",
+  "@removeProfessionConfirm": { "placeholders": { "name": {} } },
+
+  "movedToDeleted": "\"{name}\" movida para Excluídas",
+  "@movedToDeleted": { "placeholders": { "name": {} } }
+}

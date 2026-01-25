@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/app_localizations.dart';
 
 /// Compact Hours/Minutes inputs with validation and select‑all on focus.
 ///
@@ -51,12 +52,18 @@ class _DurationFieldsState extends State<DurationFields> {
     // Select-all on first focus
     _hFocus.addListener(() {
       if (_hFocus.hasFocus) {
-        _hCtrl.selection = TextSelection(baseOffset: 0, extentOffset: _hCtrl.text.length);
+        _hCtrl.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _hCtrl.text.length,
+        );
       }
     });
     _mFocus.addListener(() {
       if (_mFocus.hasFocus) {
-        _mCtrl.selection = TextSelection(baseOffset: 0, extentOffset: _mCtrl.text.length);
+        _mCtrl.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _mCtrl.text.length,
+        );
       }
     });
   }
@@ -82,28 +89,32 @@ class _DurationFieldsState extends State<DurationFields> {
   }
 
   String? _validateHours(String? v) {
-    if (v == null || v.isEmpty) return 'Required';
+    final loc = AppLocalizations.of(context)!;
+    if (v == null || v.isEmpty) return loc.required;
     final n = int.tryParse(v);
-    if (n == null) return 'Numbers only';
-    if (n < 0) return 'Must be ≥ 0';
-    if (n > 999) return 'Too large';
+    if (n == null) return loc.numbersOnly;
+    if (n < 0) return loc.mustBeZeroOrMore;
+    if (n > 999) return loc.tooLarge;
     return null;
   }
 
   String? _validateMinutes(String? v) {
-    if (v == null || v.isEmpty) return 'Required';
+    final loc = AppLocalizations.of(context)!;
+    if (v == null || v.isEmpty) return loc.required;
     final n = int.tryParse(v);
-    if (n == null) return 'Numbers only';
-    if (n < 0) return 'Must be ≥ 0';
-    if (n > 59) return '0–59';
+    if (n == null) return loc.numbersOnly;
+    if (n < 0) return loc.mustBeZeroOrMore;
+    if (n > 59) return loc.zeroToFiftyNine;
     return null;
   }
 
   void _notify() {
     var h = int.tryParse(_hCtrl.text) ?? 0;
     var m = int.tryParse(_mCtrl.text) ?? 0;
-    if (h < 0) h = 0; if (h > 999) h = 999;
-    if (m < 0) m = 0; if (m > 59) m = 59;
+    if (h < 0) h = 0;
+    if (h > 999) h = 999;
+    if (m < 0) m = 0;
+    if (m > 59) m = 59;
     widget.onChanged(h, m);
   }
 
@@ -116,7 +127,10 @@ class _DurationFieldsState extends State<DurationFields> {
             enabled: widget.enabled,
             controller: _hCtrl,
             focusNode: _hFocus,
-            keyboardType: const TextInputType.numberWithOptions(signed: false, decimal: false),
+            keyboardType: const TextInputType.numberWithOptions(
+              signed: false,
+              decimal: false,
+            ),
             textInputAction: TextInputAction.next,
             onFieldSubmitted: (_) => _mFocus.requestFocus(),
             inputFormatters: [
@@ -127,7 +141,7 @@ class _DurationFieldsState extends State<DurationFields> {
             validator: _validateHours,
             onChanged: (_) => _notify(),
             decoration: InputDecoration(
-              labelText: 'Hours',
+              labelText: AppLocalizations.of(context)!.hoursLabel,
               labelStyle: widget.labelStyle,
               isDense: true,
             ),
@@ -140,7 +154,10 @@ class _DurationFieldsState extends State<DurationFields> {
             enabled: widget.enabled,
             controller: _mCtrl,
             focusNode: _mFocus,
-            keyboardType: const TextInputType.numberWithOptions(signed: false, decimal: false),
+            keyboardType: const TextInputType.numberWithOptions(
+              signed: false,
+              decimal: false,
+            ),
             textInputAction: TextInputAction.done,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
@@ -150,7 +167,7 @@ class _DurationFieldsState extends State<DurationFields> {
             validator: _validateMinutes,
             onChanged: (_) => _notify(),
             decoration: InputDecoration(
-              labelText: 'Minutes',
+              labelText: AppLocalizations.of(context)!.minutesLabel,
               labelStyle: widget.labelStyle,
               isDense: true,
             ),

@@ -11,6 +11,106 @@ import 'package:archive/archive.dart';
 import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart'; // for debugPrint
 import '../models.dart';
+import '../l10n/app_localizations.dart';
+
+class PdfExportTexts {
+  const PdfExportTexts({
+    required this.allTime,
+    required this.to,
+    required this.pageOf,
+    required this.cpdRecordsTitle,
+    required this.nameLabel,
+    required this.companyLabel,
+    required this.emailLabel,
+    required this.professionLabel,
+    required this.periodLabel,
+    required this.totalTimeLabel,
+    required this.hours,
+    required this.minutes,
+    required this.details,
+    required this.attachmentsEvidenceLabel,
+    required this.attachmentsInlineNotePdf,
+    required this.attachmentsInlineNoteZip,
+    required this.shareSubjectPdf,
+    required this.shareSubjectBundle,
+    required this.attachmentLinksTitle,
+    required this.linksFileName,
+    required this.fileNamePrefix,
+  });
+
+  /// English defaults (used if callers do not provide localized strings).
+  factory PdfExportTexts.english() => PdfExportTexts(
+    allTime: 'All time',
+    to: 'to',
+    pageOf: (p, total) => 'Page $p of $total',
+    cpdRecordsTitle: 'CPD Records',
+    nameLabel: 'Name',
+    companyLabel: 'Company',
+    emailLabel: 'Email',
+    professionLabel: 'Profession',
+    periodLabel: 'Period',
+    totalTimeLabel: 'Total Time',
+    hours: 'Hours',
+    minutes: 'Minutes',
+    details: 'Details',
+    attachmentsEvidenceLabel: 'Attachments / Evidence:',
+    attachmentsInlineNotePdf: 'Attachments/Evidence available on request',
+    attachmentsInlineNoteZip: 'For Attachments & Evidence see ZIP File',
+    shareSubjectPdf: 'CPD records',
+    shareSubjectBundle: 'CPD records bundle',
+    attachmentLinksTitle: 'CPD Attachment Links',
+    linksFileName: 'links.txt',
+    fileNamePrefix: 'cpd_records',
+  );
+
+  /// Convenience: build a text bundle from `AppLocalizations`.
+  /// This keeps PDF export strings in sync with the app language.
+  factory PdfExportTexts.fromLoc(AppLocalizations loc) => PdfExportTexts(
+    allTime: loc.allTime,
+    to: loc.toWord,
+    pageOf: (p, total) => loc.pageOf(p, total),
+    cpdRecordsTitle: loc.cpdRecordsTitle,
+    nameLabel: loc.nameLabel,
+    companyLabel: loc.companyLabel,
+    emailLabel: loc.emailLabel,
+    professionLabel: loc.professionLabel,
+    periodLabel: loc.periodLabel,
+    totalTimeLabel: loc.totalTimeLabel,
+    hours: loc.hoursLabel,
+    minutes: loc.minutesLabel,
+    details: loc.detailsLabel,
+    attachmentsEvidenceLabel: loc.attachmentsEvidenceLabel,
+    attachmentsInlineNotePdf: loc.attachmentsInlineNotePdf,
+    attachmentsInlineNoteZip: loc.attachmentsInlineNoteZip,
+    shareSubjectPdf: loc.cpdRecordsShareSubject,
+    shareSubjectBundle: loc.cpdRecordsBundleShareSubject,
+    attachmentLinksTitle: loc.attachmentLinksTitle,
+    linksFileName: loc.linksFileName,
+    fileNamePrefix: loc.exportFilePrefix,
+  );
+
+  final String allTime;
+  final String to;
+  final String Function(int pageNumber, int pagesCount) pageOf;
+  final String cpdRecordsTitle;
+  final String nameLabel;
+  final String companyLabel;
+  final String emailLabel;
+  final String professionLabel;
+  final String periodLabel;
+  final String totalTimeLabel;
+  final String hours;
+  final String minutes;
+  final String details;
+  final String attachmentsEvidenceLabel;
+  final String attachmentsInlineNotePdf;
+  final String attachmentsInlineNoteZip;
+  final String shareSubjectPdf;
+  final String shareSubjectBundle;
+  final String attachmentLinksTitle;
+  final String linksFileName;
+  final String fileNamePrefix;
+}
 
 /// Builds a landscape PDF summarising [entries].
 /// If [includeAttachments] is true, a second section is appended that
@@ -24,8 +124,10 @@ Future<File> buildRecordsPdf({
   String? email,
   bool includeAttachments = false,
   String? attachmentsInlineNote,
+  PdfExportTexts? texts,
 }) async {
   final doc = pw.Document();
+  final t = texts ?? PdfExportTexts.english();
 
   final font = await PdfGoogleFonts.notoSansRegular();
   final boldFont = await PdfGoogleFonts.notoSansBold();
@@ -38,7 +140,8 @@ Future<File> buildRecordsPdf({
   final docsDir = await getApplicationDocumentsDirectory();
   final docsPath = docsDir.path;
   String resolve(String stored) {
-    if (stored.startsWith('http://') || stored.startsWith('https://')) return stored;
+    if (stored.startsWith('http://') || stored.startsWith('https://'))
+      return stored;
     if (stored.startsWith('/')) {
       final i = stored.indexOf('/Documents/');
       if (i != -1) {
@@ -49,12 +152,13 @@ Future<File> buildRecordsPdf({
     }
     return p.join(docsPath, stored);
   }
+
   debugPrint('[PDF] docsPath: $docsPath');
 
   // Header helpers
   String periodText() {
-    if (range == null) return 'All time';
-    return '${formatDate(range.start, 'dd/MM/yyyy')} to ${formatDate(range.end, 'dd/MM/yyyy')}';
+    if (range == null) return t.allTime;
+    return '${formatDate(range.start, 'dd/MM/yyyy')} ${t.to} ${formatDate(range.end, 'dd/MM/yyyy')}';
   }
 
   String totalText() {
@@ -63,7 +167,8 @@ Future<File> buildRecordsPdf({
       th += e.hours;
       tm += e.minutes;
     }
-    th += tm ~/ 60; tm = tm % 60;
+    th += tm ~/ 60;
+    tm = tm % 60;
     return '${th}h ${tm}m';
   }
 
@@ -76,8 +181,12 @@ Future<File> buildRecordsPdf({
         alignment: pw.Alignment.centerRight,
         margin: const pw.EdgeInsets.only(top: 10),
         child: pw.Text(
-          'Page ${context.pageNumber} of ${context.pagesCount}',
-          style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey600),
+          t.pageOf(context.pageNumber, context.pagesCount),
+          style: pw.TextStyle(
+            font: font,
+            fontSize: 10,
+            color: PdfColors.grey600,
+          ),
         ),
       ),
       build: (ctx) {
@@ -87,14 +196,38 @@ Future<File> buildRecordsPdf({
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('CPD Records', style: pw.TextStyle(font: boldFont, fontSize: 20)),
-              if ((userName ?? '').isNotEmpty) pw.Text('Name: ${userName ?? ''}', style: pw.TextStyle(font: font)),
-              if ((company ?? '').isNotEmpty) pw.Text('Company: ${company ?? ''}', style: pw.TextStyle(font: font)),
-              if ((email ?? '').isNotEmpty) pw.Text('Email: ${email ?? ''}', style: pw.TextStyle(font: font)),
+              pw.Text(
+                t.cpdRecordsTitle,
+                style: pw.TextStyle(font: boldFont, fontSize: 20),
+              ),
+              if ((userName ?? '').isNotEmpty)
+                pw.Text(
+                  '${t.nameLabel}: ${userName ?? ''}',
+                  style: pw.TextStyle(font: font),
+                ),
+              if ((company ?? '').isNotEmpty)
+                pw.Text(
+                  '${t.companyLabel}: ${company ?? ''}',
+                  style: pw.TextStyle(font: font),
+                ),
+              if ((email ?? '').isNotEmpty)
+                pw.Text(
+                  '${t.emailLabel}: ${email ?? ''}',
+                  style: pw.TextStyle(font: font),
+                ),
               pw.SizedBox(height: 8),
-              pw.Text('Profession: $profession', style: pw.TextStyle(font: font)),
-              pw.Text('Period: ${periodText()}', style: pw.TextStyle(font: font)),
-              pw.Text('Total Time: ${totalText()}', style: pw.TextStyle(font: boldFont)),
+              pw.Text(
+                '${t.professionLabel}: $profession',
+                style: pw.TextStyle(font: font),
+              ),
+              pw.Text(
+                '${t.periodLabel}: ${periodText()}',
+                style: pw.TextStyle(font: font),
+              ),
+              pw.Text(
+                '${t.totalTimeLabel}: ${totalText()}',
+                style: pw.TextStyle(font: boldFont),
+              ),
               pw.SizedBox(height: 12),
             ],
           ),
@@ -141,8 +274,11 @@ Future<File> buildRecordsPdf({
                   // Details-focused table (no attachments column)
                   pw.TableHelper.fromTextArray(
                     headerStyle: pw.TextStyle(font: boldFont),
-                    cellPadding: const pw.EdgeInsets.symmetric(vertical: 2, horizontal: 4),
-                    headers: const ['Hours', 'Minutes', 'Details'],
+                    cellPadding: const pw.EdgeInsets.symmetric(
+                      vertical: 2,
+                      horizontal: 4,
+                    ),
+                    headers: [t.hours, t.minutes, t.details],
                     data: [
                       [hh, mm, e.details],
                     ],
@@ -156,7 +292,10 @@ Future<File> buildRecordsPdf({
                   ),
                   if (includeAttachments && e.attachments.isNotEmpty) ...[
                     pw.SizedBox(height: 6),
-                    pw.Text('Attachments / Evidence:', style: pw.TextStyle(font: boldFont)),
+                    pw.Text(
+                      t.attachmentsEvidenceLabel,
+                      style: pw.TextStyle(font: boldFont),
+                    ),
                     pw.SizedBox(height: 4),
                     () {
                       final attWidgets = <pw.Widget>[];
@@ -167,55 +306,89 @@ Future<File> buildRecordsPdf({
                         if (_isUrl(a)) {
                           attWidgets.add(
                             pw.Container(
-                              margin: const pw.EdgeInsets.only(right: 6, bottom: 6),
+                              margin: const pw.EdgeInsets.only(
+                                right: 6,
+                                bottom: 6,
+                              ),
                               child: pw.UrlLink(
                                 destination: a,
                                 child: pw.Text(
                                   a,
-                                  style: pw.TextStyle(font: font, color: PdfColors.blue, decoration: pw.TextDecoration.underline),
+                                  style: pw.TextStyle(
+                                    font: font,
+                                    color: PdfColors.blue,
+                                    decoration: pw.TextDecoration.underline,
+                                  ),
                                 ),
                               ),
                             ),
                           );
-                        } else if (_looksLikeImage(resolved) && _fileExistsSync(resolved)) {
+                        } else if (_looksLikeImage(resolved) &&
+                            _fileExistsSync(resolved)) {
                           try {
                             final bytes = File(resolved).readAsBytesSync();
                             attWidgets.add(
                               pw.Container(
-                                margin: const pw.EdgeInsets.only(right: 6, bottom: 6),
+                                margin: const pw.EdgeInsets.only(
+                                  right: 6,
+                                  bottom: 6,
+                                ),
                                 width: 120,
                                 height: 90,
                                 decoration: pw.BoxDecoration(
-                                  border: pw.Border.all(color: PdfColors.grey300),
+                                  border: pw.Border.all(
+                                    color: PdfColors.grey300,
+                                  ),
                                   borderRadius: pw.BorderRadius.circular(3),
                                 ),
                                 child: pw.Padding(
                                   padding: const pw.EdgeInsets.all(2),
-                                  child: pw.Image(pw.MemoryImage(bytes), fit: pw.BoxFit.cover),
+                                  child: pw.Image(
+                                    pw.MemoryImage(bytes),
+                                    fit: pw.BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             );
                           } catch (_) {
                             final name = p.basename(resolved);
                             final size = _fileSizeSync(resolved);
-                            final label = size == null ? name : '$name (${_prettySize(size)})';
-                            attWidgets.add(pw.Text(label, style: pw.TextStyle(font: font)));
+                            final label = size == null
+                                ? name
+                                : '$name (${_prettySize(size)})';
+                            attWidgets.add(
+                              pw.Text(label, style: pw.TextStyle(font: font)),
+                            );
                           }
                         } else if (_fileExistsSync(resolved)) {
                           final name = p.basename(resolved);
                           final size = _fileSizeSync(resolved);
-                          final label = size == null ? name : '$name (${_prettySize(size)})';
+                          final label = size == null
+                              ? name
+                              : '$name (${_prettySize(size)})';
                           attWidgets.add(
                             pw.Container(
-                              margin: const pw.EdgeInsets.only(right: 6, bottom: 6),
-                              child: pw.Text(label, style: pw.TextStyle(font: font)),
+                              margin: const pw.EdgeInsets.only(
+                                right: 6,
+                                bottom: 6,
+                              ),
+                              child: pw.Text(
+                                label,
+                                style: pw.TextStyle(font: font),
+                              ),
                             ),
                           );
                         } else {
                           attWidgets.add(
                             pw.Container(
-                              margin: const pw.EdgeInsets.only(right: 6, bottom: 6),
-                              child: pw.Text(p.basename(resolved), style: pw.TextStyle(font: font)),
+                              margin: const pw.EdgeInsets.only(
+                                right: 6,
+                                bottom: 6,
+                              ),
+                              child: pw.Text(
+                                p.basename(resolved),
+                                style: pw.TextStyle(font: font),
+                              ),
                             ),
                           );
                         }
@@ -227,7 +400,9 @@ Future<File> buildRecordsPdf({
               ),
             ),
           );
-          rows.add(pw.Divider(color: PdfColors.grey300, height: 14, thickness: 0.5));
+          rows.add(
+            pw.Divider(color: PdfColors.grey300, height: 14, thickness: 0.5),
+          );
         }
 
         return rows;
@@ -235,7 +410,10 @@ Future<File> buildRecordsPdf({
     ),
   );
 
-  final tmp = await _saveTemp(doc, _makeFileName(profession, range));
+  final tmp = await _saveTemp(
+    doc,
+    _makeFileName(t.fileNamePrefix, profession, range),
+  );
   return tmp;
 }
 
@@ -248,7 +426,9 @@ Future<void> exportRecordsPdf({
   String? company,
   String? email,
   bool includeAttachments = false,
+  PdfExportTexts? texts,
 }) async {
+  final t = texts ?? PdfExportTexts.english();
   // Always produce a PDF without inline attachments, always show the inline note for records with attachments.
   final file = await buildRecordsPdf(
     profession: profession,
@@ -258,7 +438,8 @@ Future<void> exportRecordsPdf({
     company: company,
     email: email,
     includeAttachments: false,
-    attachmentsInlineNote: 'Attachments/Evidence available on request',
+    attachmentsInlineNote: t.attachmentsInlineNotePdf,
+    texts: t,
   );
 
   // debug
@@ -270,7 +451,7 @@ Future<void> exportRecordsPdf({
   const origin = Rect.fromLTWH(0, 0, 1, 1);
   await SharePlus.instance.share(
     ShareParams(
-      subject: 'CPD records',
+      subject: t.shareSubjectPdf,
       files: [XFile(file.path, mimeType: 'application/pdf', name: filename)],
       sharePositionOrigin: origin,
     ),
@@ -287,7 +468,9 @@ Future<void> exportRecordsBundleZip({
   String? userName,
   String? company,
   String? email,
+  PdfExportTexts? texts,
 }) async {
+  final t = texts ?? PdfExportTexts.english();
   // 1) Build the summary PDF we already have
   final pdfFile = await buildRecordsPdf(
     profession: profession,
@@ -297,34 +480,37 @@ Future<void> exportRecordsBundleZip({
     company: company,
     email: email,
     includeAttachments: false,
-    attachmentsInlineNote: 'For Attachments & Evidence see ZIP File',
+    attachmentsInlineNote: t.attachmentsInlineNoteZip,
+    texts: t,
   );
 
-// Resolve stored attachment paths (relative or old absolute) to current container
-final docsDir = await getApplicationDocumentsDirectory();
-final docsPath = docsDir.path;
-String resolve(String stored) {
-  if (_isUrl(stored)) return stored;
-  if (stored.startsWith('/')) {
-    final i = stored.indexOf('/Documents/');
-    if (i != -1) {
-      final tail = stored.substring(i + '/Documents/'.length);
-      return p.join(docsPath, tail);
+  // Resolve stored attachment paths (relative or old absolute) to current container
+  final docsDir = await getApplicationDocumentsDirectory();
+  final docsPath = docsDir.path;
+  String resolve(String stored) {
+    if (_isUrl(stored)) return stored;
+    if (stored.startsWith('/')) {
+      final i = stored.indexOf('/Documents/');
+      if (i != -1) {
+        final tail = stored.substring(i + '/Documents/'.length);
+        return p.join(docsPath, tail);
+      }
+      return stored;
     }
-    return stored;
+    return p.join(docsPath, stored);
   }
-  return p.join(docsPath, stored);
-}
 
   // 2) Gather attachments grouped by record date and safe, truncated title
   final localsByFolder = <String, List<String>>{}; // folder -> local file paths
-  final urlsByFolder = <String, List<String>>{};   // folder -> url strings
+  final urlsByFolder = <String, List<String>>{}; // folder -> url strings
   for (final e in entries) {
     if (e.attachments.isEmpty) continue;
     // Folder per record, named by record date and safe, truncated title to avoid illegal characters
     final datePart = formatDate(e.date, 'yyyy-MM-dd');
     final titlePartFull = _safeFileName(e.title);
-    final titlePart = titlePartFull.length > 40 ? titlePartFull.substring(0, 40) : titlePartFull;
+    final titlePart = titlePartFull.length > 40
+        ? titlePartFull.substring(0, 40)
+        : titlePartFull;
     final folder = p.join('attachments', '$datePart - $titlePart');
     for (final a in e.attachments) {
       if (_isUrl(a)) {
@@ -338,43 +524,52 @@ String resolve(String stored) {
     }
   }
   // Counters for logging
-  final localCount = localsByFolder.values.fold<int>(0, (sum, l) => sum + l.length);
-  final urlCount   = urlsByFolder.values.fold<int>(0, (sum, l) => sum + l.length);
-  debugPrint('[Bundle] locals: $localCount, urls: $urlCount, folders: ${localsByFolder.length + urlsByFolder.length}');
+  final localCount = localsByFolder.values.fold<int>(
+    0,
+    (sum, l) => sum + l.length,
+  );
+  final urlCount = urlsByFolder.values.fold<int>(0, (sum, l) => sum + l.length);
+  debugPrint(
+    '[Bundle] locals: $localCount, urls: $urlCount, folders: ${localsByFolder.length + urlsByFolder.length}',
+  );
 
   // 3) Create ZIP archive
   final arch = Archive();
 
   // Add PDF summary at root
-  arch.addFile(ArchiveFile.stream(
-    p.basename(pdfFile.path),
-    InputFileStream(pdfFile.path),
-  ));
+  arch.addFile(
+    ArchiveFile.stream(p.basename(pdfFile.path), InputFileStream(pdfFile.path)),
+  );
 
   // Add local attachments grouped into per-record folders
   for (final entry in localsByFolder.entries) {
     final folder = entry.key;
     for (final path in entry.value) {
       final nameInZip = p.join(folder, p.basename(path));
-      arch.addFile(ArchiveFile.stream(
-        nameInZip,
-        InputFileStream(path),
-      ));
+      arch.addFile(ArchiveFile.stream(nameInZip, InputFileStream(path)));
     }
   }
 
   // Add per-folder link manifests
   for (final entry in urlsByFolder.entries) {
     final folder = entry.key;
-    final buf = StringBuffer('CPD Attachment Links\n\n');
+    final buf = StringBuffer('${t.attachmentLinksTitle}\n\n');
     if (range != null) {
-      buf.writeln('Period: ${formatDate(range.start, 'dd/MM/yyyy')} to ${formatDate(range.end, 'dd/MM/yyyy')}\n');
+      buf.writeln(
+        '${t.periodLabel}: ${formatDate(range.start, 'dd/MM/yyyy')} ${t.to} ${formatDate(range.end, 'dd/MM/yyyy')}\n',
+      );
     }
     for (final u in entry.value) {
       buf.writeln(u);
     }
     final manifestBytes = utf8.encode(buf.toString());
-    arch.addFile(ArchiveFile('$folder/links.txt', manifestBytes.length, manifestBytes));
+    arch.addFile(
+      ArchiveFile(
+        '$folder/${t.linksFileName}',
+        manifestBytes.length,
+        manifestBytes,
+      ),
+    );
   }
 
   final encoded = ZipEncoder().encode(arch);
@@ -383,7 +578,11 @@ String resolve(String stored) {
     return;
   }
   final tmpDir = await getTemporaryDirectory();
-  final zipName = _makeFileName(profession, range).replaceAll('.pdf', '.zip');
+  final zipName = _makeFileName(
+    t.fileNamePrefix,
+    profession,
+    range,
+  ).replaceAll('.pdf', '.zip');
   final zipPath = p.join(tmpDir.path, zipName);
   final zipFile = File(zipPath)..writeAsBytesSync(encoded, flush: true);
   final zipLen = zipFile.lengthSync();
@@ -394,7 +593,7 @@ String resolve(String stored) {
   const origin = Rect.fromLTWH(0, 0, 1, 1);
   await SharePlus.instance.share(
     ShareParams(
-      subject: 'CPD records bundle',
+      subject: t.shareSubjectBundle,
       files: [
         XFile(
           zipFile.path,
@@ -422,9 +621,10 @@ String _dateToken(DateTime d) =>
     '${d.month.toString().padLeft(2, '0')}'
     '${d.day.toString().padLeft(2, '0')}';
 
-String _makeFileName(String profession, DateTimeRange? r) {
+String _makeFileName(String prefix, String profession, DateTimeRange? r) {
   final now = DateTime.now();
-  final stamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_'
+  final stamp =
+      '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_'
       '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
 
   final period = (r == null)
@@ -432,7 +632,10 @@ String _makeFileName(String profession, DateTimeRange? r) {
       : '_${_dateToken(r.start)}-${_dateToken(r.end)}';
 
   final safeProfession = _safeFileName(profession);
-  return 'cpd_records_$safeProfession${period}_$stamp.pdf';
+  final safePrefix = _safeFileName(
+    prefix,
+  ).replaceAll(RegExp(r'[^A-Za-z0-9_]'), '_');
+  return '${safePrefix}_$safeProfession${period}_$stamp.pdf';
 }
 
 Future<File> _saveTemp(pw.Document doc, String fileName) async {
@@ -442,8 +645,6 @@ Future<File> _saveTemp(pw.Document doc, String fileName) async {
   await f.writeAsBytes(bytes, flush: true);
   return f;
 }
-
-
 
 bool _isUrl(String s) {
   final ls = s.toLowerCase();
@@ -472,7 +673,15 @@ String _prettySize(int bytes) {
 
 bool _looksLikeImage(String pth) {
   final ext = p.extension(pth).toLowerCase();
-  return ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.heic'].contains(ext);
+  return [
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.bmp',
+    '.webp',
+    '.heic',
+  ].contains(ext);
 }
 
 bool _fileExistsSync(String path) {
@@ -504,7 +713,11 @@ pw.Widget fileRow(String pathOrUrl) {
 }
 
 class Att {
-  Att({required this.entryTitle, required this.entryDate, required this.pathOrUrl});
+  Att({
+    required this.entryTitle,
+    required this.entryDate,
+    required this.pathOrUrl,
+  });
   final String entryTitle;
   final DateTime entryDate;
   final String pathOrUrl;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'settings_store.dart';
+import 'l10n/app_localizations.dart';
 
 class EditDetailsPage extends StatefulWidget {
   const EditDetailsPage({super.key});
@@ -53,7 +54,9 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not save details. Please try again.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.couldNotSaveDetails),
+        ),
       );
     }
   }
@@ -69,15 +72,17 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Edit personal details')),
+        appBar: AppBar(title: Text(loc.editPersonalDetails)),
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit personal details')),
+      appBar: AppBar(title: Text(loc.editPersonalDetails)),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -87,40 +92,37 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
               TextFormField(
                 controller: _name,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(labelText: 'Name (optional)'),
+                decoration: InputDecoration(labelText: loc.nameOptional),
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _company,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(labelText: 'Company (optional)'),
+                decoration: InputDecoration(labelText: loc.companyOptional),
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _address,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(labelText: 'Address (optional)'),
+                decoration: InputDecoration(labelText: loc.addressOptional),
                 maxLines: 2,
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _email,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email (optional)'),
+                decoration: InputDecoration(labelText: loc.emailOptional),
                 validator: (v) {
                   final t = v?.trim() ?? '';
                   if (t.isEmpty) return null;
                   final ok = RegExp(r'^.+@.+\..+$').hasMatch(t);
-                  return ok ? null : 'Enter a valid email';
+                  return ok ? null : loc.enterValidEmail;
                 },
               ),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton(
-                  onPressed: _save,
-                  child: const Text('Save'),
-                ),
+                child: FilledButton(onPressed: _save, child: Text(loc.save)),
               ),
             ],
           ),

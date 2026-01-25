@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'settings_store.dart';
+import 'l10n/app_localizations.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -51,9 +52,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
     } catch (e) {
       // Show a non-blocking notice; still continue to Home afterwards
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Saved locally. Some settings may sync on next launch.')),
-        );
+        final loc = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(loc.savedLocallyNotice)));
       }
     }
 
@@ -64,90 +66,196 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Welcome')),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text('Set up your details',
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _name,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(labelText: 'Name (optional)'),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _company,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(labelText: 'Company (optional)'),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _address,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(labelText: 'Address (optional)'),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email (optional)'),
-                validator: (v) {
-                  final t = v?.trim() ?? '';
-                  if (t.isEmpty) return null;
-                  return RegExp(r'^.+@.+\..+$').hasMatch(t)
-                      ? null
-                      : 'Enter a valid email';
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _profession,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'First Profession (required)',
-                  hintText: 'e.g. Electrician',
-                ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Please enter a profession' : null,
-              ),
-              const SizedBox(height: 16),
-              Text('Week starts on', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 4),
-              DropdownButtonFormField<String>(
-                initialValue: _weekStart,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'locale', child: Text('Use device locale (recommended)')),
-                  DropdownMenuItem(value: 'monday', child: Text('Monday')),
-                  DropdownMenuItem(value: 'sunday', child: Text('Sunday')),
-                  DropdownMenuItem(value: 'saturday', child: Text('Saturday')),
+    return ValueListenableBuilder<Locale?>(
+      valueListenable: SettingsStore.instance.locale,
+      builder: (context, forcedLocale, _) {
+        final loc = AppLocalizations.of(context)!;
+        return Scaffold(
+          appBar: AppBar(title: Text(loc.welcome)),
+          body: SafeArea(
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              loc.language,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          ValueListenableBuilder<Locale?>(
+                            valueListenable: SettingsStore.instance.locale,
+                            builder: (context, forcedLocale, _) {
+                              final current = forcedLocale?.languageCode ?? '';
+                              return DropdownButton<String>(
+                                value: current,
+                                onChanged: (v) async {
+                                  await SettingsStore.instance.setLocaleCode(
+                                    v ?? '',
+                                  );
+                                },
+                                items: [
+                                  DropdownMenuItem(
+                                    value: '',
+                                    child: Text(loc.followSystemLanguage),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'en',
+                                    child: Text(loc.english),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'fr',
+                                    child: Text(loc.french),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'de',
+                                    child: Text(loc.german),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'es',
+                                    child: Text(loc.spanish),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'pt',
+                                    child: Text(loc.portuguese),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'hi',
+                                    child: Text(loc.hindi),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    loc.setupYourDetails,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _name,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(labelText: loc.nameOptional),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _company,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(labelText: loc.companyOptional),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _address,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: InputDecoration(labelText: loc.addressOptional),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(labelText: loc.emailOptional),
+                    validator: (v) {
+                      final t = v?.trim() ?? '';
+                      if (t.isEmpty) return null;
+                      return RegExp(r'^.+@.+\..+$').hasMatch(t)
+                          ? null
+                          : loc.enterValidEmail;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _profession,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(
+                      labelText: loc.firstProfessionRequired,
+                      hintText: loc.professionExample,
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? loc.enterProfession
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    loc.weekStartsOn,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  DropdownButtonFormField<String>(
+                    initialValue: _weekStart,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'locale',
+                        child: Text(
+                          loc.useDeviceLocaleRecommended,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'monday',
+                        child: Text(
+                          loc.monday,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'sunday',
+                        child: Text(
+                          loc.sunday,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'saturday',
+                        child: Text(
+                          loc.saturday,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _weekStart = v);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _save,
+                      child: Text(loc.continueLabel),
+                    ),
+                  ),
                 ],
-                onChanged: (v) {
-                  if (v != null) setState(() => _weekStart = v);
-                },
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _save,
-                  child: const Text('Continue'),
-                ),
-              )
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

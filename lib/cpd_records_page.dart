@@ -14,6 +14,7 @@ import 'utils/pdf_exporter.dart';
 import 'widgets/record_card.dart';
 import 'widgets/attachments_dialog.dart';
 import 'widgets/share_format_sheet.dart';
+import 'l10n/app_localizations.dart';
 
 class CpdRecordsPage extends StatefulWidget {
   const CpdRecordsPage({super.key, required this.profession});
@@ -52,7 +53,8 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     if (!mounted) return; // guard before using context
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => AddEntryPage(profession: e.profession, existingEntry: e),
+        builder: (_) =>
+            AddEntryPage(profession: e.profession, existingEntry: e),
       ),
     );
     if (!mounted) return; // guard after the await
@@ -63,15 +65,29 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(e.deleted ? 'Restore record?' : 'Delete record?'),
-        content: Text(e.deleted
-            ? 'Do you want to restore this record?'
-            : 'Do you want to delete this record?'),
+        title: Text(
+          e.deleted
+              ? AppLocalizations.of(ctx)!.restoreRecordTitle
+              : AppLocalizations.of(ctx)!.deleteRecordTitle,
+        ),
+        content: Text(
+          e.deleted
+              ? AppLocalizations.of(ctx)!.restoreRecordConfirm
+              : AppLocalizations.of(ctx)!.deleteRecordConfirm,
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(ctx)!.cancel),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(e.deleted ? 'Restore' : 'Delete')),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              e.deleted
+                  ? AppLocalizations.of(ctx)!.restore
+                  : AppLocalizations.of(ctx)!.delete,
+            ),
+          ),
         ],
       ),
     );
@@ -88,7 +104,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         await SharePlus.instance.share(
           ShareParams(
             text: path.trim(),
-            subject: 'CPD link',
+            subject: AppLocalizations.of(context)!.cpdLinkSubject,
           ),
         );
         return;
@@ -103,20 +119,22 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                 name: p.basename(path),
               ),
             ],
-            subject: 'CPD attachment',
+            subject: AppLocalizations.of(context)!.cpdAttachmentSubject,
           ),
         );
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('File not found.')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.fileNotFound)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Share failed: $e')),
+          SnackBar(
+            content: Text('${AppLocalizations.of(context)!.shareFailed}: $e'),
+          ),
         );
       }
     }
@@ -174,7 +192,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     if (!hasAny) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No records in the selected period.')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.noRecordsInSelectedPeriod,
+            ),
+          ),
         );
       }
       return;
@@ -183,14 +205,24 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     if (sel == 'csv') {
       if (!mounted) return;
       setState(() => _exporting = true);
+      // Load user profile (name/company/email) from SettingsStore
+      final Map<String, String> profile = await _settings.loadProfile();
+      final String userName = profile['name']?.trim() ?? '';
+      final String company = profile['company']?.trim() ?? '';
+      final String email = profile['email']?.trim() ?? '';
       try {
-        debugPrint('Exporting CSV for ${widget.profession} range ${picked.start} – ${picked.end}');
+        debugPrint(
+          'Exporting CSV for ${widget.profession} range ${picked.start} – ${picked.end}',
+        );
         await exportRecordsCsv(
           context: context,
           profession: widget.profession,
           dateFormat: _fmt,
           entries: _entries,
           range: picked,
+          userName: userName,
+          company: company,
+          email: email,
         );
         if (!mounted) return;
         Navigator.of(context).popUntil((route) => route is PageRoute);
@@ -199,7 +231,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         debugPrint(st.toString());
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Export failed: $err')),
+            SnackBar(
+              content: Text(
+                '${AppLocalizations.of(context)!.exportFailed}: $err',
+              ),
+            ),
           );
         }
       } finally {
@@ -211,10 +247,13 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       // Load user profile (name/company/email) from SettingsStore
       final Map<String, String> profile = await _settings.loadProfile();
       final String userName = profile['name']?.trim() ?? '';
-      final String company  = profile['company']?.trim() ?? '';
-      final String email    = profile['email']?.trim() ?? '';
+      final String company = profile['company']?.trim() ?? '';
+      final String email = profile['email']?.trim() ?? '';
       try {
-        debugPrint('Exporting PDF for ${widget.profession} range ${picked.start} – ${picked.end}');
+        debugPrint(
+          'Exporting PDF for ${widget.profession} range ${picked.start} – ${picked.end}',
+        );
+        final pdfTexts = PdfExportTexts.fromLoc(AppLocalizations.of(context)!);
         await exportRecordsPdf(
           profession: widget.profession,
           entries: _entries,
@@ -223,6 +262,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           company: company,
           email: email,
           includeAttachments: true,
+          texts: pdfTexts,
         );
         if (!mounted) return;
         Navigator.of(context).popUntil((route) => route is PageRoute);
@@ -231,7 +271,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         debugPrint(st.toString());
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Export failed: $err')),
+            SnackBar(
+              content: Text(
+                '${AppLocalizations.of(context)!.exportFailed}: $err',
+              ),
+            ),
           );
         }
       } finally {
@@ -242,10 +286,13 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       setState(() => _exporting = true);
       final Map<String, String> profile = await _settings.loadProfile();
       final String userName = profile['name']?.trim() ?? '';
-      final String company  = profile['company']?.trim() ?? '';
-      final String email    = profile['email']?.trim() ?? '';
+      final String company = profile['company']?.trim() ?? '';
+      final String email = profile['email']?.trim() ?? '';
       try {
-        debugPrint('Exporting PDF Bundle for ${widget.profession} range ${picked.start} – ${picked.end}');
+        debugPrint(
+          'Exporting PDF Bundle for ${widget.profession} range ${picked.start} – ${picked.end}',
+        );
+        final pdfTexts = PdfExportTexts.fromLoc(AppLocalizations.of(context)!);
         await exportRecordsBundleZip(
           profession: widget.profession,
           entries: _entries,
@@ -253,6 +300,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           userName: userName,
           company: company,
           email: email,
+          texts: pdfTexts,
         );
         if (!mounted) return;
         Navigator.of(context).popUntil((route) => route is PageRoute);
@@ -261,7 +309,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         debugPrint(st.toString());
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Export failed: $err')),
+            SnackBar(
+              content: Text(
+                '${AppLocalizations.of(context)!.exportFailed}: $err',
+              ),
+            ),
           );
         }
       } finally {
@@ -283,7 +335,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
             Text(widget.profession),
             if (_lastRange != null)
               Text(
-                'Period: ${formatDate(_lastRange!.start, _fmt)} – ${formatDate(_lastRange!.end, _fmt)}',
+                '${AppLocalizations.of(context)!.periodLabel}: ${formatDate(_lastRange!.start, _fmt)} – ${formatDate(_lastRange!.end, _fmt)}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
           ],
@@ -301,7 +353,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         ],
       ),
       body: _entries.isEmpty
-          ? const Center(child: Text('No CPD records yet.'))
+          ? Center(child: Text(AppLocalizations.of(context)!.noCpdRecordsYet))
           : ListView.builder(
               itemCount: _entries.length,
               itemBuilder: (context, i) {
@@ -314,7 +366,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                   onViewAttachments: () => showAttachmentsDialog(
                     context: context,
                     attachments: e.attachments,
-                    title: 'Attachments',
+                    title: AppLocalizations.of(context)!.attachments,
                     enableLongPressActions: true,
                     onShareOne: (path) => _shareAttachmentPath(path),
                     onRemoveIndex: (idx) async {
@@ -322,10 +374,15 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                       // Remove from the model and persist
                       e.attachments.removeAt(idx);
                       await _repo.updateEntry(e);
-                      if (!context.mounted) return; // guard immediately after await
+                      if (!context.mounted)
+                        return; // guard immediately after await
                       setState(() {});
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Attachment removed.')),
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(context)!.attachmentRemoved,
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -337,8 +394,10 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             IconButton(
-              tooltip: 'Share / Export',
-              onPressed: (_entries.isEmpty || _exporting) ? null : _onShareTapped,
+              tooltip: AppLocalizations.of(context)!.shareExport,
+              onPressed: (_entries.isEmpty || _exporting)
+                  ? null
+                  : _onShareTapped,
               icon: const Icon(Icons.ios_share),
             ),
             const SizedBox(width: 8),

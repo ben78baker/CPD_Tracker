@@ -1,0 +1,326 @@
+{
+  "@@locale": "es",
+
+  "appTitle": "Rastreador de Progreso de DPC",
+
+  "homeTitle": "Tus profesiones",
+  "addNew": "Añadir",
+  "newEntry": "Nuevo registro",
+
+  "scanQrCode": "Escanear QR",
+  "scanQr": "Escanear QR",
+
+  "addEntry": "Añadir registro",
+  "viewRecords": "Ver registros",
+  "setEditTarget": "Definir / editar objetivo",
+
+  "menuTooltip": "Menú",
+
+  "addProfession": "Añadir profesión",
+  "editPersonalDetails": "Datos personales",
+  "setWeekStartDay": "Inicio de semana",
+  "resetTips": "Restablecer consejos",
+  "viewDeletedProfessions": "Profesiones eliminadas",
+
+  "noProfessionsYet": "No hay profesiones. Menú → Añadir.",
+  "renameProfession": "Renombrar profesión",
+  "deleteProfession": "Eliminar profesión",
+  "tipsRestored": "Consejos restaurados",
+  "weekStartUpdated": "Inicio de semana actualizado",
+
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+
+  "language": "Idioma",
+  "followSystemLanguage": "Idioma del sistema",
+
+  "english": "Inglés",
+  "french": "Francés",
+  "german": "Alemán",
+  "spanish": "Español",
+  "portuguese": "Portugués (Brasil)",
+  "hindi": "हिंदी",
+
+  "welcome": "Bienvenido",
+  "setupYourDetails": "Configurar tus datos",
+
+  "nameOptional": "Nombre (opcional)",
+  "companyOptional": "Empresa (opcional)",
+  "addressOptional": "Dirección (opcional)",
+  "emailOptional": "Correo electrónico (opcional)",
+
+  "enterValidEmail": "Introduce un correo electrónico válido",
+
+  "firstProfessionRequired": "Primera profesión (obligatoria)",
+  "professionExample": "ej. Electricista",
+  "enterProfession": "Introduce una profesión",
+
+  "weekStartsOn": "La semana comienza el",
+  "useDeviceLocaleRecommended": "Usar idioma del dispositivo (recomendado)",
+  "monday": "Lunes",
+  "sunday": "Domingo",
+  "saturday": "Sábado",
+
+  "continueLabel": "Continuar",
+
+  "savedLocallyNotice": "Guardado localmente. Algunos ajustes se sincronizarán al próximo inicio.",
+
+  "detectedDownloadableFile": "Enlace de descarga detectado",
+  "whatWouldYouLikeToDo": "¿Qué te gustaría hacer?",
+  "attachToEntry": "Adjuntar a este registro",
+  "downloadAndSave": "Descargar y guardar en adjuntos",
+  "openLink": "Abrir enlace",
+  "keepAsUrlOnly": "Conservar solo como URL",
+
+  "qrCertificateReminder": "Para obtener cualquier certificado de DPC, sigue el enlace del código QR escaneado cuando lo desees y añade el certificado a este registro.",
+  "dontShowAgain": "No mostrar este mensaje de nuevo",
+  "ok": "OK",
+  "couldNotSaveDetails": "No se pudieron guardar los datos. Inténtalo de nuevo.",
+
+  "restoreRecordTitle": "¿Restaurar registro?",
+  "deleteRecordTitle": "¿Eliminar registro?",
+  "restoreRecordConfirm": "¿Deseas restaurar este registro?",
+  "deleteRecordConfirm": "¿Deseas eliminar este registro?",
+  "restore": "Restaurar",
+
+  "cpdLinkSubject": "Enlace DPC",
+  "cpdAttachmentSubject": "Adjunto DPC",
+  "fileNotFound": "Archivo no encontrado.",
+  "shareFailed": "Error al compartir",
+  "noRecordsInSelectedPeriod": "No hay registros en el periodo seleccionado.",
+  "exportFailed": "Error en la exportación",
+
+  "periodLabel": "Periodo",
+  "noCpdRecordsYet": "Aún no hay registros de DPC.",
+  "attachments": "Adjuntos",
+  "attachmentRemoved": "Adjunto eliminado.",
+  "shareExport": "Compartir / Exportar",
+
+  "futureDateNotAllowedTitle": "Fecha futura no permitida",
+  "futureDateNotAllowedBody": "Solo puedes añadir registros de DPC con fecha de hoy o anterior.",
+  "takePhoto": "Tomar foto",
+  "photoLibrary": "Biblioteca de fotos",
+  "chooseFile": "Elegir archivo",
+  "noQrDataCaptured": "No se capturaron datos QR.",
+  "attachmentFailed": "Error al adjuntar",
+  "enterTitleOrDetails": "Introduce un título o detalles.",
+  "entryUpdated": "Registro actualizado",
+  "entrySaved": "Registro guardado",
+  "editEntry": "Editar registro",
+
+  "professionLabel": "Profesión",
+  "dateLabel": "Fecha",
+  "titleLabel": "Título",
+  "enterTitle": "Introduce un título",
+  "detailsLabel": "Detalles",
+  "timeLabel": "Duración",
+
+  "attachmentsEvidence": "Adjuntos (evidencia)",
+  "add": "Añadir",
+  "noAttachmentsAdded": "No se añadieron adjuntos.",
+  "removeAttachmentTitle": "¿Eliminar adjunto?",
+  "removeAttachmentBody": "¿Deseas eliminar este adjunto?",
+  "remove": "Eliminar",
+  "saveChanges": "Guardar cambios",
+  "saveEntry": "Guardar registro",
+  "attachmentsNote": "Nota: los adjuntos se guardan en la app y se muestran como miniaturas en el PDF. Usa «PDF + adjuntos (paquete)» para compartir los archivos originales.",
+
+  "csvEditable": "CSV (editable)",
+  "pdfReadOnly": "PDF (solo lectura)",
+  "pdfAttachmentsBundle": "PDF + adjuntos (paquete)",
+  "pdfAttachmentsBundleSubtitle": "PDF de registros, PDF de índice y todos los archivos",
+
+  "noTitle": "(Sin título)",
+  "edit": "Editar",
+  "shareAllAttachments": "Compartir todos los adjuntos",
+  "zeroMinutes": "0 min",
+
+  "attachmentsCount": "Adjuntos ({count})",
+  "@attachmentsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "hoursPlural": "{count,plural, =1{{count} hora} other{{count} horas}}",
+  "@hoursPlural": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "minutesPlural": "{count,plural, =1{{count} minuto} other{{count} minutos}}",
+  "@minutesPlural": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "shareAll": "Compartir todo",
+  "selectPeriod": "Seleccionar periodo",
+  "fromLabel": "Desde",
+  "toLabel": "Hasta",
+
+  "hoursLabel": "Horas",
+  "minutesLabel": "Minutos",
+
+  "required": "Obligatorio",
+  "numbersOnly": "Solo números",
+  "mustBeZeroOrMore": "Debe ser ≥ 0",
+  "tooLarge": "Demasiado grande",
+  "zeroToFiftyNine": "0–59",
+
+  "selectDate": "Seleccionar fecha",
+
+  "noItemsAdded": "No se añadieron elementos.",
+
+  "link": "Enlace",
+  "imageAttachment": "Adjunto (imagen)",
+  "fileAttachment": "Adjunto (archivo)",
+  "shareThisAttachment": "Compartir este adjunto",
+
+  "allTime": "Desde el inicio",
+  "toWord": "a",
+  "pageOf": "Página {page} de {total}",
+  "@pageOf": {
+    "placeholders": {
+      "page": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "cpdRecordsTitle": "Registros de DPC",
+  "nameLabel": "Nombre",
+  "companyLabel": "Empresa",
+  "emailLabel": "Correo electrónico",
+  "totalTimeLabel": "Tiempo total",
+
+  "attachmentsEvidenceLabel": "Adjuntos / evidencias:",
+  "attachmentsInlineNotePdf": "Adjuntos / evidencias disponibles bajo solicitud",
+  "attachmentsInlineNoteZip": "Para adjuntos y evidencias, consulta el archivo ZIP",
+
+  "cpdRecordsShareSubject": "Registros de DPC",
+  "cpdRecordsBundleShareSubject": "Archivo de registros de DPC",
+
+  "attachmentLinksTitle": "Enlaces de adjuntos DPC",
+  "linksFileName": "enlaces.txt",
+
+  "csvNoAttachmentsInExport": "Ninguno en esta exportación",
+  "csvDateHeader": "Fecha",
+  "csvTitleHeader": "Título",
+  "csvHasAttachmentsHeader": "Adjuntos",
+  "yes": "Sí",
+  "no": "No",
+
+  "csvRecordsWithAttachments": "{count,plural, =1{{count} registro contiene adjuntos; disponibles bajo solicitud} other{{count} registros contienen adjuntos; disponibles bajo solicitud}}",
+  "@csvRecordsWithAttachments": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "cpdEntriesShareSubject": "Registros de DPC para {profession}",
+  "@cpdEntriesShareSubject": {
+    "placeholders": { "profession": {} }
+  },
+
+  "cpdEntriesShareText": "Registros de DPC para {profession} ({from} a {to}) — Total {hours}h {minutes}m",
+  "@cpdEntriesShareText": {
+    "placeholders": {
+      "profession": {},
+      "from": {},
+      "to": {},
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "couldNotOpenLink": "No se pudo abrir el enlace.",
+  "noAppToOpenLink": "No hay ninguna app disponible para abrir el enlace.",
+
+  "cantOpenThisFile": "No se puede abrir este archivo ({message}).",
+  "@cantOpenThisFile": { "placeholders": { "message": {} } },
+
+  "openFailed": "Error al abrir",
+  "savedToAttachments": "Guardado en adjuntos: {filename}",
+  "@savedToAttachments": { "placeholders": { "filename": {} } },
+
+  "attachmentNotFoundOnDevice": "Adjunto no encontrado en el dispositivo.",
+  "importFailed": "Error al importar",
+
+  "downloadFailedStatus": "Descarga fallida ({status}).",
+  "@downloadFailedStatus": { "placeholders": { "status": { "type": "int" } } },
+  "downloadError": "Error de descarga",
+
+  "cpdAttachmentBundleTitle": "Archivo de adjuntos DPC",
+  "includedFiles": "Archivos incluidos:",
+  "includedFilesNone": "Archivos incluidos: (ninguno)",
+  "links": "Enlaces:",
+  "linksNone": "Enlaces: (ninguno)",
+
+  "cpdAttachmentsShareSubject": "Adjuntos DPC • {profession} • {date}",
+  "@cpdAttachmentsShareSubject": { "placeholders": { "profession": {}, "date": {} } },
+
+  "attachmentsForTitleBody": "Adjuntos para «{title}» ({profession}).",
+  "@attachmentsForTitleBody": { "placeholders": { "title": {}, "profession": {} } },
+
+  "attachmentsForTitleWithLinksBody": "Adjuntos para «{title}» ({profession}). Enlaces incluidos en el manifiesto.",
+  "@attachmentsForTitleWithLinksBody": { "placeholders": { "title": {}, "profession": {} } },
+
+  "fileNotFoundWithName": "Archivo no encontrado: {filename}",
+  "@fileNotFoundWithName": { "placeholders": { "filename": {} } },
+
+  "unableToOpenAttachment": "No se pudo abrir el adjunto",
+
+  "exportFilePrefix": "registros_dpc",
+
+  "deletedProfessionsTitle": "Profesiones eliminadas",
+  "noDeletedProfessions": "No hay profesiones eliminadas",
+  "deletePermanently": "Eliminar permanentemente",
+  "professionRestored": "Profesión restaurada",
+  "permanentlyDeleteTitle": "¿Eliminar permanentemente?",
+  "permanentlyDeleteBody": "¿Eliminar «{name}» y todos sus registros? Esta acción no se puede deshacer.",
+  "@permanentlyDeleteBody": { "placeholders": { "name": {} } },
+  "professionDeletedPermanently": "«{name}» eliminada permanentemente (registros aún no eliminados)",
+  "@professionDeletedPermanently": { "placeholders": { "name": {} } },
+
+  "thisWeek": "esta semana",
+  "thisMonth": "este mes",
+  "thisYear": "este año",
+
+  "targetAchieved": "Objetivo alcanzado {cycle} 🎉",
+  "@targetAchieved": { "placeholders": { "cycle": {} } },
+
+  "timeRemaining": "Quedan {hours} h {minutes} min {cycle}",
+  "@timeRemaining": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" },
+      "cycle": {}
+    }
+  },
+
+  "weekStartsOnDay": "La semana comienza el {day}",
+  "@weekStartsOnDay": { "placeholders": { "day": {} } },
+
+  "setTargetForProfession": "Definir objetivo para {profession}",
+  "@setTargetForProfession": { "placeholders": { "profession": {} } },
+
+  "perWeek": "por semana",
+  "perMonth": "por mes",
+  "perYear": "por año",
+
+  "targetPeriod": "Periodo del objetivo",
+  "disable": "Desactivar",
+
+  "addProfessionDialogTitle": "Añadir profesión",
+  "enterProfessionHint": "Introduce la profesión",
+  "pleaseEnterProfession": "Introduce una profesión",
+  "professionAlreadyExists": "Esta profesión ya existe",
+  "professionInDeletedRestoreInstead": "Este nombre está en Eliminadas. Restaúrala en su lugar.",
+
+  "renameProfessionTitle": "Renombrar profesión",
+  "pleaseEnterName": "Introduce un nombre",
+
+  "deleteProfessionTitle": "¿Eliminar profesión?",
+  "removeProfessionConfirm": "¿Eliminar «{name}»?",
+  "@removeProfessionConfirm": { "placeholders": { "name": {} } },
+
+  "movedToDeleted": "«{name}» movida a Eliminadas",
+  "@movedToDeleted": { "placeholders": { "name": {} } }
+}

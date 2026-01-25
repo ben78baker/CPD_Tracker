@@ -1,0 +1,326 @@
+{
+  "@@locale": "fr",
+
+  "appTitle": "Suivi des progrès DPC",
+  "homeTitle": "Vos professions",
+  "addNew": "Ajouter",
+  "newEntry": "Nouvelle entrée",
+
+  "scanQrCode": "Scanner QR",
+  "scanQr": "Scanner QR",
+
+  "addEntry": "Ajouter entrée",
+  "viewRecords": "Voir registres",
+  "setEditTarget": "Définir / Modifier l’objectif",
+
+  "menuTooltip": "Menu",
+
+  "addProfession": "Ajouter prof.",
+  "editPersonalDetails": "Infos perso",
+  "setWeekStartDay": "Début semaine",
+  "resetTips": "RAZ astuces",
+  "viewDeletedProfessions": "Prof. supprimées",
+
+  "noProfessionsYet": "Aucune prof. Menu → Ajouter.",
+  "renameProfession": "Renommer la profession",
+  "deleteProfession": "Supprimer la profession",
+  "tipsRestored": "Astuces OK",
+  "weekStartUpdated": "Début semaine OK",
+
+  "save": "OK",
+  "cancel": "Annuler",
+  "delete": "Suppr.",
+
+  "language": "Langue",
+  "followSystemLanguage": "Langue du système",
+
+  "english": "Anglais",
+  "french": "Français",
+  "german": "Allemand",
+  "spanish": "Espagnol",
+  "portuguese": "Portugais (Brésil)",
+  "hindi": "हिंदी",
+
+  "welcome": "Bienvenue",
+  "setupYourDetails": "Configurer vos informations",
+
+  "nameOptional": "Nom (facultatif)",
+  "companyOptional": "Entreprise (facultatif)",
+  "addressOptional": "Adresse (facultatif)",
+  "emailOptional": "E-mail (facultatif)",
+
+  "enterValidEmail": "Entrez un e-mail valide",
+
+  "firstProfessionRequired": "Première profession (obligatoire)",
+  "professionExample": "ex. Électricien",
+  "enterProfession": "Veuillez saisir une profession",
+
+  "weekStartsOn": "La semaine commence le",
+  "useDeviceLocaleRecommended": "Utiliser la langue de l’appareil (recommandé)",
+  "monday": "Lundi",
+  "sunday": "Dimanche",
+  "saturday": "Samedi",
+
+  "continueLabel": "Continuer",
+
+  "savedLocallyNotice": "Enregistré localement. Certains réglages seront synchronisés au prochain lancement.",
+  "detectedDownloadableFile": "Lien de fichier téléchargeable détecté",
+  "whatWouldYouLikeToDo": "Que souhaitez-vous faire ?",
+  "attachToEntry": "Joindre à cette entrée",
+  "downloadAndSave": "Télécharger et enregistrer dans les pièces jointes",
+  "openLink": "Ouvrir le lien",
+  "keepAsUrlOnly": "Conserver uniquement l’URL",
+
+  "qrCertificateReminder": "Pour recevoir tout certificat de DPC, veuillez suivre le lien du QR code scanné ultérieurement et ajouter le certificat à cet enregistrement.",
+  "dontShowAgain": "Ne plus afficher ce message",
+  "ok": "OK",
+  "couldNotSaveDetails": "Impossible d’enregistrer les informations. Veuillez réessayer.",
+
+  "restoreRecordTitle": "Restaurer l’enregistrement ?",
+  "deleteRecordTitle": "Supprimer l’enregistrement ?",
+  "restoreRecordConfirm": "Voulez-vous restaurer cet enregistrement ?",
+  "deleteRecordConfirm": "Voulez-vous supprimer cet enregistrement ?",
+  "restore": "Restaurer",
+
+  "cpdLinkSubject": "Lien DPC",
+  "cpdAttachmentSubject": "Pièce jointe DPC",
+  "fileNotFound": "Fichier introuvable.",
+  "shareFailed": "Partage échoué",
+  "noRecordsInSelectedPeriod": "Aucun enregistrement sur la période sélectionnée.",
+  "exportFailed": "Exportation échouée",
+
+  "periodLabel": "Période",
+  "noCpdRecordsYet": "Aucun enregistrement DPC pour le moment.",
+  "attachments": "Pièces jointes",
+  "attachmentRemoved": "Pièce jointe supprimée.",
+  "shareExport": "Partager / Exporter",
+
+  "futureDateNotAllowedTitle": "Date future non autorisée",
+  "futureDateNotAllowedBody": "Vous ne pouvez ajouter que des entrées de DPC datées d’aujourd’hui ou d’une date antérieure.",
+  "takePhoto": "Prendre une photo",
+  "photoLibrary": "Photothèque",
+  "chooseFile": "Choisir un fichier",
+  "noQrDataCaptured": "Aucune donnée QR capturée.",
+  "attachmentFailed": "Échec de la pièce jointe",
+  "enterTitleOrDetails": "Veuillez saisir un titre ou des détails.",
+  "entryUpdated": "Entrée mise à jour",
+  "entrySaved": "Entrée enregistrée",
+  "editEntry": "Modifier l’entrée",
+
+  "professionLabel": "Profession",
+  "dateLabel": "Date",
+  "titleLabel": "Titre",
+  "enterTitle": "Veuillez saisir un titre",
+  "detailsLabel": "Détails",
+  "timeLabel": "Durée",
+
+  "attachmentsEvidence": "Pièces jointes (preuves)",
+  "add": "Ajouter",
+  "noAttachmentsAdded": "Aucune pièce jointe ajoutée.",
+  "removeAttachmentTitle": "Supprimer la pièce jointe ?",
+  "removeAttachmentBody": "Voulez-vous supprimer cette pièce jointe ?",
+  "remove": "Supprimer",
+  "saveChanges": "Enregistrer les modifications",
+  "saveEntry": "Enregistrer l’entrée",
+  "attachmentsNote": "Remarque : les pièces jointes sont enregistrées dans l’app et affichées en vignettes dans le PDF. Utilisez « PDF + pièces jointes (bundle) » pour partager les fichiers d’origine.",
+
+  "csvEditable": "CSV (modifiable)",
+  "pdfReadOnly": "PDF (lecture seule)",
+  "pdfAttachmentsBundle": "PDF + pièces jointes (archive)",
+  "pdfAttachmentsBundleSubtitle": "PDF des enregistrements, PDF d’index et tous les fichiers",
+
+  "noTitle": "(Sans titre)",
+  "edit": "Modifier",
+  "shareAllAttachments": "Partager toutes les pièces jointes",
+  "zeroMinutes": "0 min",
+
+  "attachmentsCount": "Pièces jointes ({count})",
+  "@attachmentsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "hoursPlural": "{count,plural, =1{{count} heure} other{{count} heures}}",
+  "@hoursPlural": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "minutesPlural": "{count,plural, =1{{count} minute} other{{count} minutes}}",
+  "@minutesPlural": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "shareAll": "Tout partager",
+  "selectPeriod": "Sélectionner une période",
+  "fromLabel": "Du",
+  "toLabel": "Au",
+
+  "hoursLabel": "Heures",
+  "minutesLabel": "Minutes",
+
+  "required": "Obligatoire",
+  "numbersOnly": "Chiffres uniquement",
+  "mustBeZeroOrMore": "Doit être ≥ 0",
+  "tooLarge": "Trop grand",
+  "zeroToFiftyNine": "0–59",
+
+  "selectDate": "Sélectionner une date",
+
+  "noItemsAdded": "Aucun élément n’a été ajouté.",
+
+  "link": "Lien",
+  "imageAttachment": "Pièce jointe (image)",
+  "fileAttachment": "Pièce jointe (fichier)",
+  "shareThisAttachment": "Partager cette pièce jointe",
+
+  "allTime": "Depuis le début",
+  "toWord": "au",
+  "pageOf": "Page {page} sur {total}",
+  "@pageOf": {
+    "placeholders": {
+      "page": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "cpdRecordsTitle": "Dossiers DPC",
+  "nameLabel": "Nom",
+  "companyLabel": "Entreprise",
+  "emailLabel": "E-mail",
+  "professionLabel": "Profession",
+  "periodLabel": "Période",
+  "totalTimeLabel": "Temps total",
+
+  "attachmentsEvidenceLabel": "Pièces jointes / preuves :",
+  "attachmentsInlineNotePdf": "Pièces jointes / preuves disponibles sur demande",
+  "attachmentsInlineNoteZip": "Pour les pièces jointes / preuves, voir le fichier ZIP",
+
+  "cpdRecordsShareSubject": "Dossiers DPC",
+  "cpdRecordsBundleShareSubject": "Archive des dossiers DPC",
+
+  "attachmentLinksTitle": "Liens des pièces jointes DPC",
+  "linksFileName": "liens.txt",
+
+  "csvNoAttachmentsInExport": "Aucune dans cet export",
+  "csvDateHeader": "Date",
+  "csvTitleHeader": "Titre",
+  "csvHasAttachmentsHeader": "Pièces jointes",
+  "yes": "Oui",
+  "no": "Non",
+
+  "csvRecordsWithAttachments": "{count,plural, =1{{count} enregistrement contient des pièces jointes ; disponibles sur demande} other{{count} enregistrements contiennent des pièces jointes ; disponibles sur demande}}",
+  "@csvRecordsWithAttachments": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "cpdEntriesShareSubject": "Entrées DPC pour {profession}",
+  "@cpdEntriesShareSubject": {
+    "placeholders": { "profession": {} }
+  },
+
+  "cpdEntriesShareText": "Entrées DPC pour {profession} ({from} au {to}) — Total {hours}h {minutes}m",
+  "@cpdEntriesShareText": {
+    "placeholders": {
+      "profession": {},
+      "from": {},
+      "to": {},
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "couldNotOpenLink": "Impossible d’ouvrir le lien.",
+  "noAppToOpenLink": "Aucune app disponible pour ouvrir le lien.",
+
+  "cantOpenThisFile": "Impossible d’ouvrir ce fichier ({message}).",
+  "@cantOpenThisFile": { "placeholders": { "message": {} } },
+
+  "openFailed": "Ouverture échouée",
+  "savedToAttachments": "Enregistré dans les pièces jointes : {filename}",
+  "@savedToAttachments": { "placeholders": { "filename": {} } },
+
+  "attachmentNotFoundOnDevice": "Pièce jointe introuvable sur l’appareil.",
+  "importFailed": "Importation échouée",
+
+  "downloadFailedStatus": "Téléchargement échoué ({status}).",
+  "@downloadFailedStatus": { "placeholders": { "status": { "type": "int" } } },
+  "downloadError": "Erreur de téléchargement",
+
+  "cpdAttachmentBundleTitle": "Archive des pièces jointes DPC",
+  "includedFiles": "Fichiers inclus :",
+  "includedFilesNone": "Fichiers inclus : (aucun)",
+  "links": "Liens :",
+  "linksNone": "Liens : (aucun)",
+
+  "cpdAttachmentsShareSubject": "Pièces jointes DPC • {profession} • {date}",
+  "@cpdAttachmentsShareSubject": { "placeholders": { "profession": {}, "date": {} } },
+
+  "attachmentsForTitleBody": "Pièces jointes pour « {title} » ({profession}).",
+  "@attachmentsForTitleBody": { "placeholders": { "title": {}, "profession": {} } },
+
+  "attachmentsForTitleWithLinksBody": "Pièces jointes pour « {title} » ({profession}). Liens inclus dans le manifeste.",
+  "@attachmentsForTitleWithLinksBody": { "placeholders": { "title": {}, "profession": {} } },
+
+  "fileNotFoundWithName": "Fichier introuvable : {filename}",
+  "@fileNotFoundWithName": { "placeholders": { "filename": {} } },
+
+  "unableToOpenAttachment": "Impossible d’ouvrir la pièce jointe",
+
+  "exportFilePrefix": "dossiers_dpc",
+
+  "deletedProfessionsTitle": "Professions supprimées",
+  "noDeletedProfessions": "Aucune profession supprimée",
+  "deletePermanently": "Supprimer définitivement",
+  "professionRestored": "Profession restaurée",
+  "permanentlyDeleteTitle": "Supprimer définitivement ?",
+  "permanentlyDeleteBody": "Supprimer « {name} » et tous ses enregistrements ? Cette action est irréversible.",
+  "@permanentlyDeleteBody": { "placeholders": { "name": {} } },
+  "professionDeletedPermanently": "« {name} » supprimée définitivement (enregistrements pas encore supprimés)",
+  "@professionDeletedPermanently": { "placeholders": { "name": {} } },
+
+  "thisWeek": "cette semaine",
+  "thisMonth": "ce mois-ci",
+  "thisYear": "cette année",
+
+  "targetAchieved": "Objectif atteint {cycle} 🎉",
+  "@targetAchieved": { "placeholders": { "cycle": {} } },
+
+  "timeRemaining": "Il reste {hours} h {minutes} min {cycle}",
+  "@timeRemaining": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" },
+      "cycle": {}
+    }
+  },
+
+  "weekStartsOnDay": "La semaine commence le {day}",
+  "@weekStartsOnDay": { "placeholders": { "day": {} } },
+
+  "setTargetForProfession": "Définir l’objectif pour {profession}",
+  "@setTargetForProfession": { "placeholders": { "profession": {} } },
+
+  "perWeek": "par semaine",
+  "perMonth": "par mois",
+  "perYear": "par an",
+
+  "targetPeriod": "Période de l’objectif",
+  "disable": "Désactiver",
+
+  "addProfessionDialogTitle": "Ajouter une profession",
+  "enterProfessionHint": "Saisir une profession",
+  "pleaseEnterProfession": "Veuillez saisir une profession",
+  "professionAlreadyExists": "Cette profession existe déjà",
+  "professionInDeletedRestoreInstead": "Ce nom est dans Supprimées. Restaurez-le plutôt.",
+
+  "renameProfessionTitle": "Renommer la profession",
+  "pleaseEnterName": "Veuillez saisir un nom",
+
+  "deleteProfessionTitle": "Supprimer la profession ?",
+  "removeProfessionConfirm": "Supprimer « {name} » ?",
+  "@removeProfessionConfirm": { "placeholders": { "name": {} } },
+
+  "movedToDeleted": "« {name} » déplacée vers Supprimées",
+  "@movedToDeleted": { "placeholders": { "name": {} } }
+}

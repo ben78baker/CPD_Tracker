@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cpd_tracker/utils/date_utils.dart';
 import 'date_button.dart';
 import 'package:intl/intl.dart';
+import '../l10n/app_localizations.dart';
 
 String formatDate(DateTime date, String format) {
   return DateFormat(format).format(date);
@@ -20,6 +21,7 @@ Future<DateTimeRange?> showPeriodPicker({
     context: context,
     showDragHandle: true,
     builder: (ctx) {
+      final loc = AppLocalizations.of(ctx)!;
       DateTime from = initialFrom;
       DateTime to = initialTo;
 
@@ -43,14 +45,17 @@ Future<DateTimeRange?> showPeriodPicker({
                     );
                   },
                   icon: const Icon(Icons.select_all),
-                  label: const Text('Share All'),
+                  label: Text(loc.shareAll),
                 ),
               ),
               const SizedBox(height: 12),
-              const Center(
+              Center(
                 child: Text(
-                  'Select Period',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  loc.selectPeriod,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -61,7 +66,7 @@ Future<DateTimeRange?> showPeriodPicker({
                     children: [
                       DateButton(
                         date: from,
-                        label: "From",
+                        label: loc.fromLabel,
                         onChanged: (d) => setState(() => from = d),
                       ),
                       const SizedBox(height: 4),
@@ -72,7 +77,7 @@ Future<DateTimeRange?> showPeriodPicker({
                     children: [
                       DateButton(
                         date: to,
-                        label: "To",
+                        label: loc.toLabel,
                         onChanged: (d) => setState(() => to = d),
                       ),
                       const SizedBox(height: 4),
@@ -86,12 +91,12 @@ Future<DateTimeRange?> showPeriodPicker({
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    child: const Text("Cancel"),
+                    child: Text(loc.cancel),
                     onPressed: () => Navigator.pop(ctx),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    child: const Text("OK"),
+                    child: Text(loc.ok),
                     onPressed: () {
                       if (from.isAfter(to)) {
                         // Swap to keep order
@@ -99,7 +104,10 @@ Future<DateTimeRange?> showPeriodPicker({
                         from = to;
                         to = tmp;
                       }
-                      Navigator.pop(ctx, DateTimeRange(start: dateOnly(from), end: dateOnly(to)));
+                      Navigator.pop(
+                        ctx,
+                        DateTimeRange(start: dateOnly(from), end: dateOnly(to)),
+                      );
                     },
                   ),
                 ],

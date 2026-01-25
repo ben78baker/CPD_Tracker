@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'entry_repository.dart';
@@ -7,6 +8,8 @@ import 'entry_repository.dart';
 class SettingsStore {
   SettingsStore._();
   static final SettingsStore instance = SettingsStore._();
+
+  final ValueNotifier<Locale?> locale = ValueNotifier<Locale?>(null);
 
   // Always returns a non-null SharedPreferences instance, with simple backoff retries
 Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
@@ -29,9 +32,26 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
     } catch (_) {
       // Ignore – UI flows will still retry lazily when needed
     }
+    // Also load saved language override (if any)
+    await _loadSavedLocale();
   }
 
   static const _kDateFormat = 'date_format';
+  static const _kLocaleCode = 'locale_code';
+  Future<void> _loadSavedLocale() async {
+    try {
+      final prefs = await _prefsWithRetry();
+      final code = prefs.getString(_kLocaleCode);
+      if (code == null || code.trim().isEmpty) {
+        locale.value = null; // follow device language
+      } else {
+        locale.value = Locale(code.trim());
+      }
+    } catch (_) {
+      // If prefs unavailable briefly, keep null (follow device) and allow retry later.
+      locale.value = null;
+    }
+  }
   Future<String> getDateFormat() async {
     final prefs = await _prefsWithRetry();
     return prefs.getString(_kDateFormat) ?? 'dd/MM/yyyy';
@@ -311,4 +331,24 @@ Future<int> sumMinutesForRange(String profession, DateTime start, DateTime end) 
   final repo = EntryRepository();
   return repo.sumMinutesForRange(profession, start, end);
 }
+
+  /// Persist an in-app language override.
+  /// Pass '' or null to follow system language.
+  Future<void> setLocaleCode(String? code) async {
+    final prefs = await _prefsWithRetry();
+    final c = (code ?? '').trim();
+    if (c.isEmpty) {
+      await prefs.remove(_kLocaleCode);
+      locale.value = null;
+    } else {
+      await prefs.setString(_kLocaleCode, c);
+      locale.value = Locale(c);
+    }
+  }
+
+  /// Read the saved override code (null/'' means follow system language).
+  Future<String?> getLocaleCode() async {
+    final prefs = await _prefsWithRetry();
+    return prefs.getString(_kLocaleCode);
+  }
 }

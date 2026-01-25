@@ -1,0 +1,327 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "CPD Progress Tracker",
+
+  "homeTitle": "Your Professions",
+  "addNew": "Add New",
+  "newEntry": "New Entry",
+
+  "scanQrCode": "Scan QR Code",
+  "save": "Save",
+  "cancel": "Cancel",
+
+  "menuTooltip": "Menu",
+  "tipsRestored": "Tips restored",
+
+  "addProfession": "Add Profession",
+  "editPersonalDetails": "Edit Personal Details",
+  "setWeekStartDay": "Set Week Start Day",
+  "resetTips": "Reset Tips",
+  "viewDeletedProfessions": "View Deleted Professions",
+
+  "noProfessionsYet": "No professions yet. Use menu → Add Profession.",
+  "renameProfession": "Rename Profession",
+  "deleteProfession": "Delete Profession",
+  "addEntry": "Add Entry",
+  "scanQr": "Scan QR",
+  "viewRecords": "View Records",
+
+  "setEditTarget": "Set/Edit Target",
+
+  "delete": "Delete",
+  "weekStartUpdated": "Week start updated",
+
+  "language": "Language",
+  "followSystemLanguage": "Follow system language",
+
+  "english": "English",
+  "french": "French",
+  "german": "German",
+  "spanish": "Spanish",
+  "portuguese": "Portuguese (Brazil)",
+  "hindi": "हिंदी",
+  "welcome": "Welcome",
+  "setupYourDetails": "Set up your details",
+
+  "nameOptional": "Name (optional)",
+  "companyOptional": "Company (optional)",
+  "addressOptional": "Address (optional)",
+  "emailOptional": "Email (optional)",
+
+  "enterValidEmail": "Enter a valid email",
+
+  "firstProfessionRequired": "First Profession (required)",
+  "professionExample": "e.g. Electrician",
+  "enterProfession": "Please enter a profession",
+
+  "weekStartsOn": "Week starts on",
+  "useDeviceLocaleRecommended": "Use device locale (recommended)",
+  "monday": "Monday",
+  "sunday": "Sunday",
+  "saturday": "Saturday",
+
+  "continueLabel": "Continue",
+
+  "savedLocallyNotice": "Saved locally. Some settings may sync on next launch.",
+
+  "detectedDownloadableFile": "Detected a downloadable file link",
+  "whatWouldYouLikeToDo": "What would you like to do?",
+  "attachToEntry": "Attach to this entry",
+  "downloadAndSave": "Download and save to Attachments",
+  "openLink": "Open link",
+  "keepAsUrlOnly": "Keep as URL only",
+
+  "qrCertificateReminder": "To receive any CPD certificate please follow the link from the scanned QR code at your leisure and add the certificate to this record.",
+  "dontShowAgain": "Don't show this message again",
+  "ok": "OK",
+  "couldNotSaveDetails": "Could not save details. Please try again.",
+
+  "restoreRecordTitle": "Restore record?",
+  "deleteRecordTitle": "Delete record?",
+  "restoreRecordConfirm": "Do you want to restore this record?",
+  "deleteRecordConfirm": "Do you want to delete this record?",
+  "restore": "Restore",
+
+  "cpdLinkSubject": "CPD link",
+  "cpdAttachmentSubject": "CPD attachment",
+  "fileNotFound": "File not found.",
+  "shareFailed": "Share failed",
+  "noRecordsInSelectedPeriod": "No records in the selected period.",
+  "exportFailed": "Export failed",
+
+  "periodLabel": "Period",
+  "noCpdRecordsYet": "No CPD records yet.",
+  "attachments": "Attachments",
+  "attachmentRemoved": "Attachment removed.",
+  "shareExport": "Share / Export",
+
+  "futureDateNotAllowedTitle": "Future date not allowed",
+  "futureDateNotAllowedBody": "You can only add CPD entries dated today or earlier.",
+  "takePhoto": "Take photo",
+  "photoLibrary": "Photo library",
+  "chooseFile": "Choose file",
+  "noQrDataCaptured": "No QR data captured.",
+  "attachmentFailed": "Attachment failed",
+  "enterTitleOrDetails": "Please enter a title or details.",
+  "entryUpdated": "Entry updated",
+  "entrySaved": "Entry saved",
+  "editEntry": "Edit Entry",
+
+  "professionLabel": "Profession",
+  "dateLabel": "Date",
+  "titleLabel": "Title",
+  "enterTitle": "Please enter a title",
+  "detailsLabel": "Details",
+  "timeLabel": "Time",
+
+  "attachmentsEvidence": "Attachments (evidence)",
+  "add": "Add",
+  "noAttachmentsAdded": "No attachments added.",
+  "removeAttachmentTitle": "Remove attachment?",
+  "removeAttachmentBody": "Do you want to remove this attachment?",
+  "remove": "Remove",
+  "saveChanges": "Save Changes",
+  "saveEntry": "Save Entry",
+  "attachmentsNote": "Note: Attachments are saved into the app and shown as thumbnails in the PDF. Use “PDF + attachments (bundle)” to share original files.",
+
+  "csvEditable": "CSV (editable)",
+  "pdfReadOnly": "PDF (read-only)",
+  "pdfAttachmentsBundle": "PDF + attachments (bundle)",
+  "pdfAttachmentsBundleSubtitle": "Records PDF, index PDF and all files",
+
+  "noTitle": "(No title)",
+  "edit": "Edit",
+  "shareAllAttachments": "Share all attachments",
+  "zeroMinutes": "0m",
+
+  "attachmentsCount": "Attachments ({count})",
+  "@attachmentsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "hoursPlural": "{count,plural, =1{{count} hour} other{{count} hours}}",
+  "@hoursPlural": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "minutesPlural": "{count,plural, =1{{count} minute} other{{count} minutes}}",
+  "@minutesPlural": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "shareAll": "Share All",
+  "selectPeriod": "Select Period",
+  "fromLabel": "From",
+  "toLabel": "To",
+
+  "hoursLabel": "Hours",
+  "minutesLabel": "Minutes",
+
+  "required": "Required",
+  "numbersOnly": "Numbers only",
+  "mustBeZeroOrMore": "Must be ≥ 0",
+  "tooLarge": "Too large",
+  "zeroToFiftyNine": "0–59",
+
+  "selectDate": "Select date",
+
+  "noItemsAdded": "No items have been added.",
+
+  "link": "Link",
+  "imageAttachment": "Image attachment",
+  "fileAttachment": "File attachment",
+  "shareThisAttachment": "Share this attachment",
+
+  "allTime": "All time",
+  "toWord": "to",
+  "pageOf": "Page {page} of {total}",
+  "@pageOf": {
+    "placeholders": {
+      "page": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "cpdRecordsTitle": "CPD Records",
+  "nameLabel": "Name",
+  "companyLabel": "Company",
+  "emailLabel": "Email",
+  "professionLabel": "Profession",
+  "periodLabel": "Period",
+  "totalTimeLabel": "Total Time",
+
+  "attachmentsEvidenceLabel": "Attachments / Evidence:",
+  "attachmentsInlineNotePdf": "Attachments/Evidence available on request",
+  "attachmentsInlineNoteZip": "For Attachments & Evidence see ZIP File",
+
+  "cpdRecordsShareSubject": "CPD records",
+  "cpdRecordsBundleShareSubject": "CPD records bundle",
+
+  "attachmentLinksTitle": "CPD Attachment Links",
+  "linksFileName": "links.txt",
+
+  "csvNoAttachmentsInExport": "None in this export",
+  "csvDateHeader": "Date",
+  "csvTitleHeader": "Title",
+  "csvHasAttachmentsHeader": "Has Attachments",
+  "yes": "Yes",
+  "no": "No",
+
+  "csvRecordsWithAttachments": "{count,plural, =1{{count} record includes attachments; available upon request} other{{count} records include attachments; available upon request}}",
+  "@csvRecordsWithAttachments": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "cpdEntriesShareSubject": "CPD entries for {profession}",
+  "@cpdEntriesShareSubject": {
+    "placeholders": { "profession": {} }
+  },
+
+  "cpdEntriesShareText": "CPD entries for {profession} ({from} to {to}) — Total {hours}h {minutes}m",
+  "@cpdEntriesShareText": {
+    "placeholders": {
+      "profession": {},
+      "from": {},
+      "to": {},
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "couldNotOpenLink": "Could not open link.",
+  "noAppToOpenLink": "No app available to open link.",
+
+  "cantOpenThisFile": "Can't open this file ({message}).",
+  "@cantOpenThisFile": { "placeholders": { "message": {} } },
+
+  "openFailed": "Open failed",
+  "savedToAttachments": "Saved to Attachments: {filename}",
+  "@savedToAttachments": { "placeholders": { "filename": {} } },
+
+  "attachmentNotFoundOnDevice": "Attachment not found on device.",
+  "importFailed": "Import failed",
+
+  "downloadFailedStatus": "Download failed ({status}).",
+  "@downloadFailedStatus": { "placeholders": { "status": { "type": "int" } } },
+  "downloadError": "Download error",
+
+  "cpdAttachmentBundleTitle": "CPD Attachment Bundle",
+  "includedFiles": "Included files:",
+  "includedFilesNone": "Included files: (none)",
+  "links": "Links:",
+  "linksNone": "Links: (none)",
+
+  "cpdAttachmentsShareSubject": "CPD attachments • {profession} • {date}",
+  "@cpdAttachmentsShareSubject": { "placeholders": { "profession": {}, "date": {} } },
+
+  "attachmentsForTitleBody": "Attachments for \"{title}\" ({profession}).",
+  "@attachmentsForTitleBody": { "placeholders": { "title": {}, "profession": {} } },
+
+  "attachmentsForTitleWithLinksBody": "Attachments for \"{title}\" ({profession}). Links included in manifest.",
+  "@attachmentsForTitleWithLinksBody": { "placeholders": { "title": {}, "profession": {} } },
+
+  "fileNotFoundWithName": "File not found: {filename}",
+  "@fileNotFoundWithName": { "placeholders": { "filename": {} } },
+
+  "unableToOpenAttachment": "Unable to open attachment",
+
+  "exportFilePrefix": "cpd_records",
+
+  "deletedProfessionsTitle": "Deleted Professions",
+  "noDeletedProfessions": "No deleted professions",
+  "deletePermanently": "Delete Permanently",
+  "professionRestored": "Profession restored",
+  "permanentlyDeleteTitle": "Permanently delete?",
+  "permanentlyDeleteBody": "Delete \"{name}\" and all its records? This cannot be undone.",
+  "@permanentlyDeleteBody": { "placeholders": { "name": {} } },
+  "professionDeletedPermanently": "Deleted \"{name}\" permanently (records not yet removed)",
+  "@professionDeletedPermanently": { "placeholders": { "name": {} } },
+
+  "thisWeek": "this week",
+  "thisMonth": "this month",
+  "thisYear": "this year",
+
+  "targetAchieved": "Target achieved {cycle} 🎉",
+  "@targetAchieved": { "placeholders": { "cycle": {} } },
+
+  "timeRemaining": "{hours} hrs, {minutes} mins remaining {cycle}",
+  "@timeRemaining": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" },
+      "cycle": {}
+    }
+  },
+
+  "weekStartsOnDay": "Week starts on {day}",
+  "@weekStartsOnDay": { "placeholders": { "day": {} } },
+
+  "setTargetForProfession": "Set Target for {profession}",
+  "@setTargetForProfession": { "placeholders": { "profession": {} } },
+
+  "perWeek": "per week",
+  "perMonth": "per month",
+  "perYear": "per year",
+
+  "targetPeriod": "Target period",
+  "disable": "Disable",
+
+  "addProfessionDialogTitle": "Add profession",
+  "enterProfessionHint": "Enter profession",
+  "pleaseEnterProfession": "Please enter a profession",
+  "professionAlreadyExists": "That profession already exists",
+  "professionInDeletedRestoreInstead": "That name is in Deleted. Restore it instead.",
+
+  "renameProfessionTitle": "Rename profession",
+  "pleaseEnterName": "Please enter a name",
+
+  "deleteProfessionTitle": "Delete profession?",
+  "removeProfessionConfirm": "Remove \"{name}\"?",
+  "@removeProfessionConfirm": { "placeholders": { "name": {} } },
+
+  "movedToDeleted": "Moved \"{name}\" to Deleted",
+  "@movedToDeleted": { "placeholders": { "name": {} } }
+}

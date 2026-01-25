@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'l10n/app_localizations.dart';
 // debugPrint
 import 'entry_repository.dart';
 import 'models.dart';
@@ -10,7 +11,6 @@ import 'utils/attachment_io.dart';
 import 'utils/date_utils.dart';
 import 'widgets/attachment_tile.dart';
 import 'widgets/duration_fields.dart';
-
 
 class AddEntryPage extends StatefulWidget {
   const AddEntryPage({
@@ -47,8 +47,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
   late final bool _editing;
 
   final _repo = EntryRepository();
-final _settings = SettingsStore.instance;
-
+  final _settings = SettingsStore.instance;
 
   @override
   void initState() {
@@ -71,7 +70,6 @@ final _settings = SettingsStore.instance;
       _hoursVal = 0;
       _minutesVal = 0;
     }
-    
 
     _loadFormat();
   }
@@ -112,18 +110,17 @@ final _settings = SettingsStore.instance;
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Future date not allowed'),
-        content: const Text('You can only add CPD entries dated today or earlier.'),
+        title: Text(AppLocalizations.of(ctx)!.futureDateNotAllowedTitle),
+        content: Text(AppLocalizations.of(ctx)!.futureDateNotAllowedBody),
         actions: [
           FilledButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK'),
+            child: Text(AppLocalizations.of(ctx)!.ok),
           ),
         ],
       ),
     );
   }
-
 
   Future<void> _addAttachment() async {
     if (_pickingAttachment) return; // guard against double-taps
@@ -139,34 +136,37 @@ final _settings = SettingsStore.instance;
       final choice = await showModalBottomSheet<String>(
         context: context,
         showDragHandle: true,
-        builder: (ctx) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: const Text('Take photo'),
-                onTap: () => Navigator.pop(ctx, 'camera'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Photo library'),
-                onTap: () => Navigator.pop(ctx, 'gallery'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.attach_file),
-                title: const Text('Choose file'),
-                onTap: () => Navigator.pop(ctx, 'file'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.qr_code_scanner),
-                title: const Text('Scan QR code'),
-                onTap: () => Navigator.pop(ctx, 'qr'),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
+        builder: (ctx) {
+          final loc = AppLocalizations.of(ctx)!;
+          return SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.photo_camera),
+                  title: Text(loc.takePhoto),
+                  onTap: () => Navigator.pop(ctx, 'camera'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: Text(loc.photoLibrary),
+                  onTap: () => Navigator.pop(ctx, 'gallery'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.attach_file),
+                  title: Text(loc.chooseFile),
+                  onTap: () => Navigator.pop(ctx, 'file'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.qr_code_scanner),
+                  title: Text(loc.scanQrCode),
+                  onTap: () => Navigator.pop(ctx, 'qr'),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          );
+        },
       );
       if (!context.mounted) return;
       if (!mounted) return;
@@ -176,9 +176,16 @@ final _settings = SettingsStore.instance;
       try {
         if (choice == 'camera') {
           final picker = ImagePicker();
-          final shot = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+          final shot = await picker.pickImage(
+            source: ImageSource.camera,
+            imageQuality: 85,
+          );
           if (shot != null && mounted) {
-            final saved = await importAttachmentToApp(context, shot.path, displayName: p.basename(shot.path));
+            final saved = await importAttachmentToApp(
+              context,
+              shot.path,
+              displayName: p.basename(shot.path),
+            );
             if (saved != null && mounted) {
               setState(() => _attachments.add(saved));
               debugPrint('[AddEntry] added (app path): $saved');
@@ -186,9 +193,16 @@ final _settings = SettingsStore.instance;
           }
         } else if (choice == 'gallery') {
           final picker = ImagePicker();
-          final img = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+          final img = await picker.pickImage(
+            source: ImageSource.gallery,
+            imageQuality: 85,
+          );
           if (img != null && mounted) {
-            final saved = await importAttachmentToApp(context, img.path, displayName: p.basename(img.path));
+            final saved = await importAttachmentToApp(
+              context,
+              img.path,
+              displayName: p.basename(img.path),
+            );
             if (saved != null && mounted) {
               setState(() => _attachments.add(saved));
               debugPrint('[AddEntry] added (app path): $saved');
@@ -199,7 +213,11 @@ final _settings = SettingsStore.instance;
           if (res != null && res.files.isNotEmpty) {
             final path = res.files.single.path;
             if (path != null && mounted) {
-              final saved = await importAttachmentToApp(context, path, displayName: p.basename(path));
+              final saved = await importAttachmentToApp(
+                context,
+                path,
+                displayName: p.basename(path),
+              );
               if (saved != null && mounted) {
                 setState(() => _attachments.add(saved));
                 debugPrint('[AddEntry] added (app path): $saved');
@@ -211,7 +229,9 @@ final _settings = SettingsStore.instance;
           final dynamic r = await Navigator.of(context).pushNamed('/scan');
           if (!mounted) return;
 
-          final String? result = (r is String && r.trim().isNotEmpty) ? r.trim() : null;
+          final String? result = (r is String && r.trim().isNotEmpty)
+              ? r.trim()
+              : null;
           if (result != null) {
             // If it looks like a web URL, store as-is; otherwise try to import to app dir
             if (isUrl(result)) {
@@ -226,14 +246,20 @@ final _settings = SettingsStore.instance;
             }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No QR data captured.')),
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.noQrDataCaptured),
+              ),
             );
           }
         }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Attachment failed: $e')),
+          SnackBar(
+            content: Text(
+              '${AppLocalizations.of(context)!.attachmentFailed}: $e',
+            ),
+          ),
         );
       }
     } finally {
@@ -245,7 +271,9 @@ final _settings = SettingsStore.instance;
 
   Future<void> _save() async {
     debugPrint('[AddEntry] _save() pressed');
-    debugPrint('[AddEntry] title.len=${_title.text.trim().length} details.len=${_details.text.trim().length}');
+    debugPrint(
+      '[AddEntry] title.len=${_title.text.trim().length} details.len=${_details.text.trim().length}',
+    );
 
     // Ensure keyboard is dismissed before saving / navigating
     FocusScope.of(context).unfocus();
@@ -267,7 +295,9 @@ final _settings = SettingsStore.instance;
       debugPrint('[AddEntry] abort: empty title & details');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a title or details.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.enterTitleOrDetails),
+        ),
       );
       return;
     }
@@ -285,13 +315,21 @@ final _settings = SettingsStore.instance;
         attachments: List<String>.from(_attachments),
         deleted: orig.deleted,
       );
-      debugPrint('[AddEntry] saving UPDATE with ${updated.attachments.length} attachments');
-      for (final a in updated.attachments) { debugPrint('  • $a'); }
+      debugPrint(
+        '[AddEntry] saving UPDATE with ${updated.attachments.length} attachments',
+      );
+      for (final a in updated.attachments) {
+        debugPrint('  • $a');
+      }
       await _repo.updateEntry(updated);
     } else {
       final listToSave = List<String>.from(_attachments);
-      debugPrint('[AddEntry] saving CREATE with ${listToSave.length} attachments');
-      for (final a in listToSave) { debugPrint('  • $a'); }
+      debugPrint(
+        '[AddEntry] saving CREATE with ${listToSave.length} attachments',
+      );
+      for (final a in listToSave) {
+        debugPrint('  • $a');
+      }
       await _repo.createAndSave(
         profession: widget.profession,
         date: selected,
@@ -307,7 +345,13 @@ final _settings = SettingsStore.instance;
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_editing ? 'Entry updated' : 'Entry saved')),
+      SnackBar(
+        content: Text(
+          _editing
+              ? AppLocalizations.of(context)!.entryUpdated
+              : AppLocalizations.of(context)!.entrySaved,
+        ),
+      ),
     );
     debugPrint('[AddEntry] save complete → popping true');
     Navigator.pop(context, true);
@@ -316,8 +360,11 @@ final _settings = SettingsStore.instance;
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final dateLabel = formatDate(_date, _dateFormat);
-    final titleText = _editing ? 'Edit Entry' : 'New Entry – ${widget.profession}';
+    final titleText = _editing
+        ? loc.editEntry
+        : '${loc.newEntry} – ${widget.profession}';
 
     return Scaffold(
       appBar: AppBar(title: Text(titleText)),
@@ -329,39 +376,55 @@ final _settings = SettingsStore.instance;
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             children: [
               // Profession (read-only)
-              Text('Profession', style: Theme.of(context).textTheme.labelMedium),
+              Text(
+                loc.professionLabel,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
               const SizedBox(height: 4),
-              Text(widget.profession, style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                widget.profession,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 16),
 
               // Date
-              Text('Date', style: Theme.of(context).textTheme.labelMedium),
+              Text(
+                loc.dateLabel,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
               const SizedBox(height: 4),
               OutlinedButton(
                 onPressed: _pickDate,
-                child: Align(alignment: Alignment.centerLeft, child: Text(dateLabel)),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(dateLabel),
+                ),
               ),
               const SizedBox(height: 16),
 
               // Title
               TextFormField(
                 controller: _title,
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: InputDecoration(labelText: loc.titleLabel),
                 maxLength: 150,
-                validator: (v) => (v ?? '').trim().isEmpty ? 'Please enter a title' : null,
+                validator: (v) =>
+                    (v ?? '').trim().isEmpty ? loc.enterTitle : null,
               ),
               const SizedBox(height: 8),
 
               // Details
               TextFormField(
                 controller: _details,
-                decoration: const InputDecoration(labelText: 'Details'),
+                decoration: InputDecoration(labelText: loc.detailsLabel),
                 maxLines: 4,
               ),
               const SizedBox(height: 16),
 
               // Time
-              Text('Time', style: Theme.of(context).textTheme.labelMedium),
+              Text(
+                loc.timeLabel,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
               const SizedBox(height: 4),
               DurationFields(
                 hours: _hoursVal,
@@ -378,12 +441,19 @@ final _settings = SettingsStore.instance;
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Attachments (evidence)', style: Theme.of(context).textTheme.labelMedium),
-                  TextButton.icon(onPressed: _addAttachment, icon: const Icon(Icons.add), label: const Text('Add')),
+                  Text(
+                    loc.attachmentsEvidence,
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  TextButton.icon(
+                    onPressed: _addAttachment,
+                    icon: const Icon(Icons.add),
+                    label: Text(loc.add),
+                  ),
                 ],
               ),
               if (_attachments.isEmpty)
-                const Text('No attachments added.')
+                Text(loc.noAttachmentsAdded)
               else
                 ..._attachments.asMap().entries.map((entry) {
                   final i = entry.key;
@@ -393,27 +463,36 @@ final _settings = SettingsStore.instance;
                     onRemove: () async {
                       final confirm = await showDialog<bool>(
                         context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Remove attachment?'),
-                          content: const Text('Do you want to remove this attachment?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx, false),
-                              child: const Text('Cancel'),
-                            ),
-                            FilledButton(
-                              onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('Remove'),
-                            ),
-                          ],
-                        ),
+                        builder: (ctx) {
+                          final loc = AppLocalizations.of(ctx)!;
+                          return AlertDialog(
+                            title: Text(loc.removeAttachmentTitle),
+                            content: Text(loc.removeAttachmentBody),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: Text(loc.cancel),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: Text(loc.remove),
+                              ),
+                            ],
+                          );
+                        },
                       );
-                      if (!context.mounted) return; // guard directly after the await
+                      if (!context.mounted)
+                        return; // guard directly after the await
                       if (confirm != true) return;
                       _removeAttachment(i);
-                      if (!context.mounted) return; // final guard just before context use
+                      if (!context.mounted)
+                        return; // final guard just before context use
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Attachment removed.')),
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(context)!.attachmentRemoved,
+                          ),
+                        ),
                       );
                     },
                   );
@@ -422,13 +501,13 @@ final _settings = SettingsStore.instance;
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton(onPressed: _save, child: Text(_editing ? 'Save Changes' : 'Save Entry')),
+                child: FilledButton(
+                  onPressed: _save,
+                  child: Text(_editing ? loc.saveChanges : loc.saveEntry),
+                ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Note: Attachments are saved into the app and shown as thumbnails in the PDF. Use “PDF + attachments (bundle)” to share original files.',
-                style: TextStyle(fontSize: 12),
-              ),
+              Text(loc.attachmentsNote, style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),

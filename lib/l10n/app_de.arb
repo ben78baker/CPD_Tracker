@@ -1,0 +1,326 @@
+{
+  "@@locale": "de",
+
+  "appTitle": "CPD-Fortschritt-Tracker",
+
+  "homeTitle": "Ihre Berufe",
+  "addNew": "Neu hinzufügen",
+  "newEntry": "Neuer Eintrag",
+
+  "scanQrCode": "QR-Code scannen",
+  "save": "Speichern",
+  "cancel": "Abbrechen",
+
+  "menuTooltip": "Menü",
+  "tipsRestored": "Tipps wiederhergestellt",
+
+  "addProfession": "Beruf hinzufügen",
+  "editPersonalDetails": "Persönliche Daten bearbeiten",
+  "setWeekStartDay": "Wochenbeginn festlegen",
+  "resetTips": "Tipps zurücksetzen",
+  "viewDeletedProfessions": "Gelöschte Berufe anzeigen",
+
+  "noProfessionsYet": "Noch keine Berufe. Menü → Beruf hinzufügen.",
+  "renameProfession": "Beruf umbenennen",
+  "deleteProfession": "Beruf löschen",
+  "addEntry": "Eintrag hinzufügen",
+  "scanQr": "QR scannen",
+  "viewRecords": "Einträge anzeigen",
+
+  "setEditTarget": "Ziel festlegen/bearbeiten",
+
+  "delete": "Löschen",
+  "weekStartUpdated": "Wochenbeginn aktualisiert",
+
+  "language": "Sprache",
+  "followSystemLanguage": "Systemsprache verwenden",
+
+  "english": "Englisch",
+  "french": "Französisch",
+  "german": "Deutsch",
+  "spanish": "Spanisch",
+  "portuguese": "Portugiesisch (Brasilien)",
+  "hindi": "हिंदी",
+
+  "welcome": "Willkommen",
+  "setupYourDetails": "Ihre Angaben einrichten",
+
+  "nameOptional": "Name (optional)",
+  "companyOptional": "Firma (optional)",
+  "addressOptional": "Adresse (optional)",
+  "emailOptional": "E-Mail (optional)",
+
+  "enterValidEmail": "Bitte eine gültige E-Mail eingeben",
+
+  "firstProfessionRequired": "Erster Beruf (erforderlich)",
+  "professionExample": "z. B. Elektriker",
+  "enterProfession": "Bitte einen Beruf eingeben",
+
+  "weekStartsOn": "Woche beginnt am",
+  "useDeviceLocaleRecommended": "Gerätesprache verwenden (empfohlen)",
+  "monday": "Montag",
+  "sunday": "Sonntag",
+  "saturday": "Samstag",
+
+  "continueLabel": "Weiter",
+
+  "savedLocallyNotice": "Lokal gespeichert. Einige Einstellungen werden beim nächsten Start synchronisiert.",
+
+  "detectedDownloadableFile": "Download-Link erkannt",
+  "whatWouldYouLikeToDo": "Was möchten Sie tun?",
+  "attachToEntry": "An diesen Eintrag anhängen",
+  "downloadAndSave": "Herunterladen und bei Anhängen speichern",
+  "openLink": "Link öffnen",
+  "keepAsUrlOnly": "Nur als URL behalten",
+
+  "qrCertificateReminder": "Um ein CPD-Zertifikat zu erhalten, folgen Sie bitte später dem Link aus dem gescannten QR-Code und fügen Sie das Zertifikat diesem Eintrag hinzu.",
+  "dontShowAgain": "Diese Nachricht nicht mehr anzeigen",
+  "ok": "OK",
+  "couldNotSaveDetails": "Details konnten nicht gespeichert werden. Bitte erneut versuchen.",
+
+  "restoreRecordTitle": "Eintrag wiederherstellen?",
+  "deleteRecordTitle": "Eintrag löschen?",
+  "restoreRecordConfirm": "Möchten Sie diesen Eintrag wiederherstellen?",
+  "deleteRecordConfirm": "Möchten Sie diesen Eintrag löschen?",
+  "restore": "Wiederherstellen",
+
+  "cpdLinkSubject": "CPD-Link",
+  "cpdAttachmentSubject": "CPD-Anhang",
+  "fileNotFound": "Datei nicht gefunden.",
+  "shareFailed": "Teilen fehlgeschlagen",
+  "noRecordsInSelectedPeriod": "Keine Einträge im ausgewählten Zeitraum.",
+  "exportFailed": "Export fehlgeschlagen",
+
+  "periodLabel": "Zeitraum",
+  "noCpdRecordsYet": "Noch keine CPD-Einträge.",
+  "attachments": "Anhänge",
+  "attachmentRemoved": "Anhang entfernt.",
+  "shareExport": "Teilen / Exportieren",
+
+  "futureDateNotAllowedTitle": "Zukünftiges Datum nicht erlaubt",
+  "futureDateNotAllowedBody": "Sie können nur CPD-Einträge mit dem heutigen Datum oder früher hinzufügen.",
+  "takePhoto": "Foto aufnehmen",
+  "photoLibrary": "Fotomediathek",
+  "chooseFile": "Datei auswählen",
+  "noQrDataCaptured": "Keine QR-Daten erfasst.",
+  "attachmentFailed": "Anhang fehlgeschlagen",
+  "enterTitleOrDetails": "Bitte Titel oder Details eingeben.",
+  "entryUpdated": "Eintrag aktualisiert",
+  "entrySaved": "Eintrag gespeichert",
+  "editEntry": "Eintrag bearbeiten",
+
+  "professionLabel": "Beruf",
+  "dateLabel": "Datum",
+  "titleLabel": "Titel",
+  "enterTitle": "Bitte einen Titel eingeben",
+  "detailsLabel": "Details",
+  "timeLabel": "Zeit",
+
+  "attachmentsEvidence": "Anhänge (Nachweise)",
+  "add": "Hinzufügen",
+  "noAttachmentsAdded": "Keine Anhänge hinzugefügt.",
+  "removeAttachmentTitle": "Anhang entfernen?",
+  "removeAttachmentBody": "Möchten Sie diesen Anhang entfernen?",
+  "remove": "Entfernen",
+  "saveChanges": "Änderungen speichern",
+  "saveEntry": "Eintrag speichern",
+  "attachmentsNote": "Hinweis: Anhänge werden in der App gespeichert und im PDF als Vorschaubilder angezeigt. Verwenden Sie „PDF + Anhänge (Bundle)“, um die Originaldateien zu teilen.",
+
+  "csvEditable": "CSV (bearbeitbar)",
+  "pdfReadOnly": "PDF (schreibgeschützt)",
+  "pdfAttachmentsBundle": "PDF + Anhänge (Bundle)",
+  "pdfAttachmentsBundleSubtitle": "Einträge-PDF, Index-PDF und alle Dateien",
+
+  "noTitle": "(Kein Titel)",
+  "edit": "Bearbeiten",
+  "shareAllAttachments": "Alle Anhänge teilen",
+  "zeroMinutes": "0 Min",
+
+  "attachmentsCount": "Anhänge ({count})",
+  "@attachmentsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "hoursPlural": "{count,plural, =1{{count} Stunde} other{{count} Stunden}}",
+  "@hoursPlural": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "minutesPlural": "{count,plural, =1{{count} Minute} other{{count} Minuten}}",
+  "@minutesPlural": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "shareAll": "Alles teilen",
+  "selectPeriod": "Zeitraum auswählen",
+  "fromLabel": "Von",
+  "toLabel": "Bis",
+
+  "hoursLabel": "Stunden",
+  "minutesLabel": "Minuten",
+
+  "required": "Erforderlich",
+  "numbersOnly": "Nur Zahlen",
+  "mustBeZeroOrMore": "Muss ≥ 0 sein",
+  "tooLarge": "Zu groß",
+  "zeroToFiftyNine": "0–59",
+
+  "selectDate": "Datum auswählen",
+
+  "noItemsAdded": "Es wurden keine Elemente hinzugefügt.",
+
+  "link": "Link",
+  "imageAttachment": "Bildanhang",
+  "fileAttachment": "Dateianhang",
+  "shareThisAttachment": "Diesen Anhang teilen",
+
+  "allTime": "Gesamter Zeitraum",
+  "toWord": "bis",
+  "pageOf": "Seite {page} von {total}",
+  "@pageOf": {
+    "placeholders": {
+      "page": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "cpdRecordsTitle": "CPD-Einträge",
+  "nameLabel": "Name",
+  "companyLabel": "Firma",
+  "emailLabel": "E-Mail",
+  "totalTimeLabel": "Gesamtzeit",
+
+  "attachmentsEvidenceLabel": "Anhänge / Nachweise:",
+  "attachmentsInlineNotePdf": "Anhänge/Nachweise auf Anfrage verfügbar",
+  "attachmentsInlineNoteZip": "Für Anhänge & Nachweise siehe ZIP-Datei",
+
+  "cpdRecordsShareSubject": "CPD-Einträge",
+  "cpdRecordsBundleShareSubject": "CPD-Einträge-Bundle",
+
+  "attachmentLinksTitle": "CPD-Anhang-Links",
+  "linksFileName": "links.txt",
+
+  "csvNoAttachmentsInExport": "Keine in diesem Export",
+  "csvDateHeader": "Datum",
+  "csvTitleHeader": "Titel",
+  "csvHasAttachmentsHeader": "Anhänge vorhanden",
+  "yes": "Ja",
+  "no": "Nein",
+
+  "csvRecordsWithAttachments": "{count,plural, =1{{count} Eintrag enthält Anhänge; auf Anfrage verfügbar} other{{count} Einträge enthalten Anhänge; auf Anfrage verfügbar}}",
+  "@csvRecordsWithAttachments": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "cpdEntriesShareSubject": "CPD-Einträge für {profession}",
+  "@cpdEntriesShareSubject": {
+    "placeholders": { "profession": {} }
+  },
+
+  "cpdEntriesShareText": "CPD-Einträge für {profession} ({from} bis {to}) — Gesamt {hours}h {minutes}m",
+  "@cpdEntriesShareText": {
+    "placeholders": {
+      "profession": {},
+      "from": {},
+      "to": {},
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "couldNotOpenLink": "Link konnte nicht geöffnet werden.",
+  "noAppToOpenLink": "Keine App verfügbar, um den Link zu öffnen.",
+
+  "cantOpenThisFile": "Diese Datei kann nicht geöffnet werden ({message}).",
+  "@cantOpenThisFile": { "placeholders": { "message": {} } },
+
+  "openFailed": "Öffnen fehlgeschlagen",
+  "savedToAttachments": "In Anhängen gespeichert: {filename}",
+  "@savedToAttachments": { "placeholders": { "filename": {} } },
+
+  "attachmentNotFoundOnDevice": "Anhang auf dem Gerät nicht gefunden.",
+  "importFailed": "Import fehlgeschlagen",
+
+  "downloadFailedStatus": "Download fehlgeschlagen ({status}).",
+  "@downloadFailedStatus": { "placeholders": { "status": { "type": "int" } } },
+  "downloadError": "Download-Fehler",
+
+  "cpdAttachmentBundleTitle": "CPD-Anhang-Bundle",
+  "includedFiles": "Enthaltene Dateien:",
+  "includedFilesNone": "Enthaltene Dateien: (keine)",
+  "links": "Links:",
+  "linksNone": "Links: (keine)",
+
+  "cpdAttachmentsShareSubject": "CPD-Anhänge • {profession} • {date}",
+  "@cpdAttachmentsShareSubject": { "placeholders": { "profession": {}, "date": {} } },
+
+  "attachmentsForTitleBody": "Anhänge für „{title}“ ({profession}).",
+  "@attachmentsForTitleBody": { "placeholders": { "title": {}, "profession": {} } },
+
+  "attachmentsForTitleWithLinksBody": "Anhänge für „{title}“ ({profession}). Links sind im Manifest enthalten.",
+  "@attachmentsForTitleWithLinksBody": { "placeholders": { "title": {}, "profession": {} } },
+
+  "fileNotFoundWithName": "Datei nicht gefunden: {filename}",
+  "@fileNotFoundWithName": { "placeholders": { "filename": {} } },
+
+  "unableToOpenAttachment": "Anhang konnte nicht geöffnet werden",
+
+  "exportFilePrefix": "cpd_records",
+
+  "deletedProfessionsTitle": "Gelöschte Berufe",
+  "noDeletedProfessions": "Keine gelöschten Berufe",
+  "deletePermanently": "Dauerhaft löschen",
+  "professionRestored": "Beruf wiederhergestellt",
+  "permanentlyDeleteTitle": "Dauerhaft löschen?",
+  "permanentlyDeleteBody": "„{name}“ und alle Einträge löschen? Dies kann nicht rückgängig gemacht werden.",
+  "@permanentlyDeleteBody": { "placeholders": { "name": {} } },
+  "professionDeletedPermanently": "„{name}“ dauerhaft gelöscht (Einträge noch nicht entfernt)",
+  "@professionDeletedPermanently": { "placeholders": { "name": {} } },
+
+  "thisWeek": "diese Woche",
+  "thisMonth": "diesen Monat",
+  "thisYear": "dieses Jahr",
+
+  "targetAchieved": "Ziel erreicht {cycle} 🎉",
+  "@targetAchieved": { "placeholders": { "cycle": {} } },
+
+  "timeRemaining": "{hours} Std., {minutes} Min. verbleibend {cycle}",
+  "@timeRemaining": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" },
+      "cycle": {}
+    }
+  },
+
+  "weekStartsOnDay": "Woche beginnt am {day}",
+  "@weekStartsOnDay": { "placeholders": { "day": {} } },
+
+  "setTargetForProfession": "Ziel festlegen für {profession}",
+  "@setTargetForProfession": { "placeholders": { "profession": {} } },
+
+  "perWeek": "pro Woche",
+  "perMonth": "pro Monat",
+  "perYear": "pro Jahr",
+
+  "targetPeriod": "Zielzeitraum",
+  "disable": "Deaktivieren",
+
+  "addProfessionDialogTitle": "Beruf hinzufügen",
+  "enterProfessionHint": "Beruf eingeben",
+  "pleaseEnterProfession": "Bitte einen Beruf eingeben",
+  "professionAlreadyExists": "Dieser Beruf existiert bereits",
+  "professionInDeletedRestoreInstead": "Dieser Name ist unter Gelöscht. Stellen Sie ihn stattdessen wieder her.",
+
+  "renameProfessionTitle": "Beruf umbenennen",
+  "pleaseEnterName": "Bitte einen Namen eingeben",
+
+  "deleteProfessionTitle": "Beruf löschen?",
+  "removeProfessionConfirm": "„{name}“ entfernen?",
+  "@removeProfessionConfirm": { "placeholders": { "name": {} } },
+
+  "movedToDeleted": "„{name}“ nach Gelöscht verschoben",
+  "@movedToDeleted": { "placeholders": { "name": {} } }
+}

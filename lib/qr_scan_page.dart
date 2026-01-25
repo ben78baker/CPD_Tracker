@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'utils/attachment_io.dart';
 import 'settings_store.dart';
+import 'l10n/app_localizations.dart';
 
 class QrScanPage extends StatefulWidget {
   const QrScanPage({super.key, required this.profession});
@@ -19,19 +20,23 @@ class _QrScanPageState extends State<QrScanPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Scan QR – ${widget.profession}'),
+        title: Text(
+          '${AppLocalizations.of(context)!.scanQr} – ${widget.profession}',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
-            tooltip: 'Cancel',
+            tooltip: AppLocalizations.of(context)!.cancel,
           ),
         ],
       ),
       body: MobileScanner(
         onDetect: (capture) async {
           if (_handled) return;
-          final code = capture.barcodes.isNotEmpty ? capture.barcodes.first.rawValue : null;
+          final code = capture.barcodes.isNotEmpty
+              ? capture.barcodes.first.rawValue
+              : null;
           if (code != null && code.isNotEmpty) {
             _handled = true;
 
@@ -46,24 +51,30 @@ class _QrScanPageState extends State<QrScanPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const ListTile(
-                        title: Text('Detected a downloadable file link'),
-                        subtitle: Text('What would you like to do?'),
+                      ListTile(
+                        title: Text(
+                          AppLocalizations.of(ctx)!.detectedDownloadableFile,
+                        ),
+                        subtitle: Text(
+                          AppLocalizations.of(ctx)!.whatWouldYouLikeToDo,
+                        ),
                       ),
                       ListTile(
                         leading: const Icon(Icons.download),
-                        title: const Text('Attach to this entry'),
-                        subtitle: Text('Download and save to Attachments'),
+                        title: Text(AppLocalizations.of(ctx)!.attachToEntry),
+                        subtitle: Text(
+                          AppLocalizations.of(ctx)!.downloadAndSave,
+                        ),
                         onTap: () => Navigator.pop(ctx, 'attach'),
                       ),
                       ListTile(
                         leading: const Icon(Icons.open_in_new),
-                        title: const Text('Open link'),
+                        title: Text(AppLocalizations.of(ctx)!.openLink),
                         onTap: () => Navigator.pop(ctx, 'open'),
                       ),
                       ListTile(
                         leading: const Icon(Icons.link),
-                        title: const Text('Keep as URL only'),
+                        title: Text(AppLocalizations.of(ctx)!.keepAsUrlOnly),
                         onTap: () => Navigator.pop(ctx, 'keep'),
                       ),
                       const SizedBox(height: 8),
@@ -78,7 +89,10 @@ class _QrScanPageState extends State<QrScanPage> {
                   final saved = await downloadToAppDir(context, code);
                   if (!context.mounted) return; // guard after await
                   if (saved != null) {
-                    Navigator.pop(context, saved); // return file path to add as attachment
+                    Navigator.pop(
+                      context,
+                      saved,
+                    ); // return file path to add as attachment
                     return;
                   }
                   // If download failed, fall back to returning the URL
@@ -87,7 +101,10 @@ class _QrScanPageState extends State<QrScanPage> {
                 case 'open':
                   await openUrl(context, code);
                   if (!context.mounted) return;
-                  Navigator.pop(context, code); // also return URL so it's kept with the entry
+                  Navigator.pop(
+                    context,
+                    code,
+                  ); // also return URL so it's kept with the entry
                   return;
                 case 'keep':
                 default:
@@ -110,16 +127,18 @@ class _QrScanPageState extends State<QrScanPage> {
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            "To receive any CPD certificate please follow the link from the scanned QR code at your leisure and add the certificate to this record."
-                          ),
+                          Text(AppLocalizations.of(ctx)!.qrCertificateReminder),
                           const SizedBox(height: 16),
                           CheckboxListTile(
                             contentPadding: EdgeInsets.zero,
-                            title: const Text("Don't show this message again"),
+                            title: Text(
+                              AppLocalizations.of(ctx)!.dontShowAgain,
+                            ),
                             value: dontShowAgain,
                             onChanged: (val) {
-                              setSt(() { dontShowAgain = val ?? false; });
+                              setSt(() {
+                                dontShowAgain = val ?? false;
+                              });
                             },
                           ),
                         ],
@@ -127,18 +146,22 @@ class _QrScanPageState extends State<QrScanPage> {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            Navigator.of(ctx).pop(dontShowAgain); // return checkbox state
+                            Navigator.of(
+                              ctx,
+                            ).pop(dontShowAgain); // return checkbox state
                           },
-                          child: const Text('OK'),
+                          child: Text(AppLocalizations.of(ctx)!.ok),
                         ),
                       ],
                     ),
                   );
-                }
+                },
               );
               if (!context.mounted) return;
               if (res == true) {
-                setState(() { _showPrompt = false; });
+                setState(() {
+                  _showPrompt = false;
+                });
                 await SettingsStore.instance.setQrHintDismissed(true);
                 if (!context.mounted) return;
               }

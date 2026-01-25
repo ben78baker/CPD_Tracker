@@ -2,14 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../utils/attachment_io.dart';
 import 'package:path/path.dart' as p;
+import '../l10n/app_localizations.dart';
 
 class AttachmentTile extends StatelessWidget {
   const AttachmentTile({
     super.key,
-    required this.value,                // path or URL
-    this.onRemove,                      // optional delete callback
+    required this.value, // path or URL
+    this.onRemove, // optional delete callback
     this.enableLongPressActions = false,
-    this.onShare,                       // optional share callback
+    this.onShare, // optional share callback
   });
 
   final String value;
@@ -23,11 +24,16 @@ class AttachmentTile extends StatelessWidget {
     return FutureBuilder<String>(
       future: resolveStoredPath(value),
       builder: (context, snap) {
-        final resolved = snap.data; // absolute path for local files; URLs returned unchanged
+        final resolved =
+            snap.data; // absolute path for local files; URLs returned unchanged
         final url = isUrl(value);
 
         // Determine image using the resolved path for locals
-        final img = !url && resolved != null && fileExists(resolved) && isImagePath(resolved);
+        final img =
+            !url &&
+            resolved != null &&
+            fileExists(resolved) &&
+            isImagePath(resolved);
 
         Widget leading;
         if (url) {
@@ -42,7 +48,8 @@ class AttachmentTile extends StatelessWidget {
               width: 48,
               height: 48,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.image_not_supported),
             ),
           );
         } else {
@@ -53,7 +60,10 @@ class AttachmentTile extends StatelessWidget {
           await openAttachment(context, value);
         }
 
-        final semanticsLabel = url ? 'Link' : (img ? 'Image attachment' : 'File attachment');
+        final loc = AppLocalizations.of(context)!;
+        final semanticsLabel = url
+            ? loc.link
+            : (img ? loc.imageAttachment : loc.fileAttachment);
         final displayName = () {
           if (url) return value;
           if (resolved != null) return p.basename(resolved);
@@ -74,7 +84,7 @@ class AttachmentTile extends StatelessWidget {
             trailing: onRemove == null
                 ? null
                 : IconButton(
-                    tooltip: 'Remove',
+                    tooltip: loc.remove,
                     icon: const Icon(Icons.close),
                     onPressed: () async {
                       await onRemove?.call();
@@ -88,21 +98,28 @@ class AttachmentTile extends StatelessWidget {
                       context: context,
                       showDragHandle: true,
                       builder: (bCtx) => SafeArea(
-                        child: Column(mainAxisSize: MainAxisSize.min, children: [
-                          if (onShare != null)
-                            ListTile(
-                              leading: const Icon(Icons.ios_share),
-                              title: const Text('Share this attachment'),
-                              onTap: () => Navigator.pop(bCtx, 'share'),
-                            ),
-                          if (onRemove != null)
-                            ListTile(
-                              leading: const Icon(Icons.delete_outline),
-                              title: const Text('Remove'),
-                              onTap: () => Navigator.pop(bCtx, 'remove'),
-                            ),
-                          const SizedBox(height: 8),
-                        ]),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (onShare != null)
+                              ListTile(
+                                leading: const Icon(Icons.ios_share),
+                                title: Text(
+                                  AppLocalizations.of(
+                                    bCtx,
+                                  )!.shareThisAttachment,
+                                ),
+                                onTap: () => Navigator.pop(bCtx, 'share'),
+                              ),
+                            if (onRemove != null)
+                              ListTile(
+                                leading: const Icon(Icons.delete_outline),
+                                title: Text(AppLocalizations.of(bCtx)!.remove),
+                                onTap: () => Navigator.pop(bCtx, 'remove'),
+                              ),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
                       ),
                     );
                     if (action == 'share') await onShare?.call();

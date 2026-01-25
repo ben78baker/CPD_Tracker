@@ -24,18 +24,21 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>http</string>
+		<string>https</string>
+		<string>mailto</string>
+		<string>tel</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_dartobservatory._tcp</string>
-	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>We need camera access to scan QR codes.</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>This app uses the local network for Flutter debugging in development.</string>
+	<string>We need camera access to scan QR codes on CPD certificates and to take photos of CPD evidence, so the app can automatically create and update your records</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Allows saving exported images or attachments to your photo library.</string>
+	<string>Used to save exported CPD documents or attached evidence to your photo library when you choose to export them</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Photos access is used to attach CPD evidence from your library.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
@@ -54,13 +57,6 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>http</string>
-		<string>https</string>
-		<string>mailto</string>
-		<string>tel</string>
 	</array>
 </dict>
 </plist>

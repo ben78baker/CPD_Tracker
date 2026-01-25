@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 /// Shows a bottom sheet for selecting export/share format.
 /// Returns the selected choice as a string: 'csv', 'pdf', or 'pdf_bundle'.
@@ -12,7 +13,7 @@ Future<String?> showShareFormatSheet(BuildContext context) async {
         children: [
           ListTile(
             leading: const Icon(Icons.table_chart),
-            title: const Text('CSV (editable)'),
+            title: Text(AppLocalizations.of(ctx)!.csvEditable),
             onTap: () {
               debugPrint('Share format picked: CSV');
               Navigator.pop(ctx, 'csv');
@@ -20,7 +21,7 @@ Future<String?> showShareFormatSheet(BuildContext context) async {
           ),
           ListTile(
             leading: const Icon(Icons.picture_as_pdf),
-            title: const Text('PDF (read-only)'),
+            title: Text(AppLocalizations.of(ctx)!.pdfReadOnly),
             onTap: () async {
               debugPrint('Share format picked: PDF');
               Navigator.pop(ctx, 'pdf');
@@ -31,8 +32,10 @@ Future<String?> showShareFormatSheet(BuildContext context) async {
           ),
           ListTile(
             leading: const Icon(Icons.archive_outlined),
-            title: const Text('PDF + attachments (bundle)'),
-            subtitle: const Text('Records PDF, index PDF and all files'),
+            title: Text(AppLocalizations.of(ctx)!.pdfAttachmentsBundle),
+            subtitle: Text(
+              AppLocalizations.of(ctx)!.pdfAttachmentsBundleSubtitle,
+            ),
             onTap: () {
               debugPrint('Share format picked: PDF_BUNDLE');
               Navigator.pop(ctx, 'pdf_bundle');
