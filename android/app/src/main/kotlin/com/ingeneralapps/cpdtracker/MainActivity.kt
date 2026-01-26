@@ -1,4 +1,4 @@
-package com.example.cpd_tracker
+package com.ingeneralapps.cpdtracker
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.cpd_tracker"
+    namespace = "com.ingeneralapps.cpdtracker"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.cpd_tracker"
+        applicationId = "com.ingeneralapps.cpdtracker"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
