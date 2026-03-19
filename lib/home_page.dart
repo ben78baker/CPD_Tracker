@@ -28,10 +28,16 @@ class _HomePageState extends State<HomePage> {
     return s.length <= 40 ? s : s.substring(0, 40);
   }
 
-  void _openRecords(String profession) {
-    Navigator.of(context).push(
+  Future<void> _openRecords(String profession) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => CpdRecordsPage(profession: profession)),
     );
+    if (!mounted) return;
+    await _load();
+    if (!mounted) return;
+    setState(() {
+      _progressBump++;
+    });
   }
 
   Future<void> _scanQrAndPrefill(String profession) async {
@@ -652,7 +658,7 @@ class _HomePageState extends State<HomePage> {
                     }
                   },
                   onScan: () => _scanQrAndPrefill(name),
-                  onView: () => _openRecords(name),
+                  onView: () async => _openRecords(name),
                   onRename: () => _renameProfession(index),
                   onDelete: () => _deleteProfession(index),
                   refreshToken: _progressBump,
