@@ -5,6 +5,7 @@ import 'edit_details_page.dart';
 import 'qr_scan_page.dart';
 import 'cpd_records_page.dart';
 import 'l10n/app_localizations.dart';
+import 'global_search_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,9 +29,17 @@ class _HomePageState extends State<HomePage> {
     return s.length <= 40 ? s : s.substring(0, 40);
   }
 
-  Future<void> _openRecords(String profession) async {
+  Future<void> _openRecords(
+    String profession, {
+    bool startInSearchMode = false,
+  }) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => CpdRecordsPage(profession: profession)),
+      MaterialPageRoute(
+        builder: (_) => CpdRecordsPage(
+          profession: profession,
+          startInSearchMode: startInSearchMode,
+        ),
+      ),
     );
     if (!mounted) return;
     await _load();
@@ -564,6 +573,15 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'Search all records',
+          icon: const Icon(Icons.search),
+          onPressed: () {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const GlobalSearchPage()));
+          },
+        ),
         title: Text(AppLocalizations.of(context)!.appTitle),
         actions: [
           Material(
@@ -659,6 +677,8 @@ class _HomePageState extends State<HomePage> {
                   },
                   onScan: () => _scanQrAndPrefill(name),
                   onView: () async => _openRecords(name),
+                  onSearch: () async =>
+                      _openRecords(name, startInSearchMode: true),
                   onRename: () => _renameProfession(index),
                   onDelete: () => _deleteProfession(index),
                   refreshToken: _progressBump,
@@ -675,6 +695,7 @@ class _ProfessionCard extends StatelessWidget {
     required this.onAdd,
     required this.onScan,
     required this.onView,
+    required this.onSearch,
     required this.onRename,
     required this.onDelete,
     required this.target,
@@ -687,6 +708,7 @@ class _ProfessionCard extends StatelessWidget {
   final VoidCallback onAdd;
   final VoidCallback onScan;
   final VoidCallback onView;
+  final VoidCallback onSearch;
   final VoidCallback onRename;
   final VoidCallback onDelete;
 
@@ -725,6 +747,7 @@ class _ProfessionCard extends StatelessWidget {
                       icon: const Icon(Icons.more_vert),
                       onSelected: (value) {
                         if (value == 'set_target') onSetTarget();
+                        if (value == 'search_records') onSearch();
                         if (value == 'rename') onRename();
                         if (value == 'delete') onDelete();
                       },
@@ -732,6 +755,10 @@ class _ProfessionCard extends StatelessWidget {
                         PopupMenuItem(
                           value: 'set_target',
                           child: Text(AppLocalizations.of(ctx)!.setEditTarget),
+                        ),
+                        const PopupMenuItem(
+                          value: 'search_records',
+                          child: Text('Search Records'),
                         ),
                         PopupMenuItem(
                           value: 'rename',

@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'utils/attachment_io.dart';
 import 'widgets/period_picker.dart' show showPeriodPicker;
 import 'utils/date_utils.dart';
+import 'utils/record_search.dart';
 import 'utils/csv_exporter.dart';
 import 'utils/pdf_exporter.dart';
 import 'widgets/record_card.dart';
@@ -17,8 +18,15 @@ import 'widgets/share_format_sheet.dart';
 import 'l10n/app_localizations.dart';
 
 class CpdRecordsPage extends StatefulWidget {
-  const CpdRecordsPage({super.key, required this.profession});
+  const CpdRecordsPage({
+    super.key,
+    required this.profession,
+    this.startInSearchMode = false,
+    this.initialSearchQuery = '',
+  });
   final String profession;
+  final bool startInSearchMode;
+  final String initialSearchQuery;
 
   @override
   State<CpdRecordsPage> createState() => _CpdRecordsPageState();
@@ -30,11 +38,16 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
   List<CpdEntry> _entries = [];
   String _fmt = 'dd/MM/yyyy';
   bool _exporting = false;
+  bool _showSearch = false;
+  String _searchQuery = '';
   DateTimeRange? _lastRange; // NEW: remember picked range
 
   @override
   void initState() {
     super.initState();
+    _searchQuery = widget.initialSearchQuery;
+    _showSearch =
+        widget.startInSearchMode || widget.initialSearchQuery.trim().isNotEmpty;
     _load();
   }
 
@@ -49,6 +62,10 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     });
   }
 
+  List<CpdEntry> get _filteredEntries {
+    return RecordSearch.filter(_entries, _searchQuery);
+  }
+
   Future<void> _edit(CpdEntry e) async {
     if (!mounted) return; // guard before using context
     await Navigator.of(context).push(
@@ -59,6 +76,17 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     );
     if (!mounted) return; // guard after the await
     _load();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      if (_showSearch) {
+        _showSearch = false;
+        _searchQuery = '';
+      } else {
+        _showSearch = true;
+      }
+    });
   }
 
   Future<void> _toggleDelete(CpdEntry e) async {
@@ -340,7 +368,44 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
               ),
           ],
         ),
+        bottom: _showSearch
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(68),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: TextField(
+                    autofocus: true,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search records',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchQuery.isEmpty
+                          ? null
+                          : IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                              icon: const Icon(Icons.clear),
+                            ),
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+              )
+            : null,
         actions: [
+          IconButton(
+            tooltip: _showSearch ? 'Close search' : 'Search records',
+            onPressed: _toggleSearch,
+            icon: Icon(_showSearch ? Icons.close : Icons.search),
+          ),
           if (_exporting)
             const Padding(
               padding: EdgeInsets.only(right: 12),
@@ -354,10 +419,12 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       ),
       body: _entries.isEmpty
           ? Center(child: Text(AppLocalizations.of(context)!.noCpdRecordsYet))
+          : _filteredEntries.isEmpty
+          ? const Center(child: Text('No matching records found'))
           : ListView.builder(
-              itemCount: _entries.length,
+              itemCount: _filteredEntries.length,
               itemBuilder: (context, i) {
-                final e = _entries[i];
+                final e = _filteredEntries[i];
                 return RecordCard(
                   entry: e,
                   dateFormat: _fmt,
@@ -371,11 +438,9 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                     onShareOne: (path) => _shareAttachmentPath(path),
                     onRemoveIndex: (idx) async {
                       if (idx < 0 || idx >= e.attachments.length) return;
-                      // Remove from the model and persist
                       e.attachments.removeAt(idx);
                       await _repo.updateEntry(e);
-                      if (!context.mounted)
-                        return; // guard immediately after await
+                      if (!context.mounted) return;
                       setState(() {});
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -389,19 +454,27 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                 );
               },
             ),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            IconButton(
-              tooltip: AppLocalizations.of(context)!.shareExport,
-              onPressed: (_entries.isEmpty || _exporting)
-                  ? null
-                  : _onShareTapped,
-              icon: const Icon(Icons.ios_share),
-            ),
-            const SizedBox(width: 8),
-          ],
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: BottomAppBar(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                tooltip: AppLocalizations.of(context)!.shareExport,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                padding: const EdgeInsets.all(6),
+                visualDensity: VisualDensity.compact,
+                onPressed:
+                    (_entries.isEmpty || _filteredEntries.isEmpty || _exporting)
+                    ? null
+                    : _onShareTapped,
+                icon: const Icon(Icons.ios_share, size: 22),
+              ),
+            ],
+          ),
         ),
       ),
     );

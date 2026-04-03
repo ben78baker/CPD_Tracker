@@ -507,7 +507,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(loc.attachmentsNote, style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
