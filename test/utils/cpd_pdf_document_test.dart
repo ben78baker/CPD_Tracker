@@ -145,29 +145,55 @@ void main() {
       expect((await render(presentation)).bytes, isNotEmpty);
     });
 
-    test('allows very long details to span multiple pages', () async {
-      final details = List.generate(
-        220,
-        (index) =>
-            'Reflection ${index + 1}: learning outcome, practical application, '
-            'and planned improvement.',
-      ).join('\n');
-      final presentation = await prepare(
-        selection([
-          entry(
-            id: 1,
-            date: DateTime(2026, 5, 1),
-            title: 'Extended reflective account',
-            details: details,
+    test(
+      'allows very long details to span more than two pages with context',
+      () async {
+        final details = List.generate(
+          420,
+          (index) =>
+              'Reflection ${index + 1}: learning outcome, practical application, '
+              'and planned improvement.',
+        ).join('\n');
+        final presentation = await prepare(
+          selection([
+            entry(
+              id: 1,
+              date: DateTime(2026, 5, 1),
+              title: 'Extended reflective account',
+              details: details,
+            ),
+          ]),
+          profile: const CpdPdfProfile(
+            name: 'Alex Morgan',
+            company: 'Example Health Ltd',
+            email: 'alex@example.com',
           ),
-        ]),
-      );
+        );
 
-      final result = await render(presentation);
+        final result = await render(presentation);
 
-      expect(presentation.records.single.details, details);
-      expect(result.pageCount, greaterThan(1));
-    });
+        expect(presentation.records.single.details, details);
+        expect(result.pageCount, greaterThan(2));
+        expect(
+          texts.continuedTitle('Extended reflective account'),
+          'Extended reflective account - continued',
+        );
+        final rawPdf = latin1.decode(result.bytes, allowInvalid: true);
+        expect(
+          RegExp(r'\[\(continued\)\]TJ').allMatches(rawPdf),
+          hasLength(result.pageCount - 1),
+        );
+        expect(
+          RegExp(r'\[\(Alex\)\]TJ').allMatches(rawPdf),
+          hasLength(result.pageCount),
+        );
+        expect(
+          RegExp(r'\[\(Paramedicine\)\]TJ').allMatches(rawPdf),
+          hasLength(result.pageCount),
+        );
+        expect(RegExp(r'/XObject<<').allMatches(rawPdf), hasLength(1));
+      },
+    );
 
     test('uses the configured date format', () async {
       final presentation = await prepare(
@@ -249,6 +275,16 @@ void main() {
         ExportAttachmentKind.telUrl,
       ]);
       expect(presentation.hyperlinks.map((uri) => uri.toString()), links);
+      expect(
+        presentation.records.single.evidence.map((item) => item.category),
+        ['Web link', 'Web link', 'Email', 'Telephone'],
+      );
+      expect(presentation.records.single.evidence.map((item) => item.label), [
+        'http://example.com/course',
+        'https://example.com/evidence',
+        'assessor@example.com',
+        '+441234567890',
+      ]);
       expect(RegExp(r'/URI\s*\(').allMatches(rawPdf), hasLength(4));
     });
 
@@ -277,10 +313,13 @@ void main() {
 
       expect(evidence[0].label, 'certificate.pdf');
       expect(evidence[0].kind, ExportAttachmentKind.localFile);
+      expect(evidence[0].category, 'File');
       expect(evidence[1].label, 'session-photo.jpg');
       expect(evidence[1].kind, ExportAttachmentKind.localImage);
+      expect(evidence[1].category, 'Photo');
       expect(evidence[2].label, 'Unavailable: missing-evidence.docx');
       expect(evidence[2].isMissing, isTrue);
+      expect(evidence[2].category, 'Unavailable');
       for (final item in evidence) {
         expect(item.label, isNot(contains(documentsDirectory.path)));
         expect(item.label, isNot(contains('attachments/')));

@@ -434,6 +434,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cpdPdfEvidenceResourcesLabel => 'Evidence / Resources';
 
   @override
+  String cpdPdfContinuedTitle(Object title) {
+    return '$title - continued';
+  }
+
+  @override
+  String get cpdPdfWebLinkLabel => 'Web link';
+
+  @override
+  String get cpdPdfEmailLinkLabel => 'Email';
+
+  @override
+  String get cpdPdfTelephoneLinkLabel => 'Telephone';
+
+  @override
+  String get cpdPdfPhotoEvidenceLabel => 'Photo';
+
+  @override
+  String get cpdPdfFileEvidenceLabel => 'File';
+
+  @override
+  String get cpdPdfUnavailableEvidenceLabel => 'Unavailable';
+
+  @override
   String get nameLabel => 'Name';
 
   @override

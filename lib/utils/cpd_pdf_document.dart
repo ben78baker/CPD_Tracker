@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -26,6 +29,13 @@ class PdfExportTexts {
     required this.timeLabel,
     required this.details,
     required this.attachmentsEvidenceLabel,
+    required this.continuedTitle,
+    required this.webLinkLabel,
+    required this.emailLinkLabel,
+    required this.telephoneLinkLabel,
+    required this.photoEvidenceLabel,
+    required this.fileEvidenceLabel,
+    required this.unavailableEvidenceLabel,
     required this.noTitle,
     required this.hoursText,
     required this.minutesText,
@@ -53,6 +63,13 @@ class PdfExportTexts {
     timeLabel: 'Duration',
     details: 'Details / Notes',
     attachmentsEvidenceLabel: 'Evidence / Resources',
+    continuedTitle: (title) => '$title - continued',
+    webLinkLabel: 'Web link',
+    emailLinkLabel: 'Email',
+    telephoneLinkLabel: 'Telephone',
+    photoEvidenceLabel: 'Photo',
+    fileEvidenceLabel: 'File',
+    unavailableEvidenceLabel: 'Unavailable',
     noTitle: '(No title)',
     hoursText: (count) => count == 1 ? '1 hour' : '$count hours',
     minutesText: (count) => count == 1 ? '1 minute' : '$count minutes',
@@ -80,6 +97,13 @@ class PdfExportTexts {
     timeLabel: loc.cpdPdfDurationLabel,
     details: loc.detailsLabel,
     attachmentsEvidenceLabel: loc.cpdPdfEvidenceResourcesLabel,
+    continuedTitle: loc.cpdPdfContinuedTitle,
+    webLinkLabel: loc.cpdPdfWebLinkLabel,
+    emailLinkLabel: loc.cpdPdfEmailLinkLabel,
+    telephoneLinkLabel: loc.cpdPdfTelephoneLinkLabel,
+    photoEvidenceLabel: loc.cpdPdfPhotoEvidenceLabel,
+    fileEvidenceLabel: loc.cpdPdfFileEvidenceLabel,
+    unavailableEvidenceLabel: loc.cpdPdfUnavailableEvidenceLabel,
     noTitle: loc.noTitle,
     hoursText: loc.hoursPlural,
     minutesText: loc.minutesPlural,
@@ -106,6 +130,13 @@ class PdfExportTexts {
   final String timeLabel;
   final String details;
   final String attachmentsEvidenceLabel;
+  final String Function(String title) continuedTitle;
+  final String webLinkLabel;
+  final String emailLinkLabel;
+  final String telephoneLinkLabel;
+  final String photoEvidenceLabel;
+  final String fileEvidenceLabel;
+  final String unavailableEvidenceLabel;
   final String noTitle;
   final String Function(int count) hoursText;
   final String Function(int count) minutesText;
@@ -144,11 +175,13 @@ class CpdPdfProfile {
 class CpdPdfEvidence {
   const CpdPdfEvidence({
     required this.kind,
+    required this.category,
     required this.label,
     this.destination,
   });
 
   final ExportAttachmentKind kind;
+  final String category;
   final String label;
   final Uri? destination;
 
@@ -292,16 +325,31 @@ CpdPdfEvidence _evidencePresentation(
     case ExportAttachmentKind.httpsUrl:
     case ExportAttachmentKind.mailtoUrl:
     case ExportAttachmentKind.telUrl:
-      final value = attachment.uri?.toString() ?? attachment.storedValue.trim();
+      final value = _linkDisplayValue(attachment);
       return CpdPdfEvidence(
         kind: attachment.kind,
+        category: switch (attachment.kind) {
+          ExportAttachmentKind.httpUrl ||
+          ExportAttachmentKind.httpsUrl => texts.webLinkLabel,
+          ExportAttachmentKind.mailtoUrl => texts.emailLinkLabel,
+          ExportAttachmentKind.telUrl => texts.telephoneLinkLabel,
+          _ => throw StateError('Unexpected link attachment kind'),
+        },
         label: value,
         destination: attachment.uri,
       );
     case ExportAttachmentKind.localImage:
+      return CpdPdfEvidence(
+        kind: attachment.kind,
+        category: texts.photoEvidenceLabel,
+        label: _cleanEvidenceName(
+          attachment.resolvedPath ?? attachment.storedValue,
+        ),
+      );
     case ExportAttachmentKind.localFile:
       return CpdPdfEvidence(
         kind: attachment.kind,
+        category: texts.fileEvidenceLabel,
         label: _cleanEvidenceName(
           attachment.resolvedPath ?? attachment.storedValue,
         ),
@@ -312,8 +360,26 @@ CpdPdfEvidence _evidencePresentation(
       );
       return CpdPdfEvidence(
         kind: attachment.kind,
+        category: texts.unavailableEvidenceLabel,
         label: texts.fileNotFoundWithName(filename),
       );
+  }
+}
+
+String _linkDisplayValue(ExportAttachment attachment) {
+  final uri = attachment.uri;
+  if (uri == null) return attachment.storedValue.trim();
+  switch (attachment.kind) {
+    case ExportAttachmentKind.mailtoUrl:
+    case ExportAttachmentKind.telUrl:
+      return uri.path.isEmpty ? uri.toString() : uri.path;
+    case ExportAttachmentKind.httpUrl:
+    case ExportAttachmentKind.httpsUrl:
+      return uri.toString();
+    case ExportAttachmentKind.localImage:
+    case ExportAttachmentKind.localFile:
+    case ExportAttachmentKind.missingLocal:
+      throw StateError('A local attachment cannot be displayed as a link');
   }
 }
 
@@ -349,9 +415,12 @@ Future<CpdPdfBuildResult> renderCpdPdf({
   required CpdPdfPresentation presentation,
   required PdfExportTexts texts,
   CpdPdfFonts? fonts,
+  Uint8List? appIconBytes,
   bool compress = true,
 }) async {
   final resolvedFonts = fonts ?? await loadCpdPdfFonts();
+  final resolvedAppIconBytes = appIconBytes ?? await _loadAppIconBytes();
+  final appIcon = pw.MemoryImage(resolvedAppIconBytes);
   final document = pw.Document(
     compress: compress,
     title: texts.cpdRecordsTitle,
@@ -374,7 +443,7 @@ Future<CpdPdfBuildResult> renderCpdPdf({
       header: (context) => _buildRepeatingHeader(context, presentation, texts),
       footer: (context) => _buildFooter(context, texts),
       build: (context) => [
-        _buildDocumentHeader(presentation, texts),
+        _buildDocumentHeader(presentation, texts, appIcon),
         pw.SizedBox(height: 24),
         for (final record in presentation.records) ...[
           pw.NewPage(freeSpace: 132),
@@ -383,14 +452,9 @@ Future<CpdPdfBuildResult> renderCpdPdf({
             pw.SizedBox(height: 10),
             _sectionLabel(texts.details),
             pw.SizedBox(height: 4),
-            pw.Text(
+            _ContinuedDetailsText(
               record.details,
-              overflow: pw.TextOverflow.span,
-              style: const pw.TextStyle(
-                fontSize: 10.5,
-                lineSpacing: 2.2,
-                color: _bodyText,
-              ),
+              continuationLabel: texts.continuedTitle(record.title),
             ),
           ],
           if (record.evidence.isNotEmpty) ...[
@@ -400,9 +464,9 @@ Future<CpdPdfBuildResult> renderCpdPdf({
             pw.SizedBox(height: 5),
             for (final evidence in record.evidence) _buildEvidenceRow(evidence),
           ],
-          pw.SizedBox(height: 15),
-          pw.Divider(color: _border, thickness: 0.7),
-          pw.SizedBox(height: 12),
+          pw.SizedBox(height: 18),
+          pw.Divider(color: _border, thickness: 0.8),
+          pw.SizedBox(height: 18),
         ],
       ],
     ),
@@ -428,6 +492,12 @@ const _surface = PdfColor.fromInt(0xfff4f7fa);
 const _border = PdfColor.fromInt(0xffd9e2ec);
 const _missing = PdfColor.fromInt(0xff9c4221);
 const _link = PdfColor.fromInt(0xff1f5f99);
+const _appIconAssetPath = 'assets/icon/1024x1024_app_icon.png';
+
+Future<Uint8List> _loadAppIconBytes() async {
+  final data = await rootBundle.load(_appIconAssetPath);
+  return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+}
 
 pw.Widget _buildRepeatingHeader(
   pw.Context context,
@@ -442,19 +512,35 @@ pw.Widget _buildRepeatingHeader(
       border: pw.Border(bottom: pw.BorderSide(color: _border, width: 0.7)),
     ),
     child: pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: pw.CrossAxisAlignment.center,
       children: [
-        pw.Text(
-          texts.appTitle,
-          style: pw.TextStyle(
-            fontSize: 9,
-            fontWeight: pw.FontWeight.bold,
-            color: _ink,
+        pw.Expanded(
+          child: pw.Text(
+            texts.appTitle,
+            style: pw.TextStyle(
+              fontSize: 8.5,
+              fontWeight: pw.FontWeight.bold,
+              color: _ink,
+            ),
           ),
         ),
-        pw.Text(
-          presentation.profession,
-          style: const pw.TextStyle(fontSize: 9, color: _muted),
+        pw.SizedBox(width: 10),
+        pw.Expanded(
+          child: presentation.profile.name.isEmpty
+              ? pw.SizedBox()
+              : pw.Text(
+                  presentation.profile.name,
+                  textAlign: pw.TextAlign.center,
+                  style: const pw.TextStyle(fontSize: 8.5, color: _muted),
+                ),
+        ),
+        pw.SizedBox(width: 10),
+        pw.Expanded(
+          child: pw.Text(
+            presentation.profession,
+            textAlign: pw.TextAlign.right,
+            style: const pw.TextStyle(fontSize: 8.5, color: _muted),
+          ),
         ),
       ],
     ),
@@ -487,24 +573,43 @@ pw.Widget _buildFooter(pw.Context context, PdfExportTexts texts) {
 pw.Widget _buildDocumentHeader(
   CpdPdfPresentation presentation,
   PdfExportTexts texts,
+  pw.ImageProvider appIcon,
 ) {
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
       pw.Container(width: 54, height: 4, color: _accent),
       pw.SizedBox(height: 12),
-      pw.Text(
-        texts.appTitle,
-        style: pw.TextStyle(
-          fontSize: 23,
-          fontWeight: pw.FontWeight.bold,
-          color: _ink,
-        ),
-      ),
-      pw.SizedBox(height: 3),
-      pw.Text(
-        texts.cpdRecordsTitle,
-        style: const pw.TextStyle(fontSize: 11.5, color: _muted),
+      pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          pw.ClipRRect(
+            horizontalRadius: 8,
+            verticalRadius: 8,
+            child: pw.Image(appIcon, width: 42, height: 42),
+          ),
+          pw.SizedBox(width: 12),
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  texts.appTitle,
+                  style: pw.TextStyle(
+                    fontSize: 23,
+                    fontWeight: pw.FontWeight.bold,
+                    color: _ink,
+                  ),
+                ),
+                pw.SizedBox(height: 3),
+                pw.Text(
+                  texts.cpdRecordsTitle,
+                  style: const pw.TextStyle(fontSize: 11.5, color: _muted),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       if (!presentation.profile.isEmpty) ...[
         pw.SizedBox(height: 18),
@@ -620,8 +725,7 @@ pw.Widget _buildRecordHeader(CpdPdfRecord record, PdfExportTexts texts) {
     padding: const pw.EdgeInsets.symmetric(horizontal: 13, vertical: 11),
     decoration: pw.BoxDecoration(
       color: _surface,
-      border: pw.Border.all(color: _border, width: 0.7),
-      borderRadius: pw.BorderRadius.circular(5),
+      border: const pw.Border(left: pw.BorderSide(color: _accent, width: 3)),
     ),
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -645,7 +749,7 @@ pw.Widget _buildRecordHeader(CpdPdfRecord record, PdfExportTexts texts) {
             ),
           ],
         ),
-        pw.SizedBox(height: 7),
+        pw.SizedBox(height: 8),
         pw.Text(
           record.title,
           overflow: pw.TextOverflow.span,
@@ -674,7 +778,7 @@ pw.Widget _sectionLabel(String label) {
 }
 
 pw.Widget _buildEvidenceRow(CpdPdfEvidence evidence) {
-  final display = '- ${_wrapLongText(evidence.label)}';
+  final display = _wrapLongText(evidence.label);
   final text = pw.Text(
     display,
     overflow: pw.TextOverflow.span,
@@ -687,11 +791,149 @@ pw.Widget _buildEvidenceRow(CpdPdfEvidence evidence) {
   );
 
   return pw.Container(
-    margin: const pw.EdgeInsets.only(bottom: 5),
-    child: evidence.destination == null
-        ? text
-        : pw.UrlLink(destination: evidence.destination.toString(), child: text),
+    margin: const pw.EdgeInsets.only(bottom: 8),
+    padding: const pw.EdgeInsets.only(left: 8),
+    decoration: pw.BoxDecoration(
+      border: pw.Border(
+        left: pw.BorderSide(
+          color: evidence.isMissing
+              ? _missing
+              : evidence.isLink
+              ? _link
+              : _accent,
+          width: 1.5,
+        ),
+      ),
+    ),
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          evidence.category.toUpperCase(),
+          style: pw.TextStyle(
+            fontSize: 7,
+            fontWeight: pw.FontWeight.bold,
+            color: evidence.isMissing
+                ? _missing
+                : evidence.isLink
+                ? _link
+                : _accent,
+            letterSpacing: 0.35,
+          ),
+        ),
+        pw.SizedBox(height: 2),
+        evidence.destination == null
+            ? text
+            : pw.UrlLink(
+                destination: evidence.destination.toString(),
+                child: text,
+              ),
+      ],
+    ),
   );
+}
+
+/// A normal spanning PDF text widget that adds context on continuation pages.
+///
+/// The `pdf` package's public [pw.RichTextContext] tells us whether the current
+/// span starts after the beginning of the record. Reserving the label height
+/// before delegating layout keeps pagination, text shaping and page breaking in
+/// the package's standard `MultiPage` flow, including records longer than two
+/// pages.
+class _ContinuedDetailsText extends pw.Text {
+  _ContinuedDetailsText(super.text, {required this.continuationLabel})
+    : super(
+        overflow: pw.TextOverflow.span,
+        style: const pw.TextStyle(
+          fontSize: 10.5,
+          lineSpacing: 2.2,
+          color: _bodyText,
+        ),
+      );
+
+  final String continuationLabel;
+
+  pw.Text? _label;
+  double _contentHeight = 0;
+  double _labelGap = 0;
+
+  @override
+  void layout(
+    pw.Context context,
+    pw.BoxConstraints constraints, {
+    bool parentUsesSize = false,
+  }) {
+    final textContext = saveContext() as pw.RichTextContext;
+    final isContinuation =
+        textContext.spanStart > 0 || textContext.startOffset != 0;
+
+    _label = isContinuation
+        ? pw.Text(
+            continuationLabel,
+            maxLines: 2,
+            overflow: pw.TextOverflow.clip,
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
+              fontStyle: pw.FontStyle.italic,
+              color: _accent,
+            ),
+          )
+        : null;
+    _labelGap = _label == null ? 0 : 6;
+
+    var labelHeight = 0.0;
+    if (_label != null) {
+      _label!.layout(
+        context,
+        constraints.copyWith(maxHeight: double.infinity),
+        parentUsesSize: true,
+      );
+      labelHeight = _label!.box!.height;
+    }
+
+    final reservedHeight = labelHeight + _labelGap;
+    super.layout(
+      context,
+      constraints.copyWith(
+        minHeight: 0,
+        maxHeight: math.max(0, constraints.maxHeight - reservedHeight),
+      ),
+      parentUsesSize: parentUsesSize,
+    );
+
+    _contentHeight = box!.height;
+    box = PdfRect(
+      box!.left,
+      box!.bottom,
+      box!.width,
+      _contentHeight + reservedHeight,
+    );
+  }
+
+  @override
+  void paint(pw.Context context) {
+    final outerBox = box!;
+    box = PdfRect(
+      outerBox.left,
+      outerBox.bottom,
+      outerBox.width,
+      _contentHeight,
+    );
+    super.paint(context);
+    box = outerBox;
+
+    final label = _label;
+    if (label != null) {
+      label.box = PdfRect(
+        outerBox.left,
+        outerBox.bottom + _contentHeight + _labelGap,
+        label.box!.width,
+        label.box!.height,
+      );
+      label.paint(context);
+    }
+  }
 }
 
 String _wrapLongText(String value, {int maxSegmentLength = 72}) {

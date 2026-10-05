@@ -434,6 +434,29 @@ class AppLocalizationsHi extends AppLocalizations {
   String get cpdPdfEvidenceResourcesLabel => 'साक्ष्य / संसाधन';
 
   @override
+  String cpdPdfContinuedTitle(Object title) {
+    return '$title - जारी';
+  }
+
+  @override
+  String get cpdPdfWebLinkLabel => 'वेब लिंक';
+
+  @override
+  String get cpdPdfEmailLinkLabel => 'ईमेल';
+
+  @override
+  String get cpdPdfTelephoneLinkLabel => 'टेलीफ़ोन';
+
+  @override
+  String get cpdPdfPhotoEvidenceLabel => 'फ़ोटो';
+
+  @override
+  String get cpdPdfFileEvidenceLabel => 'फ़ाइल';
+
+  @override
+  String get cpdPdfUnavailableEvidenceLabel => 'उपलब्ध नहीं';
+
+  @override
   String get nameLabel => 'Name';
 
   @override

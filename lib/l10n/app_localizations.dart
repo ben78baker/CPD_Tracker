@@ -913,6 +913,48 @@ abstract class AppLocalizations {
   /// **'Evidence / Resources'**
   String get cpdPdfEvidenceResourcesLabel;
 
+  /// No description provided for @cpdPdfContinuedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} - continued'**
+  String cpdPdfContinuedTitle(Object title);
+
+  /// No description provided for @cpdPdfWebLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Web link'**
+  String get cpdPdfWebLinkLabel;
+
+  /// No description provided for @cpdPdfEmailLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get cpdPdfEmailLinkLabel;
+
+  /// No description provided for @cpdPdfTelephoneLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Telephone'**
+  String get cpdPdfTelephoneLinkLabel;
+
+  /// No description provided for @cpdPdfPhotoEvidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get cpdPdfPhotoEvidenceLabel;
+
+  /// No description provided for @cpdPdfFileEvidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get cpdPdfFileEvidenceLabel;
+
+  /// No description provided for @cpdPdfUnavailableEvidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get cpdPdfUnavailableEvidenceLabel;
+
   /// No description provided for @nameLabel.
   ///
   /// In en, this message translates to:
