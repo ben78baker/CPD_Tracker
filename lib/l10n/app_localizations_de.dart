@@ -425,6 +425,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cpdRecordsTitle => 'CPD-Einträge';
 
   @override
+  String get cpdPdfDocumentTitle => 'Dokumentation der beruflichen Fortbildung';
+
+  @override
+  String get cpdPdfDurationLabel => 'Dauer';
+
+  @override
+  String get cpdPdfEvidenceResourcesLabel => 'Nachweise / Ressourcen';
+
+  @override
   String get nameLabel => 'Name';
 
   @override

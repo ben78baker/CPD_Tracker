@@ -425,6 +425,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cpdRecordsTitle => 'Dossiers DPC';
 
   @override
+  String get cpdPdfDocumentTitle => 'Dossier de développement professionnel continu';
+
+  @override
+  String get cpdPdfDurationLabel => 'Durée';
+
+  @override
+  String get cpdPdfEvidenceResourcesLabel => 'Preuves / Ressources';
+
+  @override
   String get nameLabel => 'Nom';
 
   @override

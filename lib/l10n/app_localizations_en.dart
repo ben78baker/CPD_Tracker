@@ -425,6 +425,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cpdRecordsTitle => 'CPD Records';
 
   @override
+  String get cpdPdfDocumentTitle => 'Continuing Professional Development Record';
+
+  @override
+  String get cpdPdfDurationLabel => 'Duration';
+
+  @override
+  String get cpdPdfEvidenceResourcesLabel => 'Evidence / Resources';
+
+  @override
   String get nameLabel => 'Name';
 
   @override

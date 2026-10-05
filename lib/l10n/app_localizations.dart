@@ -895,6 +895,24 @@ abstract class AppLocalizations {
   /// **'CPD Records'**
   String get cpdRecordsTitle;
 
+  /// No description provided for @cpdPdfDocumentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continuing Professional Development Record'**
+  String get cpdPdfDocumentTitle;
+
+  /// No description provided for @cpdPdfDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get cpdPdfDurationLabel;
+
+  /// No description provided for @cpdPdfEvidenceResourcesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence / Resources'**
+  String get cpdPdfEvidenceResourcesLabel;
+
   /// No description provided for @nameLabel.
   ///
   /// In en, this message translates to:

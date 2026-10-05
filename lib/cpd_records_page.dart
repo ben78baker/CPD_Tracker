@@ -278,6 +278,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       final Map<String, String> profile = await _settings.loadProfile();
       final String userName = profile['name']?.trim() ?? '';
       final String company = profile['company']?.trim() ?? '';
+      final String address = profile['address']?.trim() ?? '';
       final String email = profile['email']?.trim() ?? '';
       try {
         debugPrint(
@@ -286,10 +287,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         final pdfTexts = PdfExportTexts.fromLoc(AppLocalizations.of(context)!);
         await exportRecordsPdf(
           selection: exportSelection,
+          dateFormat: _fmt,
           userName: userName,
           company: company,
+          address: address,
           email: email,
-          includeAttachments: true,
           texts: pdfTexts,
         );
         if (!mounted) return;
@@ -315,6 +317,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       final Map<String, String> profile = await _settings.loadProfile();
       final String userName = profile['name']?.trim() ?? '';
       final String company = profile['company']?.trim() ?? '';
+      final String address = profile['address']?.trim() ?? '';
       final String email = profile['email']?.trim() ?? '';
       try {
         debugPrint(
@@ -323,8 +326,10 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         final pdfTexts = PdfExportTexts.fromLoc(AppLocalizations.of(context)!);
         await exportRecordsBundleZip(
           selection: exportSelection,
+          dateFormat: _fmt,
           userName: userName,
           company: company,
+          address: address,
           email: email,
           texts: pdfTexts,
         );

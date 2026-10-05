@@ -186,6 +186,9 @@
   },
 
   "cpdRecordsTitle": "CPD Records",
+  "cpdPdfDocumentTitle": "Continuing Professional Development Record",
+  "cpdPdfDurationLabel": "Duration",
+  "cpdPdfEvidenceResourcesLabel": "Evidence / Resources",
   "nameLabel": "Name",
   "companyLabel": "Company",
   "emailLabel": "Email",

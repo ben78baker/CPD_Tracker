@@ -186,6 +186,9 @@
   },
 
   "cpdRecordsTitle": "CPD Records",
+  "cpdPdfDocumentTitle": "सतत व्यावसायिक विकास रिकॉर्ड",
+  "cpdPdfDurationLabel": "अवधि",
+  "cpdPdfEvidenceResourcesLabel": "साक्ष्य / संसाधन",
   "nameLabel": "Name",
   "companyLabel": "Company",
   "emailLabel": "Email",

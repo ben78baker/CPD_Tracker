@@ -187,6 +187,9 @@
   },
 
   "cpdRecordsTitle": "CPD-Einträge",
+  "cpdPdfDocumentTitle": "Dokumentation der beruflichen Fortbildung",
+  "cpdPdfDurationLabel": "Dauer",
+  "cpdPdfEvidenceResourcesLabel": "Nachweise / Ressourcen",
   "nameLabel": "Name",
   "companyLabel": "Firma",
   "emailLabel": "E-Mail",

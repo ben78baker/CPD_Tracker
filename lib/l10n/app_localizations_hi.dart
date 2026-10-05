@@ -425,6 +425,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get cpdRecordsTitle => 'CPD Records';
 
   @override
+  String get cpdPdfDocumentTitle => 'सतत व्यावसायिक विकास रिकॉर्ड';
+
+  @override
+  String get cpdPdfDurationLabel => 'अवधि';
+
+  @override
+  String get cpdPdfEvidenceResourcesLabel => 'साक्ष्य / संसाधन';
+
+  @override
   String get nameLabel => 'Name';
 
   @override

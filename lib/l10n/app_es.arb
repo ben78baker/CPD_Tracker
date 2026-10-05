@@ -187,6 +187,9 @@
   },
 
   "cpdRecordsTitle": "Registros de DPC",
+  "cpdPdfDocumentTitle": "Registro de desarrollo profesional continuo",
+  "cpdPdfDurationLabel": "Duración",
+  "cpdPdfEvidenceResourcesLabel": "Evidencias / Recursos",
   "nameLabel": "Nombre",
   "companyLabel": "Empresa",
   "emailLabel": "Correo electrónico",
