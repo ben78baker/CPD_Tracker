@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -34,12 +35,14 @@ class PdfExportTexts {
     required this.emailLinkLabel,
     required this.telephoneLinkLabel,
     required this.photoEvidenceLabel,
+    required this.photographicEvidenceLabel,
     required this.fileEvidenceLabel,
     required this.unavailableEvidenceLabel,
     required this.noTitle,
     required this.hoursText,
     required this.minutesText,
     required this.fileNotFoundWithName,
+    required this.unsupportedImageWithName,
     required this.shareSubjectPdf,
     required this.shareSubjectBundle,
     required this.attachmentLinksTitle,
@@ -68,12 +71,14 @@ class PdfExportTexts {
     emailLinkLabel: 'Email',
     telephoneLinkLabel: 'Telephone',
     photoEvidenceLabel: 'Photo',
+    photographicEvidenceLabel: 'Photographic Evidence',
     fileEvidenceLabel: 'File',
     unavailableEvidenceLabel: 'Unavailable',
     noTitle: '(No title)',
     hoursText: (count) => count == 1 ? '1 hour' : '$count hours',
     minutesText: (count) => count == 1 ? '1 minute' : '$count minutes',
     fileNotFoundWithName: (filename) => 'Unavailable: $filename',
+    unsupportedImageWithName: (filename) => 'Unsupported image: $filename',
     shareSubjectPdf: 'CPD records',
     shareSubjectBundle: 'CPD records bundle',
     attachmentLinksTitle: 'CPD Attachment Links',
@@ -102,12 +107,14 @@ class PdfExportTexts {
     emailLinkLabel: loc.cpdPdfEmailLinkLabel,
     telephoneLinkLabel: loc.cpdPdfTelephoneLinkLabel,
     photoEvidenceLabel: loc.cpdPdfPhotoEvidenceLabel,
+    photographicEvidenceLabel: loc.cpdPdfPhotographicEvidenceLabel,
     fileEvidenceLabel: loc.cpdPdfFileEvidenceLabel,
     unavailableEvidenceLabel: loc.cpdPdfUnavailableEvidenceLabel,
     noTitle: loc.noTitle,
     hoursText: loc.hoursPlural,
     minutesText: loc.minutesPlural,
     fileNotFoundWithName: loc.fileNotFoundWithName,
+    unsupportedImageWithName: loc.cpdPdfUnsupportedImageWithName,
     shareSubjectPdf: loc.cpdRecordsShareSubject,
     shareSubjectBundle: loc.cpdRecordsBundleShareSubject,
     attachmentLinksTitle: loc.attachmentLinksTitle,
@@ -135,18 +142,22 @@ class PdfExportTexts {
   final String emailLinkLabel;
   final String telephoneLinkLabel;
   final String photoEvidenceLabel;
+  final String photographicEvidenceLabel;
   final String fileEvidenceLabel;
   final String unavailableEvidenceLabel;
   final String noTitle;
   final String Function(int count) hoursText;
   final String Function(int count) minutesText;
   final String Function(Object filename) fileNotFoundWithName;
+  final String Function(Object filename) unsupportedImageWithName;
   final String shareSubjectPdf;
   final String shareSubjectBundle;
   final String attachmentLinksTitle;
   final String linksFileName;
   final String fileNamePrefix;
 }
+
+enum CpdPdfEvidenceMode { textOnly, embeddedImages }
 
 class CpdPdfProfile {
   const CpdPdfProfile({
@@ -178,15 +189,38 @@ class CpdPdfEvidence {
     required this.category,
     required this.label,
     this.destination,
+    this.image,
+    this.isUnavailable = false,
   });
 
   final ExportAttachmentKind kind;
   final String category;
   final String label;
   final Uri? destination;
+  final CpdPdfImageData? image;
+  final bool isUnavailable;
 
   bool get isLink => destination != null;
-  bool get isMissing => kind == ExportAttachmentKind.missingLocal;
+  bool get isMissing =>
+      kind == ExportAttachmentKind.missingLocal || isUnavailable;
+}
+
+/// Decoded image metadata and original encoded bytes for a PDF evidence page.
+///
+/// No source path is retained, so the PDF presentation cannot expose internal
+/// application storage locations. JPEG bytes stay encoded until the PDF is
+/// built, preserving source quality and EXIF orientation without an eager
+/// full-resolution decode.
+class CpdPdfImageData {
+  const CpdPdfImageData({
+    required this.bytes,
+    required this.pixelWidth,
+    required this.pixelHeight,
+  });
+
+  final Uint8List bytes;
+  final int pixelWidth;
+  final int pixelHeight;
 }
 
 class CpdPdfRecord {
@@ -218,6 +252,7 @@ class CpdPdfPresentation {
     required this.period,
     required this.totalDuration,
     required this.records,
+    this.evidenceMode = CpdPdfEvidenceMode.textOnly,
   });
 
   final CpdPdfProfile profile;
@@ -225,6 +260,13 @@ class CpdPdfPresentation {
   final String period;
   final String totalDuration;
   final List<CpdPdfRecord> records;
+  final CpdPdfEvidenceMode evidenceMode;
+
+  int get embeddedImageCount => records.fold<int>(
+    0,
+    (total, record) =>
+        total + record.evidence.where((item) => item.image != null).length,
+  );
 
   List<Uri> get hyperlinks {
     final links = <Uri>[];
@@ -261,12 +303,16 @@ class CpdPdfBuildResult {
     required this.bytes,
     required this.pageCount,
     required this.pageLabels,
+    required this.embeddedImageCount,
   });
 
   final Uint8List bytes;
   final int pageCount;
   final List<String> pageLabels;
+  final int embeddedImageCount;
 }
+
+typedef CpdPdfImageLoader = Future<Uint8List> Function(String path);
 
 Future<CpdPdfPresentation> prepareCpdPdfPresentation({
   required CpdExportSelection selection,
@@ -275,7 +321,10 @@ Future<CpdPdfPresentation> prepareCpdPdfPresentation({
   required PdfExportTexts texts,
   ExportAttachmentPathResolver? attachmentPathResolver,
   ExportAttachmentPathExists? attachmentPathExists,
+  CpdPdfEvidenceMode evidenceMode = CpdPdfEvidenceMode.textOnly,
+  CpdPdfImageLoader? imageLoader,
 }) async {
+  final loadImage = imageLoader ?? (path) => File(path).readAsBytes();
   final records = <CpdPdfRecord>[];
   for (final entry in selection.records) {
     final evidence = <CpdPdfEvidence>[];
@@ -285,7 +334,14 @@ Future<CpdPdfPresentation> prepareCpdPdfPresentation({
         pathResolver: attachmentPathResolver,
         pathExists: attachmentPathExists,
       );
-      evidence.add(_evidencePresentation(attachment, texts));
+      evidence.add(
+        await _evidencePresentation(
+          attachment,
+          texts,
+          evidenceMode: evidenceMode,
+          imageLoader: loadImage,
+        ),
+      );
     }
 
     records.add(
@@ -313,13 +369,16 @@ Future<CpdPdfPresentation> prepareCpdPdfPresentation({
         '${texts.to} ${formatDate(selection.range.end, dateFormat)}',
     totalDuration: _durationText(totalMinutes ~/ 60, totalMinutes % 60, texts),
     records: List<CpdPdfRecord>.unmodifiable(records),
+    evidenceMode: evidenceMode,
   );
 }
 
-CpdPdfEvidence _evidencePresentation(
+Future<CpdPdfEvidence> _evidencePresentation(
   ExportAttachment attachment,
-  PdfExportTexts texts,
-) {
+  PdfExportTexts texts, {
+  required CpdPdfEvidenceMode evidenceMode,
+  required CpdPdfImageLoader imageLoader,
+}) async {
   switch (attachment.kind) {
     case ExportAttachmentKind.httpUrl:
     case ExportAttachmentKind.httpsUrl:
@@ -339,13 +398,38 @@ CpdPdfEvidence _evidencePresentation(
         destination: attachment.uri,
       );
     case ExportAttachmentKind.localImage:
-      return CpdPdfEvidence(
-        kind: attachment.kind,
-        category: texts.photoEvidenceLabel,
-        label: _cleanEvidenceName(
-          attachment.resolvedPath ?? attachment.storedValue,
-        ),
+      final filename = _cleanEvidenceName(
+        attachment.resolvedPath ?? attachment.storedValue,
       );
+      try {
+        final bytes = await imageLoader(attachment.resolvedPath!);
+        final image = pw.MemoryImage(bytes);
+        final width = image.width;
+        final height = image.height;
+        if (width == null || height == null || height <= 0 || width <= 0) {
+          throw const FormatException('Image has invalid dimensions');
+        }
+        return CpdPdfEvidence(
+          kind: attachment.kind,
+          category: texts.photoEvidenceLabel,
+          label: filename,
+          image: evidenceMode == CpdPdfEvidenceMode.embeddedImages
+              ? CpdPdfImageData(
+                  bytes: bytes,
+                  pixelWidth: width,
+                  pixelHeight: height,
+                )
+              : null,
+        );
+      } catch (error) {
+        debugPrint('[PDF] Unsupported image evidence $filename: $error');
+        return CpdPdfEvidence(
+          kind: attachment.kind,
+          category: texts.unavailableEvidenceLabel,
+          label: texts.unsupportedImageWithName(filename),
+          isUnavailable: true,
+        );
+      }
     case ExportAttachmentKind.localFile:
       return CpdPdfEvidence(
         kind: attachment.kind,
@@ -362,6 +446,7 @@ CpdPdfEvidence _evidencePresentation(
         kind: attachment.kind,
         category: texts.unavailableEvidenceLabel,
         label: texts.fileNotFoundWithName(filename),
+        isUnavailable: true,
       );
   }
 }
@@ -467,6 +552,12 @@ Future<CpdPdfBuildResult> renderCpdPdf({
           pw.SizedBox(height: 18),
           pw.Divider(color: _border, thickness: 0.8),
           pw.SizedBox(height: 18),
+          if (presentation.evidenceMode == CpdPdfEvidenceMode.embeddedImages)
+            for (final evidence in record.evidence)
+              if (evidence.image != null) ...[
+                pw.NewPage(),
+                _buildPhotoEvidencePage(record, evidence, texts),
+              ],
         ],
       ],
     ),
@@ -481,6 +572,7 @@ Future<CpdPdfBuildResult> renderCpdPdf({
       (index) => texts.pageOf(index + 1, pageCount),
       growable: false,
     ),
+    embeddedImageCount: presentation.embeddedImageCount,
   );
 }
 
@@ -831,6 +923,79 @@ pw.Widget _buildEvidenceRow(CpdPdfEvidence evidence) {
       ],
     ),
   );
+}
+
+pw.Widget _buildPhotoEvidencePage(
+  CpdPdfRecord record,
+  CpdPdfEvidence evidence,
+  PdfExportTexts texts,
+) {
+  final imageData = evidence.image!;
+  final image = pw.MemoryImage(imageData.bytes);
+  final displaySize = _photoDisplaySize(imageData);
+
+  return pw.Container(
+    height: 620,
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _sectionLabel(texts.photographicEvidenceLabel),
+        pw.SizedBox(height: 7),
+        _buildRecordHeader(record, texts),
+        pw.SizedBox(height: 14),
+        pw.Container(
+          height: 478,
+          width: double.infinity,
+          alignment: pw.Alignment.center,
+          child: pw.Container(
+            width: displaySize.x + 8,
+            height: displaySize.y + 8,
+            padding: const pw.EdgeInsets.all(4),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.white,
+              border: pw.Border.all(color: _border, width: 0.7),
+            ),
+            child: pw.Image(
+              image,
+              width: displaySize.x,
+              height: displaySize.y,
+              fit: pw.BoxFit.contain,
+            ),
+          ),
+        ),
+        pw.SizedBox(height: 7),
+        pw.Container(
+          width: double.infinity,
+          child: pw.Text(
+            _wrapLongText(evidence.label),
+            textAlign: pw.TextAlign.center,
+            maxLines: 2,
+            overflow: pw.TextOverflow.clip,
+            style: const pw.TextStyle(fontSize: 8.5, color: _muted),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Fits the complete source image inside the evidence area without cropping.
+///
+/// Pixels are treated as 144 dpi when determining their natural print size,
+/// then scaled down only. This keeps small sources from being needlessly
+/// enlarged while full-resolution photos retain their original encoded bytes
+/// for useful PDF zooming.
+PdfPoint _photoDisplaySize(CpdPdfImageData image) {
+  const sourceDpi = 144.0;
+  const maxWidth = 475.0;
+  const maxHeight = 462.0;
+  final naturalWidth = image.pixelWidth * PdfPageFormat.inch / sourceDpi;
+  final naturalHeight = image.pixelHeight * PdfPageFormat.inch / sourceDpi;
+  final scale = math.min(
+    1.0,
+    math.min(maxWidth / naturalWidth, maxHeight / naturalHeight),
+  );
+  return PdfPoint(naturalWidth * scale, naturalHeight * scale);
 }
 
 /// A normal spanning PDF text widget that adds context on continuation pages.

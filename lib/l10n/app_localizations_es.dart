@@ -306,7 +306,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get saveEntry => 'Guardar registro';
 
   @override
-  String get attachmentsNote => 'Nota: los adjuntos se guardan en la app y se muestran como miniaturas en el PDF. Usa «PDF + adjuntos (paquete)» para compartir los archivos originales.';
+  String get attachmentsNote => 'Nota: los adjuntos se guardan en la app. Elige PDF con evidencia fotográfica para incluir fotos compatibles, o PDF + adjuntos originales (ZIP) para compartir los archivos originales.';
 
   @override
   String get csvEditable => 'CSV (editable)';
@@ -315,10 +315,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pdfReadOnly => 'PDF (solo lectura)';
 
   @override
-  String get pdfAttachmentsBundle => 'PDF + adjuntos (paquete)';
+  String get pdfWithoutEvidence => 'PDF sin evidencia incrustada';
 
   @override
-  String get pdfAttachmentsBundleSubtitle => 'PDF de registros, PDF de índice y todos los archivos';
+  String get pdfWithoutEvidenceSubtitle => 'Registro profesional con una lista de evidencias';
+
+  @override
+  String get pdfWithEvidence => 'PDF con evidencia fotográfica';
+
+  @override
+  String get pdfWithEvidenceSubtitle => 'Añade fotos compatibles en páginas de evidencia dedicadas';
+
+  @override
+  String get pdfAttachmentsBundle => 'PDF + adjuntos originales (ZIP)';
+
+  @override
+  String get pdfAttachmentsBundleSubtitle => 'PDF de texto y archivos justificativos originales';
 
   @override
   String get noTitle => '(Sin título)';
@@ -449,6 +461,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cpdPdfPhotoEvidenceLabel => 'Foto';
+
+  @override
+  String get cpdPdfPhotographicEvidenceLabel => 'Evidencia fotográfica';
+
+  @override
+  String cpdPdfUnsupportedImageWithName(Object filename) {
+    return 'Imagen no compatible: $filename';
+  }
 
   @override
   String get cpdPdfFileEvidenceLabel => 'Archivo';

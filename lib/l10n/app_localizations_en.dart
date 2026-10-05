@@ -306,7 +306,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveEntry => 'Save Entry';
 
   @override
-  String get attachmentsNote => 'Note: Attachments are saved into the app and shown as thumbnails in the PDF. Use “PDF + attachments (bundle)” to share original files.';
+  String get attachmentsNote => 'Note: Attachments are saved in the app. Choose PDF with photographic evidence to embed supported photos, or PDF + original attachments (ZIP) to share original files.';
 
   @override
   String get csvEditable => 'CSV (editable)';
@@ -315,10 +315,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfReadOnly => 'PDF (read-only)';
 
   @override
-  String get pdfAttachmentsBundle => 'PDF + attachments (bundle)';
+  String get pdfWithoutEvidence => 'PDF without embedded evidence';
 
   @override
-  String get pdfAttachmentsBundleSubtitle => 'Records PDF, index PDF and all files';
+  String get pdfWithoutEvidenceSubtitle => 'Professional record with an evidence list';
+
+  @override
+  String get pdfWithEvidence => 'PDF with photographic evidence';
+
+  @override
+  String get pdfWithEvidenceSubtitle => 'Adds supported photos on dedicated evidence pages';
+
+  @override
+  String get pdfAttachmentsBundle => 'PDF + original attachments (ZIP)';
+
+  @override
+  String get pdfAttachmentsBundleSubtitle => 'Text-only PDF and original supporting files';
 
   @override
   String get noTitle => '(No title)';
@@ -449,6 +461,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cpdPdfPhotoEvidenceLabel => 'Photo';
+
+  @override
+  String get cpdPdfPhotographicEvidenceLabel => 'Photographic Evidence';
+
+  @override
+  String cpdPdfUnsupportedImageWithName(Object filename) {
+    return 'Unsupported image: $filename';
+  }
 
   @override
   String get cpdPdfFileEvidenceLabel => 'File';

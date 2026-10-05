@@ -271,7 +271,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       } finally {
         if (mounted) setState(() => _exporting = false);
       }
-    } else if (sel == 'pdf') {
+    } else if (sel == 'pdf' || sel == 'pdf_evidence') {
       if (!mounted) return;
       setState(() => _exporting = true);
       // Load user profile (name/company/email) from SettingsStore
@@ -293,6 +293,9 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           address: address,
           email: email,
           texts: pdfTexts,
+          evidenceMode: sel == 'pdf_evidence'
+              ? CpdPdfEvidenceMode.embeddedImages
+              : CpdPdfEvidenceMode.textOnly,
         );
         if (!mounted) return;
         Navigator.of(context).popUntil((route) => route is PageRoute);

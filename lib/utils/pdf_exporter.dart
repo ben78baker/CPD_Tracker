@@ -18,6 +18,8 @@ export 'cpd_pdf_document.dart'
     show
         CpdPdfBuildResult,
         CpdPdfFonts,
+        CpdPdfEvidenceMode,
+        CpdPdfImageLoader,
         CpdPdfPresentation,
         CpdPdfProfile,
         PdfExportTexts,
@@ -33,6 +35,13 @@ Future<File> buildRecordsPdf({
   String? address,
   String? email,
   PdfExportTexts? texts,
+  CpdPdfEvidenceMode evidenceMode = CpdPdfEvidenceMode.textOnly,
+  ExportAttachmentPathResolver? attachmentPathResolver,
+  ExportAttachmentPathExists? attachmentPathExists,
+  CpdPdfImageLoader? imageLoader,
+  CpdPdfFonts? fonts,
+  Uint8List? appIconBytes,
+  Directory? outputDirectory,
 }) async {
   final resolvedTexts = texts ?? PdfExportTexts.english();
   final presentation = await prepareCpdPdfPresentation(
@@ -45,10 +54,16 @@ Future<File> buildRecordsPdf({
       email: email ?? '',
     ),
     texts: resolvedTexts,
+    evidenceMode: evidenceMode,
+    attachmentPathResolver: attachmentPathResolver,
+    attachmentPathExists: attachmentPathExists,
+    imageLoader: imageLoader,
   );
   final result = await renderCpdPdf(
     presentation: presentation,
     texts: resolvedTexts,
+    fonts: fonts,
+    appIconBytes: appIconBytes,
   );
   return _saveTemp(
     result.bytes,
@@ -57,6 +72,7 @@ Future<File> buildRecordsPdf({
       selection.profession,
       selection.range,
     ),
+    directory: outputDirectory,
   );
 }
 
@@ -69,6 +85,7 @@ Future<void> exportRecordsPdf({
   String? address,
   String? email,
   PdfExportTexts? texts,
+  CpdPdfEvidenceMode evidenceMode = CpdPdfEvidenceMode.textOnly,
 }) async {
   final resolvedTexts = texts ?? PdfExportTexts.english();
   final file = await buildRecordsPdf(
@@ -79,6 +96,7 @@ Future<void> exportRecordsPdf({
     address: address,
     email: email,
     texts: resolvedTexts,
+    evidenceMode: evidenceMode,
   );
 
   try {
@@ -101,9 +119,10 @@ Future<void> exportRecordsPdf({
   );
 }
 
-/// Builds a ZIP containing the redesigned summary PDF and the original local
-/// evidence files. The existing bundle folder structure is intentionally kept.
-Future<void> exportRecordsBundleZip({
+/// Builds a ZIP containing the text-only professional PDF and the original
+/// local evidence files. The existing bundle folder structure is intentionally
+/// kept, and original attachment bytes are never re-encoded.
+Future<File> buildRecordsBundleZip({
   required CpdExportSelection selection,
   required String dateFormat,
   String? userName,
@@ -111,6 +130,12 @@ Future<void> exportRecordsBundleZip({
   String? address,
   String? email,
   PdfExportTexts? texts,
+  ExportAttachmentPathResolver? attachmentPathResolver,
+  ExportAttachmentPathExists? attachmentPathExists,
+  CpdPdfImageLoader? imageLoader,
+  CpdPdfFonts? fonts,
+  Uint8List? appIconBytes,
+  Directory? outputDirectory,
 }) async {
   final resolvedTexts = texts ?? PdfExportTexts.english();
   final profession = selection.profession;
@@ -123,6 +148,13 @@ Future<void> exportRecordsBundleZip({
     address: address,
     email: email,
     texts: resolvedTexts,
+    evidenceMode: CpdPdfEvidenceMode.textOnly,
+    attachmentPathResolver: attachmentPathResolver,
+    attachmentPathExists: attachmentPathExists,
+    imageLoader: imageLoader,
+    fonts: fonts,
+    appIconBytes: appIconBytes,
+    outputDirectory: outputDirectory,
   );
 
   final localsByFolder = <String, List<String>>{};
@@ -137,7 +169,11 @@ Future<void> exportRecordsBundleZip({
         : titlePartFull;
     final folder = p.join('attachments', '$datePart - $titlePart');
     for (final stored in entry.attachments) {
-      final attachment = await ExportAttachment.classify(stored);
+      final attachment = await ExportAttachment.classify(
+        stored,
+        pathResolver: attachmentPathResolver,
+        pathExists: attachmentPathExists,
+      );
       if (attachment.isUrl) {
         (urlsByFolder[folder] ??= <String>[]).add(stored);
       } else if (attachment.isAvailableLocal) {
@@ -202,10 +238,9 @@ Future<void> exportRecordsBundleZip({
 
   final encoded = ZipEncoder().encode(archive);
   if (encoded.isEmpty) {
-    debugPrint('[Bundle] ERROR: zip encode returned empty');
-    return;
+    throw StateError('ZIP export produced no data');
   }
-  final temporaryDirectory = await getTemporaryDirectory();
+  final temporaryDirectory = outputDirectory ?? await getTemporaryDirectory();
   final zipName = _makeFileName(
     resolvedTexts.fileNamePrefix,
     profession,
@@ -214,6 +249,31 @@ Future<void> exportRecordsBundleZip({
   final zipFile = File(p.join(temporaryDirectory.path, zipName));
   await zipFile.writeAsBytes(encoded, flush: true);
   debugPrint('[Bundle] wrote: ${zipFile.path} (${zipFile.lengthSync()} bytes)');
+
+  return zipFile;
+}
+
+/// Builds the existing PDF/original-attachments ZIP and invokes the native
+/// share sheet.
+Future<void> exportRecordsBundleZip({
+  required CpdExportSelection selection,
+  required String dateFormat,
+  String? userName,
+  String? company,
+  String? address,
+  String? email,
+  PdfExportTexts? texts,
+}) async {
+  final resolvedTexts = texts ?? PdfExportTexts.english();
+  final zipFile = await buildRecordsBundleZip(
+    selection: selection,
+    dateFormat: dateFormat,
+    userName: userName,
+    company: company,
+    address: address,
+    email: email,
+    texts: resolvedTexts,
+  );
 
   const origin = Rect.fromLTWH(0, 0, 1, 1);
   await SharePlus.instance.share(
@@ -255,9 +315,13 @@ String _makeFileName(String prefix, String profession, DateTimeRange range) {
   return '${safePrefix}_${_safeFileName(profession)}${period}_$timestamp.pdf';
 }
 
-Future<File> _saveTemp(Uint8List bytes, String fileName) async {
-  final directory = await getTemporaryDirectory();
-  final file = File(p.join(directory.path, fileName));
+Future<File> _saveTemp(
+  Uint8List bytes,
+  String fileName, {
+  Directory? directory,
+}) async {
+  final resolvedDirectory = directory ?? await getTemporaryDirectory();
+  final file = File(p.join(resolvedDirectory.path, fileName));
   await file.writeAsBytes(bytes, flush: true);
   return file;
 }

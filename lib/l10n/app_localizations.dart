@@ -700,7 +700,7 @@ abstract class AppLocalizations {
   /// No description provided for @attachmentsNote.
   ///
   /// In en, this message translates to:
-  /// **'Note: Attachments are saved into the app and shown as thumbnails in the PDF. Use “PDF + attachments (bundle)” to share original files.'**
+  /// **'Note: Attachments are saved in the app. Choose PDF with photographic evidence to embed supported photos, or PDF + original attachments (ZIP) to share original files.'**
   String get attachmentsNote;
 
   /// No description provided for @csvEditable.
@@ -715,16 +715,40 @@ abstract class AppLocalizations {
   /// **'PDF (read-only)'**
   String get pdfReadOnly;
 
+  /// No description provided for @pdfWithoutEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF without embedded evidence'**
+  String get pdfWithoutEvidence;
+
+  /// No description provided for @pdfWithoutEvidenceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional record with an evidence list'**
+  String get pdfWithoutEvidenceSubtitle;
+
+  /// No description provided for @pdfWithEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF with photographic evidence'**
+  String get pdfWithEvidence;
+
+  /// No description provided for @pdfWithEvidenceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds supported photos on dedicated evidence pages'**
+  String get pdfWithEvidenceSubtitle;
+
   /// No description provided for @pdfAttachmentsBundle.
   ///
   /// In en, this message translates to:
-  /// **'PDF + attachments (bundle)'**
+  /// **'PDF + original attachments (ZIP)'**
   String get pdfAttachmentsBundle;
 
   /// No description provided for @pdfAttachmentsBundleSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Records PDF, index PDF and all files'**
+  /// **'Text-only PDF and original supporting files'**
   String get pdfAttachmentsBundleSubtitle;
 
   /// No description provided for @noTitle.
@@ -942,6 +966,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Photo'**
   String get cpdPdfPhotoEvidenceLabel;
+
+  /// No description provided for @cpdPdfPhotographicEvidenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Photographic Evidence'**
+  String get cpdPdfPhotographicEvidenceLabel;
+
+  /// No description provided for @cpdPdfUnsupportedImageWithName.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported image: {filename}'**
+  String cpdPdfUnsupportedImageWithName(Object filename);
 
   /// No description provided for @cpdPdfFileEvidenceLabel.
   ///

@@ -306,7 +306,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get saveEntry => 'Save Entry';
 
   @override
-  String get attachmentsNote => 'Note: Attachments are saved into the app and shown as thumbnails in the PDF. Use “PDF + attachments (bundle)” to share original files.';
+  String get attachmentsNote => 'नोट: अटैचमेंट ऐप में सहेजे जाते हैं। समर्थित फ़ोटो शामिल करने के लिए फ़ोटोग्राफ़िक साक्ष्य वाला PDF चुनें, या मूल फ़ाइलें साझा करने के लिए PDF + मूल अटैचमेंट (ZIP) चुनें।';
 
   @override
   String get csvEditable => 'CSV (editable)';
@@ -315,10 +315,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get pdfReadOnly => 'PDF (read-only)';
 
   @override
-  String get pdfAttachmentsBundle => 'PDF + attachments (bundle)';
+  String get pdfWithoutEvidence => 'एम्बेडेड साक्ष्य के बिना PDF';
 
   @override
-  String get pdfAttachmentsBundleSubtitle => 'Records PDF, index PDF and all files';
+  String get pdfWithoutEvidenceSubtitle => 'साक्ष्य सूची के साथ पेशेवर रिकॉर्ड';
+
+  @override
+  String get pdfWithEvidence => 'फ़ोटोग्राफ़िक साक्ष्य वाला PDF';
+
+  @override
+  String get pdfWithEvidenceSubtitle => 'समर्थित फ़ोटो को अलग साक्ष्य पृष्ठों पर जोड़ता है';
+
+  @override
+  String get pdfAttachmentsBundle => 'PDF + मूल अटैचमेंट (ZIP)';
+
+  @override
+  String get pdfAttachmentsBundleSubtitle => 'केवल-पाठ PDF और मूल सहायक फ़ाइलें';
 
   @override
   String get noTitle => '(No title)';
@@ -449,6 +461,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get cpdPdfPhotoEvidenceLabel => 'फ़ोटो';
+
+  @override
+  String get cpdPdfPhotographicEvidenceLabel => 'फ़ोटोग्राफ़िक साक्ष्य';
+
+  @override
+  String cpdPdfUnsupportedImageWithName(Object filename) {
+    return 'असमर्थित छवि: $filename';
+  }
 
   @override
   String get cpdPdfFileEvidenceLabel => 'फ़ाइल';

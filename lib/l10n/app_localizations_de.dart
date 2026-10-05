@@ -306,7 +306,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get saveEntry => 'Eintrag speichern';
 
   @override
-  String get attachmentsNote => 'Hinweis: Anhänge werden in der App gespeichert und im PDF als Vorschaubilder angezeigt. Verwenden Sie „PDF + Anhänge (Bundle)“, um die Originaldateien zu teilen.';
+  String get attachmentsNote => 'Hinweis: Anhänge werden in der App gespeichert. Wählen Sie das PDF mit Fotobelegen, um unterstützte Fotos einzubetten, oder PDF + Originalanhänge (ZIP), um Originaldateien zu teilen.';
 
   @override
   String get csvEditable => 'CSV (bearbeitbar)';
@@ -315,10 +315,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pdfReadOnly => 'PDF (schreibgeschützt)';
 
   @override
-  String get pdfAttachmentsBundle => 'PDF + Anhänge (Bundle)';
+  String get pdfWithoutEvidence => 'PDF ohne eingebettete Nachweise';
 
   @override
-  String get pdfAttachmentsBundleSubtitle => 'Einträge-PDF, Index-PDF und alle Dateien';
+  String get pdfWithoutEvidenceSubtitle => 'Professioneller Bericht mit Nachweisliste';
+
+  @override
+  String get pdfWithEvidence => 'PDF mit Fotobelegen';
+
+  @override
+  String get pdfWithEvidenceSubtitle => 'Fügt unterstützte Fotos auf eigenen Nachweisseiten hinzu';
+
+  @override
+  String get pdfAttachmentsBundle => 'PDF + Originalanhänge (ZIP)';
+
+  @override
+  String get pdfAttachmentsBundleSubtitle => 'Text-PDF und ursprüngliche Nachweisdateien';
 
   @override
   String get noTitle => '(Kein Titel)';
@@ -449,6 +461,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cpdPdfPhotoEvidenceLabel => 'Foto';
+
+  @override
+  String get cpdPdfPhotographicEvidenceLabel => 'Fotografischer Nachweis';
+
+  @override
+  String cpdPdfUnsupportedImageWithName(Object filename) {
+    return 'Nicht unterstütztes Bild: $filename';
+  }
 
   @override
   String get cpdPdfFileEvidenceLabel => 'Datei';

@@ -306,7 +306,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get saveEntry => 'Enregistrer l’entrée';
 
   @override
-  String get attachmentsNote => 'Remarque : les pièces jointes sont enregistrées dans l’app et affichées en vignettes dans le PDF. Utilisez « PDF + pièces jointes (bundle) » pour partager les fichiers d’origine.';
+  String get attachmentsNote => 'Remarque : les pièces jointes sont enregistrées dans l’app. Choisissez le PDF avec preuves photographiques pour intégrer les photos prises en charge, ou le ZIP avec pièces jointes d’origine pour partager les fichiers d’origine.';
 
   @override
   String get csvEditable => 'CSV (modifiable)';
@@ -315,10 +315,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pdfReadOnly => 'PDF (lecture seule)';
 
   @override
-  String get pdfAttachmentsBundle => 'PDF + pièces jointes (archive)';
+  String get pdfWithoutEvidence => 'PDF sans preuves intégrées';
 
   @override
-  String get pdfAttachmentsBundleSubtitle => 'PDF des enregistrements, PDF d’index et tous les fichiers';
+  String get pdfWithoutEvidenceSubtitle => 'Dossier professionnel avec une liste des preuves';
+
+  @override
+  String get pdfWithEvidence => 'PDF avec preuves photographiques';
+
+  @override
+  String get pdfWithEvidenceSubtitle => 'Ajoute les photos prises en charge sur des pages dédiées';
+
+  @override
+  String get pdfAttachmentsBundle => 'PDF + pièces jointes d’origine (ZIP)';
+
+  @override
+  String get pdfAttachmentsBundleSubtitle => 'PDF texte et fichiers justificatifs d’origine';
 
   @override
   String get noTitle => '(Sans titre)';
@@ -449,6 +461,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cpdPdfPhotoEvidenceLabel => 'Photo';
+
+  @override
+  String get cpdPdfPhotographicEvidenceLabel => 'Preuve photographique';
+
+  @override
+  String cpdPdfUnsupportedImageWithName(Object filename) {
+    return 'Image non prise en charge : $filename';
+  }
 
   @override
   String get cpdPdfFileEvidenceLabel => 'Fichier';
