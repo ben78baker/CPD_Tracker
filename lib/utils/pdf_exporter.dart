@@ -12,6 +12,9 @@ import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart'; // for debugPrint
 import '../models.dart';
 import '../l10n/app_localizations.dart';
+import 'attachment_io.dart';
+import 'export_attachment.dart';
+import 'export_selection.dart';
 
 class PdfExportTexts {
   const PdfExportTexts({
@@ -112,13 +115,11 @@ class PdfExportTexts {
   final String fileNamePrefix;
 }
 
-/// Builds a landscape PDF summarising [entries].
+/// Builds a landscape PDF summarising [selection].
 /// If [includeAttachments] is true, a second section is appended that
 /// renders thumbnails for image attachments and lists non‑image files/URLs.
 Future<File> buildRecordsPdf({
-  required String profession,
-  required List<CpdEntry> entries,
-  DateTimeRange? range,
+  required CpdExportSelection selection,
   String? userName,
   String? company,
   String? email,
@@ -133,31 +134,20 @@ Future<File> buildRecordsPdf({
   final boldFont = await PdfGoogleFonts.notoSansBold();
   final italicFont = await PdfGoogleFonts.notoSansItalic();
 
-  // Normalise & sort by date ascending
-  final list = [...entries]..sort((a, b) => a.date.compareTo(b.date));
+  final profession = selection.profession;
+  final range = selection.range;
+  final list = selection.records;
 
   // Resolve stored attachment paths (relative or old absolute) to current container
   final docsDir = await getApplicationDocumentsDirectory();
   final docsPath = docsDir.path;
-  String resolve(String stored) {
-    if (stored.startsWith('http://') || stored.startsWith('https://'))
-      return stored;
-    if (stored.startsWith('/')) {
-      final i = stored.indexOf('/Documents/');
-      if (i != -1) {
-        final tail = stored.substring(i + '/Documents/'.length);
-        return p.join(docsPath, tail);
-      }
-      return stored;
-    }
-    return p.join(docsPath, stored);
-  }
+  String resolve(String stored) =>
+      resolveStoredPathForDocumentsDirectory(stored, docsPath);
 
   debugPrint('[PDF] docsPath: $docsPath');
 
   // Header helpers
   String periodText() {
-    if (range == null) return t.allTime;
     return '${formatDate(range.start, 'dd/MM/yyyy')} ${t.to} ${formatDate(range.end, 'dd/MM/yyyy')}';
   }
 
@@ -419,9 +409,7 @@ Future<File> buildRecordsPdf({
 
 /// Convenience: build the PDF then invoke the platform share sheet.
 Future<void> exportRecordsPdf({
-  required String profession,
-  required List<CpdEntry> entries,
-  DateTimeRange? range,
+  required CpdExportSelection selection,
   String? userName,
   String? company,
   String? email,
@@ -431,9 +419,7 @@ Future<void> exportRecordsPdf({
   final t = texts ?? PdfExportTexts.english();
   // Always produce a PDF without inline attachments, always show the inline note for records with attachments.
   final file = await buildRecordsPdf(
-    profession: profession,
-    entries: entries,
-    range: range,
+    selection: selection,
     userName: userName,
     company: company,
     email: email,
@@ -462,20 +448,18 @@ Future<void> exportRecordsPdf({
 /// attachments (images/docs) found in the selected records. URL attachments
 /// are listed inside a small text file in the bundle.
 Future<void> exportRecordsBundleZip({
-  required String profession,
-  required List<CpdEntry> entries,
-  DateTimeRange? range,
+  required CpdExportSelection selection,
   String? userName,
   String? company,
   String? email,
   PdfExportTexts? texts,
 }) async {
   final t = texts ?? PdfExportTexts.english();
+  final profession = selection.profession;
+  final range = selection.range;
   // 1) Build the summary PDF we already have
   final pdfFile = await buildRecordsPdf(
-    profession: profession,
-    entries: entries,
-    range: range,
+    selection: selection,
     userName: userName,
     company: company,
     email: email,
@@ -484,26 +468,11 @@ Future<void> exportRecordsBundleZip({
     texts: t,
   );
 
-  // Resolve stored attachment paths (relative or old absolute) to current container
-  final docsDir = await getApplicationDocumentsDirectory();
-  final docsPath = docsDir.path;
-  String resolve(String stored) {
-    if (_isUrl(stored)) return stored;
-    if (stored.startsWith('/')) {
-      final i = stored.indexOf('/Documents/');
-      if (i != -1) {
-        final tail = stored.substring(i + '/Documents/'.length);
-        return p.join(docsPath, tail);
-      }
-      return stored;
-    }
-    return p.join(docsPath, stored);
-  }
-
   // 2) Gather attachments grouped by record date and safe, truncated title
   final localsByFolder = <String, List<String>>{}; // folder -> local file paths
   final urlsByFolder = <String, List<String>>{}; // folder -> url strings
-  for (final e in entries) {
+  var missingCount = 0;
+  for (final e in selection.records) {
     if (e.attachments.isEmpty) continue;
     // Folder per record, named by record date and safe, truncated title to avoid illegal characters
     final datePart = formatDate(e.date, 'yyyy-MM-dd');
@@ -513,13 +482,16 @@ Future<void> exportRecordsBundleZip({
         : titlePartFull;
     final folder = p.join('attachments', '$datePart - $titlePart');
     for (final a in e.attachments) {
-      if (_isUrl(a)) {
+      final attachment = await ExportAttachment.classify(a);
+      if (attachment.isUrl) {
         (urlsByFolder[folder] ??= <String>[]).add(a);
+      } else if (attachment.isAvailableLocal) {
+        (localsByFolder[folder] ??= <String>[]).add(attachment.resolvedPath!);
       } else {
-        final resolved = resolve(a);
-        if (_fileExistsSync(resolved)) {
-          (localsByFolder[folder] ??= <String>[]).add(resolved);
-        }
+        missingCount++;
+        debugPrint(
+          '[Bundle] missing evidence: ${attachment.resolvedPath ?? a}',
+        );
       }
     }
   }
@@ -530,7 +502,7 @@ Future<void> exportRecordsBundleZip({
   );
   final urlCount = urlsByFolder.values.fold<int>(0, (sum, l) => sum + l.length);
   debugPrint(
-    '[Bundle] locals: $localCount, urls: $urlCount, folders: ${localsByFolder.length + urlsByFolder.length}',
+    '[Bundle] locals: $localCount, urls: $urlCount, missing: $missingCount, folders: ${localsByFolder.length + urlsByFolder.length}',
   );
 
   // 3) Create ZIP archive
@@ -554,11 +526,9 @@ Future<void> exportRecordsBundleZip({
   for (final entry in urlsByFolder.entries) {
     final folder = entry.key;
     final buf = StringBuffer('${t.attachmentLinksTitle}\n\n');
-    if (range != null) {
-      buf.writeln(
-        '${t.periodLabel}: ${formatDate(range.start, 'dd/MM/yyyy')} ${t.to} ${formatDate(range.end, 'dd/MM/yyyy')}\n',
-      );
-    }
+    buf.writeln(
+      '${t.periodLabel}: ${formatDate(range.start, 'dd/MM/yyyy')} ${t.to} ${formatDate(range.end, 'dd/MM/yyyy')}\n',
+    );
     for (final u in entry.value) {
       buf.writeln(u);
     }

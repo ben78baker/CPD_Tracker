@@ -22,12 +22,9 @@ Future<String?> showShareFormatSheet(BuildContext context) async {
           ListTile(
             leading: const Icon(Icons.picture_as_pdf),
             title: Text(AppLocalizations.of(ctx)!.pdfReadOnly),
-            onTap: () async {
+            onTap: () {
               debugPrint('Share format picked: PDF');
               Navigator.pop(ctx, 'pdf');
-              // Update this call in your calling page to pass real data using named parameters!
-              // Example:
-              // await exportRecordsPdf(context, profession: ..., entries: [...], ...);
             },
           ),
           ListTile(

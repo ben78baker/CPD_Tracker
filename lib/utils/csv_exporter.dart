@@ -5,33 +5,26 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models.dart';
-import 'date_utils.dart';
 import '../l10n/app_localizations.dart';
+import 'export_selection.dart';
 
 Future<void> exportRecordsCsv({
   required BuildContext context,
-  required String profession,
+  required CpdExportSelection selection,
   required String dateFormat,
-  required List<CpdEntry> entries,
-  required DateTimeRange range,
   String? userName,
   String? company,
   String? email,
 }) async {
   final loc = AppLocalizations.of(context)!;
   try {
-    // Filter within range
-    final filtered = entries.where((e) {
-      final d = dateOnly(e.date);
-      final s = dateOnly(range.start);
-      final t = dateOnly(range.end);
-      return (d.isAtSameMomentAs(s) || d.isAfter(s)) &&
-          (d.isAtSameMomentAs(t) || d.isBefore(t));
-    }).toList()..sort((a, b) => a.date.compareTo(b.date));
+    final profession = selection.profession;
+    final range = selection.range;
+    final records = selection.records;
 
     // Compute total time
     int totalMinutes = 0;
-    for (final e in filtered) {
+    for (final e in records) {
       totalMinutes += (e.hours * 60) + e.minutes;
     }
     final th = totalMinutes ~/ 60;
@@ -53,7 +46,7 @@ Future<void> exportRecordsCsv({
     );
     sb.writeln('"${loc.periodLabel}:","$fromStr ${loc.toWord} $toStr"');
     sb.writeln('"${loc.totalTimeLabel}:","${th}h ${tm}m"');
-    final withAttachments = filtered
+    final withAttachments = records
         .where((e) => e.attachments.isNotEmpty)
         .length;
     sb.writeln(
@@ -63,7 +56,7 @@ Future<void> exportRecordsCsv({
     sb.writeln(
       '${loc.csvDateHeader},${loc.csvTitleHeader},${loc.hoursLabel},${loc.minutesLabel},${loc.detailsLabel},${loc.csvHasAttachmentsHeader}',
     );
-    for (final e in filtered) {
+    for (final e in records) {
       final dateStr = formatDate(e.date, dateFormat).replaceAll(',', ' ');
       final title = e.title.replaceAll('"', '""');
       final details = e.details.replaceAll('\n', ' ').replaceAll('"', '""');

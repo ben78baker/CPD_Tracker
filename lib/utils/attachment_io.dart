@@ -150,17 +150,25 @@ Future<String> toAppRelative(String absolutePath) async {
 /// - Absolute paths with `/Documents/`: rebase onto current Documents dir
 /// - Relative paths: joined to current Documents dir
 Future<String> resolveStoredPath(String stored) async {
-  if (isUrl(stored)) return stored;
   final docsPath = await _currentDocsPath();
+  return resolveStoredPathForDocumentsDirectory(stored, docsPath);
+}
+
+/// Pure path-resolution counterpart used by export preparation and tests.
+String resolveStoredPathForDocumentsDirectory(
+  String stored,
+  String documentsPath,
+) {
+  if (isUrl(stored)) return stored;
   if (stored.startsWith('/')) {
     final i = stored.indexOf('/Documents/');
     if (i != -1) {
       final tail = stored.substring(i + '/Documents/'.length);
-      return p.join(docsPath, tail);
+      return p.join(documentsPath, tail);
     }
     return stored; // some other absolute path
   }
-  return p.join(docsPath, stored);
+  return p.join(documentsPath, stored);
 }
 
 /// Ensure and return the app's attachments directory inside Documents.

@@ -7,6 +7,7 @@ import 'add_entry_page.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path/path.dart' as p;
 import 'utils/attachment_io.dart';
+import 'utils/export_selection.dart';
 import 'widgets/period_picker.dart' show showPeriodPicker;
 import 'utils/date_utils.dart';
 import 'utils/record_search.dart';
@@ -137,14 +138,18 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         );
         return;
       }
-      if (await File(path).exists()) {
+      final resolvedPath = await resolveStoredPath(path);
+      if (!mounted) return;
+      final exists = await File(resolvedPath).exists();
+      if (!mounted) return;
+      if (exists) {
         await SharePlus.instance.share(
           ShareParams(
             files: [
               XFile(
-                path,
+                resolvedPath,
                 // mimeType optional; let the platform infer
-                name: p.basename(path),
+                name: p.basename(resolvedPath),
               ),
             ],
             subject: AppLocalizations.of(context)!.cpdAttachmentSubject,
@@ -211,13 +216,12 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     final sel = choice.trim().toLowerCase();
     debugPrint('Normalized share format choice: $sel');
 
-    final hasAny = _entries.any((e) {
-      final d = dateOnly(e.date);
-      final s = dateOnly(picked.start);
-      final t = dateOnly(picked.end);
-      return !d.isBefore(s) && !d.isAfter(t);
-    });
-    if (!hasAny) {
+    final exportSelection = CpdExportSelection.fromVisibleRecords(
+      profession: widget.profession,
+      range: picked,
+      visibleRecords: _filteredEntries,
+    );
+    if (exportSelection.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -244,10 +248,8 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         );
         await exportRecordsCsv(
           context: context,
-          profession: widget.profession,
+          selection: exportSelection,
           dateFormat: _fmt,
-          entries: _entries,
-          range: picked,
           userName: userName,
           company: company,
           email: email,
@@ -283,9 +285,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         );
         final pdfTexts = PdfExportTexts.fromLoc(AppLocalizations.of(context)!);
         await exportRecordsPdf(
-          profession: widget.profession,
-          entries: _entries,
-          range: picked,
+          selection: exportSelection,
           userName: userName,
           company: company,
           email: email,
@@ -322,9 +322,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         );
         final pdfTexts = PdfExportTexts.fromLoc(AppLocalizations.of(context)!);
         await exportRecordsBundleZip(
-          profession: widget.profession,
-          entries: _entries,
-          range: picked,
+          selection: exportSelection,
           userName: userName,
           company: company,
           email: email,
