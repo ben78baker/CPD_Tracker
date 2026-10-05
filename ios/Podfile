@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-platform :ios, '13.0'
+platform :ios, '15.6'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -38,6 +38,7 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
     # Force no excluded architectures for iOS simulators
     target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.6'
       config.build_settings.delete('EXCLUDED_ARCHS[sdk=iphonesimulator*]')
     end
   end
