@@ -35,9 +35,11 @@ void main() {
       find.text('Professional record with an evidence list'),
       findsOneWidget,
     );
-    expect(find.text('PDF with photographic evidence'), findsOneWidget);
+    expect(find.text('PDF with evidence'), findsOneWidget);
     expect(
-      find.text('Adds supported photos on dedicated evidence pages'),
+      find.text(
+        'Adds supported photos and PDF pages on dedicated evidence pages',
+      ),
       findsOneWidget,
     );
     expect(find.text('PDF + original attachments (ZIP)'), findsOneWidget);
@@ -46,8 +48,45 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.text('PDF with photographic evidence'));
+    await tester.tap(find.text('PDF with evidence'));
     await tester.pumpAndSettle();
     expect(selected, 'pdf_evidence');
+  });
+
+  testWidgets('explains the accompanying originals ZIP before continuing', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showPdfEvidenceOriginalsNotice(context),
+              child: const Text('Show notice'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Show notice'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Original evidence included'), findsOneWidget);
+    expect(
+      find.text(
+        'Some evidence files cannot be displayed within the PDF. Their '
+        'original files will be included in an accompanying ZIP archive.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Continue'), findsOneWidget);
+
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    expect(find.text('Original evidence included'), findsNothing);
   });
 }

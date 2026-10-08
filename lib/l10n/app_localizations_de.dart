@@ -135,7 +135,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get weekStartsOn => 'Woche beginnt am';
 
   @override
-  String get useDeviceLocaleRecommended => 'Gerätesprache verwenden (empfohlen)';
+  String get useDeviceLocaleRecommended =>
+      'Gerätesprache verwenden (empfohlen)';
 
   @override
   String get monday => 'Montag';
@@ -150,7 +151,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get continueLabel => 'Weiter';
 
   @override
-  String get savedLocallyNotice => 'Lokal gespeichert. Einige Einstellungen werden beim nächsten Start synchronisiert.';
+  String get savedLocallyNotice =>
+      'Lokal gespeichert. Einige Einstellungen werden beim nächsten Start synchronisiert.';
 
   @override
   String get detectedDownloadableFile => 'Download-Link erkannt';
@@ -171,7 +173,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get keepAsUrlOnly => 'Nur als URL behalten';
 
   @override
-  String get qrCertificateReminder => 'Um ein CPD-Zertifikat zu erhalten, folgen Sie bitte später dem Link aus dem gescannten QR-Code und fügen Sie das Zertifikat diesem Eintrag hinzu.';
+  String get qrCertificateReminder =>
+      'Um ein CPD-Zertifikat zu erhalten, folgen Sie bitte später dem Link aus dem gescannten QR-Code und fügen Sie das Zertifikat diesem Eintrag hinzu.';
 
   @override
   String get dontShowAgain => 'Diese Nachricht nicht mehr anzeigen';
@@ -180,7 +183,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get ok => 'OK';
 
   @override
-  String get couldNotSaveDetails => 'Details konnten nicht gespeichert werden. Bitte erneut versuchen.';
+  String get couldNotSaveDetails =>
+      'Details konnten nicht gespeichert werden. Bitte erneut versuchen.';
 
   @override
   String get restoreRecordTitle => 'Eintrag wiederherstellen?';
@@ -189,7 +193,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteRecordTitle => 'Eintrag löschen?';
 
   @override
-  String get restoreRecordConfirm => 'Möchten Sie diesen Eintrag wiederherstellen?';
+  String get restoreRecordConfirm =>
+      'Möchten Sie diesen Eintrag wiederherstellen?';
 
   @override
   String get deleteRecordConfirm => 'Möchten Sie diesen Eintrag löschen?';
@@ -210,7 +215,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareFailed => 'Teilen fehlgeschlagen';
 
   @override
-  String get noRecordsInSelectedPeriod => 'Keine Einträge im ausgewählten Zeitraum.';
+  String get noRecordsInSelectedPeriod =>
+      'Keine Einträge im ausgewählten Zeitraum.';
 
   @override
   String get exportFailed => 'Export fehlgeschlagen';
@@ -234,7 +240,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get futureDateNotAllowedTitle => 'Zukünftiges Datum nicht erlaubt';
 
   @override
-  String get futureDateNotAllowedBody => 'Sie können nur CPD-Einträge mit dem heutigen Datum oder früher hinzufügen.';
+  String get futureDateNotAllowedBody =>
+      'Sie können nur CPD-Einträge mit dem heutigen Datum oder früher hinzufügen.';
 
   @override
   String get takePhoto => 'Foto aufnehmen';
@@ -306,7 +313,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get saveEntry => 'Eintrag speichern';
 
   @override
-  String get attachmentsNote => 'Hinweis: Anhänge werden in der App gespeichert. Wählen Sie das PDF mit Fotobelegen, um unterstützte Fotos einzubetten, oder PDF + Originalanhänge (ZIP), um Originaldateien zu teilen.';
+  String get attachmentsNote =>
+      'Hinweis: Anhänge werden in der App gespeichert. Wählen Sie PDF mit Nachweisen, um unterstützte Fotos und PDF-Seiten einzubetten, oder PDF + Originalanhänge (ZIP), um Originaldateien zu teilen.';
 
   @override
   String get csvEditable => 'CSV (bearbeitbar)';
@@ -318,19 +326,29 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pdfWithoutEvidence => 'PDF ohne eingebettete Nachweise';
 
   @override
-  String get pdfWithoutEvidenceSubtitle => 'Professioneller Bericht mit Nachweisliste';
+  String get pdfWithoutEvidenceSubtitle =>
+      'Professioneller Bericht mit Nachweisliste';
 
   @override
-  String get pdfWithEvidence => 'PDF mit Fotobelegen';
+  String get pdfWithEvidence => 'PDF mit Nachweisen';
 
   @override
-  String get pdfWithEvidenceSubtitle => 'Fügt unterstützte Fotos auf eigenen Nachweisseiten hinzu';
+  String get pdfWithEvidenceSubtitle =>
+      'Fügt unterstützte Fotos und PDF-Seiten auf eigenen Nachweisseiten hinzu';
+
+  @override
+  String get pdfEvidenceOriginalsNoticeTitle => 'Originalnachweise enthalten';
+
+  @override
+  String get pdfEvidenceOriginalsNoticeBody =>
+      'Einige Nachweisdateien können nicht im PDF angezeigt werden. Ihre Originaldateien werden in einem begleitenden ZIP-Archiv bereitgestellt.';
 
   @override
   String get pdfAttachmentsBundle => 'PDF + Originalanhänge (ZIP)';
 
   @override
-  String get pdfAttachmentsBundleSubtitle => 'Text-PDF und ursprüngliche Nachweisdateien';
+  String get pdfAttachmentsBundleSubtitle =>
+      'Text-PDF und ursprüngliche Nachweisdateien';
 
   @override
   String get noTitle => '(Kein Titel)';
@@ -466,12 +484,44 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cpdPdfPhotographicEvidenceLabel => 'Fotografischer Nachweis';
 
   @override
+  String get cpdPdfDocumentEvidenceLabel => 'PDF-Dokument';
+
+  @override
+  String get cpdPdfDocumentaryEvidenceLabel => 'Dokumentennachweis';
+
+  @override
+  String cpdPdfPagesShownBelow(Object filename, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Seiten unten dargestellt',
+      one: '1 Seite unten dargestellt',
+    );
+    return '$filename - $_temp0';
+  }
+
+  @override
+  String cpdPdfSourcePage(int page, int total) {
+    return 'Quellseite $page von $total';
+  }
+
+  @override
+  String cpdPdfUnableToRenderOriginalInZipWithName(Object filename) {
+    return '$filename - Darstellung nicht möglich; Originaldatei im begleitenden ZIP-Archiv';
+  }
+
+  @override
   String cpdPdfUnsupportedImageWithName(Object filename) {
     return 'Nicht unterstütztes Bild: $filename';
   }
 
   @override
   String get cpdPdfFileEvidenceLabel => 'Datei';
+
+  @override
+  String cpdPdfOriginalFileInZipWithName(Object filename) {
+    return '$filename - Originaldatei im begleitenden ZIP-Archiv';
+  }
 
   @override
   String get cpdPdfUnavailableEvidenceLabel => 'Nicht verfügbar';
@@ -492,10 +542,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get attachmentsEvidenceLabel => 'Anhänge / Nachweise:';
 
   @override
-  String get attachmentsInlineNotePdf => 'Anhänge/Nachweise auf Anfrage verfügbar';
+  String get attachmentsInlineNotePdf =>
+      'Anhänge/Nachweise auf Anfrage verfügbar';
 
   @override
-  String get attachmentsInlineNoteZip => 'Für Anhänge & Nachweise siehe ZIP-Datei';
+  String get attachmentsInlineNoteZip =>
+      'Für Anhänge & Nachweise siehe ZIP-Datei';
 
   @override
   String get cpdRecordsShareSubject => 'CPD-Einträge';
@@ -544,7 +596,13 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String cpdEntriesShareText(Object profession, Object from, Object to, int hours, int minutes) {
+  String cpdEntriesShareText(
+    Object profession,
+    Object from,
+    Object to,
+    int hours,
+    int minutes,
+  ) {
     return 'CPD-Einträge für $profession ($from bis $to) — Gesamt ${hours}h ${minutes}m';
   }
 
@@ -568,7 +626,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get attachmentNotFoundOnDevice => 'Anhang auf dem Gerät nicht gefunden.';
+  String get attachmentNotFoundOnDevice =>
+      'Anhang auf dem Gerät nicht gefunden.';
 
   @override
   String get importFailed => 'Import fehlgeschlagen';
@@ -704,7 +763,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get professionAlreadyExists => 'Dieser Beruf existiert bereits';
 
   @override
-  String get professionInDeletedRestoreInstead => 'Dieser Name ist unter Gelöscht. Stellen Sie ihn stattdessen wieder her.';
+  String get professionInDeletedRestoreInstead =>
+      'Dieser Name ist unter Gelöscht. Stellen Sie ihn stattdessen wieder her.';
 
   @override
   String get renameProfessionTitle => 'Beruf umbenennen';

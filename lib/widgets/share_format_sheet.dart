@@ -60,3 +60,21 @@ Future<String?> showShareFormatSheet(BuildContext context) async {
     ),
   );
 }
+
+Future<void> showPdfEvidenceOriginalsNotice(BuildContext context) {
+  final loc = AppLocalizations.of(context)!;
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => AlertDialog(
+      title: Text(loc.pdfEvidenceOriginalsNoticeTitle),
+      content: Text(loc.pdfEvidenceOriginalsNoticeBody),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(loc.continueLabel),
+        ),
+      ],
+    ),
+  );
+}

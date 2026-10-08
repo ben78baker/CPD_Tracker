@@ -194,6 +194,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     );
   }
 
+  Future<void> _showPdfEvidenceOriginalsNotice() async {
+    if (!mounted) return;
+    await showPdfEvidenceOriginalsNotice(context);
+  }
+
   Future<void> _onShareTapped() async {
     if (!mounted) return; // guard before async UI
     final picked = await _pickRangeSimple(context);
@@ -296,6 +301,9 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           evidenceMode: sel == 'pdf_evidence'
               ? CpdPdfEvidenceMode.embeddedImages
               : CpdPdfEvidenceMode.textOnly,
+          onOriginalEvidenceBundleReady: sel == 'pdf_evidence'
+              ? _showPdfEvidenceOriginalsNotice
+              : null,
         );
         if (!mounted) return;
         Navigator.of(context).popUntil((route) => route is PageRoute);

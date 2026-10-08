@@ -82,8 +82,26 @@ void main() {
       expect(attachment.isAvailableLocal, isTrue);
     });
 
-    test('classifies an existing local non-image file', () async {
+    test('classifies an existing local PDF separately', () async {
       final stored = p.join('attachments', 'certificate.pdf');
+      final resolved = resolveStoredPathForDocumentsDirectory(
+        stored,
+        documentsDirectory.path,
+      );
+      File(resolved).createSync(recursive: true);
+
+      final attachment = await ExportAttachment.classify(
+        stored,
+        pathResolver: resolveFromTestDocuments,
+      );
+
+      expect(attachment.kind, ExportAttachmentKind.localPdf);
+      expect(attachment.resolvedPath, resolved);
+      expect(attachment.isAvailableLocal, isTrue);
+    });
+
+    test('keeps other existing local documents as local files', () async {
+      final stored = p.join('attachments', 'reflection.docx');
       final resolved = resolveStoredPathForDocumentsDirectory(
         stored,
         documentsDirectory.path,

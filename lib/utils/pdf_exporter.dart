@@ -13,6 +13,7 @@ import '../models.dart';
 import 'cpd_pdf_document.dart';
 import 'export_attachment.dart';
 import 'export_selection.dart';
+import 'pdf_evidence_rasterizer.dart';
 
 export 'cpd_pdf_document.dart'
     show
@@ -25,6 +26,22 @@ export 'cpd_pdf_document.dart'
         PdfExportTexts,
         prepareCpdPdfPresentation,
         renderCpdPdf;
+export 'pdf_evidence_rasterizer.dart'
+    show CpdPdfEvidenceRasterizer, CpdPdfRasterPage;
+
+class CpdPdfExportArtifacts {
+  const CpdPdfExportArtifacts({
+    required this.pdfFile,
+    required this.originalBundleEvidenceCount,
+    this.originalEvidenceZip,
+  });
+
+  final File pdfFile;
+  final File? originalEvidenceZip;
+  final int originalBundleEvidenceCount;
+
+  bool get includesOriginalEvidenceZip => originalEvidenceZip != null;
+}
 
 /// Builds the professional portrait PDF for the centralized export selection.
 Future<File> buildRecordsPdf({
@@ -42,38 +59,150 @@ Future<File> buildRecordsPdf({
   CpdPdfFonts? fonts,
   Uint8List? appIconBytes,
   Directory? outputDirectory,
+  CpdPdfEvidenceRasterizer? pdfEvidenceRasterizer,
+  ValueChanged<CpdPdfPresentation>? onPresentationPrepared,
 }) async {
   final resolvedTexts = texts ?? PdfExportTexts.english();
-  final presentation = await prepareCpdPdfPresentation(
+  Directory? rasterDirectory;
+  try {
+    if (evidenceMode == CpdPdfEvidenceMode.embeddedImages) {
+      final temporaryRoot = outputDirectory ?? await getTemporaryDirectory();
+      rasterDirectory = await temporaryRoot.createTemp('cpd_pdf_evidence_');
+    }
+
+    final presentation = await prepareCpdPdfPresentation(
+      selection: selection,
+      dateFormat: dateFormat,
+      profile: CpdPdfProfile(
+        name: userName ?? '',
+        company: company ?? '',
+        address: address ?? '',
+        email: email ?? '',
+      ),
+      texts: resolvedTexts,
+      evidenceMode: evidenceMode,
+      attachmentPathResolver: attachmentPathResolver,
+      attachmentPathExists: attachmentPathExists,
+      imageLoader: imageLoader,
+      pdfRasterizer: evidenceMode == CpdPdfEvidenceMode.embeddedImages
+          ? pdfEvidenceRasterizer ?? PrintingCpdPdfEvidenceRasterizer()
+          : null,
+      pdfRasterDirectory: rasterDirectory,
+    );
+    onPresentationPrepared?.call(presentation);
+    final result = await renderCpdPdf(
+      presentation: presentation,
+      texts: resolvedTexts,
+      fonts: fonts,
+      appIconBytes: appIconBytes,
+    );
+    return _saveTemp(
+      result.bytes,
+      _makeFileName(
+        resolvedTexts.fileNamePrefix,
+        selection.profession,
+        selection.range,
+      ),
+      directory: outputDirectory,
+    );
+  } finally {
+    if (rasterDirectory != null) {
+      try {
+        if (await rasterDirectory.exists()) {
+          await rasterDirectory.delete(recursive: true);
+        }
+      } catch (error) {
+        debugPrint(
+          '[PDF] Could not remove temporary evidence directory: $error',
+        );
+      }
+    }
+  }
+}
+
+/// Builds the readable evidence PDF and, only when necessary, the existing
+/// original-attachments ZIP that preserves supporting files byte-for-byte.
+Future<CpdPdfExportArtifacts> buildRecordsPdfWithEvidenceArtifacts({
+  required CpdExportSelection selection,
+  required String dateFormat,
+  String? userName,
+  String? company,
+  String? address,
+  String? email,
+  PdfExportTexts? texts,
+  ExportAttachmentPathResolver? attachmentPathResolver,
+  ExportAttachmentPathExists? attachmentPathExists,
+  CpdPdfImageLoader? imageLoader,
+  CpdPdfFonts? fonts,
+  Uint8List? appIconBytes,
+  Directory? outputDirectory,
+  CpdPdfEvidenceRasterizer? pdfEvidenceRasterizer,
+}) async {
+  CpdPdfPresentation? presentation;
+  final pdfFile = await buildRecordsPdf(
     selection: selection,
     dateFormat: dateFormat,
-    profile: CpdPdfProfile(
-      name: userName ?? '',
-      company: company ?? '',
-      address: address ?? '',
-      email: email ?? '',
-    ),
-    texts: resolvedTexts,
-    evidenceMode: evidenceMode,
+    userName: userName,
+    company: company,
+    address: address,
+    email: email,
+    texts: texts,
+    evidenceMode: CpdPdfEvidenceMode.embeddedImages,
     attachmentPathResolver: attachmentPathResolver,
     attachmentPathExists: attachmentPathExists,
     imageLoader: imageLoader,
-  );
-  final result = await renderCpdPdf(
-    presentation: presentation,
-    texts: resolvedTexts,
     fonts: fonts,
     appIconBytes: appIconBytes,
+    outputDirectory: outputDirectory,
+    pdfEvidenceRasterizer: pdfEvidenceRasterizer,
+    onPresentationPrepared: (value) => presentation = value,
   );
-  return _saveTemp(
-    result.bytes,
-    _makeFileName(
-      resolvedTexts.fileNamePrefix,
-      selection.profession,
-      selection.range,
-    ),
-    directory: outputDirectory,
-  );
+  final preparedPresentation = presentation;
+  if (preparedPresentation == null) {
+    throw StateError('PDF presentation metadata was not prepared');
+  }
+  final originalBundleEvidenceCount =
+      preparedPresentation.originalBundleEvidenceCount;
+  if (originalBundleEvidenceCount == 0) {
+    return CpdPdfExportArtifacts(
+      pdfFile: pdfFile,
+      originalBundleEvidenceCount: 0,
+    );
+  }
+
+  final temporaryRoot = outputDirectory ?? await getTemporaryDirectory();
+  final bundleDirectory = await temporaryRoot.createTemp('cpd_pdf_originals_');
+  try {
+    final originalEvidenceZip = await buildRecordsBundleZip(
+      selection: selection,
+      dateFormat: dateFormat,
+      userName: userName,
+      company: company,
+      address: address,
+      email: email,
+      texts: texts,
+      attachmentPathResolver: attachmentPathResolver,
+      attachmentPathExists: attachmentPathExists,
+      imageLoader: imageLoader,
+      fonts: fonts,
+      appIconBytes: appIconBytes,
+      outputDirectory: bundleDirectory,
+    );
+    return CpdPdfExportArtifacts(
+      pdfFile: pdfFile,
+      originalEvidenceZip: originalEvidenceZip,
+      originalBundleEvidenceCount: originalBundleEvidenceCount,
+    );
+  } catch (_) {
+    try {
+      if (await bundleDirectory.exists()) {
+        await bundleDirectory.delete(recursive: true);
+      }
+    } catch (_) {
+      // Preserve the original export failure.
+    }
+    rethrow;
+  }
 }
 
 /// Builds the PDF and invokes the native share sheet.
@@ -86,34 +215,66 @@ Future<void> exportRecordsPdf({
   String? email,
   PdfExportTexts? texts,
   CpdPdfEvidenceMode evidenceMode = CpdPdfEvidenceMode.textOnly,
+  Future<void> Function()? onOriginalEvidenceBundleReady,
 }) async {
   final resolvedTexts = texts ?? PdfExportTexts.english();
-  final file = await buildRecordsPdf(
-    selection: selection,
-    dateFormat: dateFormat,
-    userName: userName,
-    company: company,
-    address: address,
-    email: email,
-    texts: resolvedTexts,
-    evidenceMode: evidenceMode,
-  );
+  late final CpdPdfExportArtifacts artifacts;
+  if (evidenceMode == CpdPdfEvidenceMode.embeddedImages) {
+    artifacts = await buildRecordsPdfWithEvidenceArtifacts(
+      selection: selection,
+      dateFormat: dateFormat,
+      userName: userName,
+      company: company,
+      address: address,
+      email: email,
+      texts: resolvedTexts,
+    );
+  } else {
+    artifacts = CpdPdfExportArtifacts(
+      pdfFile: await buildRecordsPdf(
+        selection: selection,
+        dateFormat: dateFormat,
+        userName: userName,
+        company: company,
+        address: address,
+        email: email,
+        texts: resolvedTexts,
+        evidenceMode: evidenceMode,
+      ),
+      originalBundleEvidenceCount: 0,
+    );
+  }
+
+  if (artifacts.includesOriginalEvidenceZip &&
+      onOriginalEvidenceBundleReady != null) {
+    await onOriginalEvidenceBundleReady();
+  }
 
   try {
-    debugPrint('[PDF] path: ${file.path} (${await file.length()} bytes)');
+    debugPrint(
+      '[PDF] path: ${artifacts.pdfFile.path} '
+      '(${await artifacts.pdfFile.length()} bytes)',
+    );
   } catch (_) {}
 
   const origin = Rect.fromLTWH(0, 0, 1, 1);
+  final files = <XFile>[
+    XFile(
+      artifacts.pdfFile.path,
+      mimeType: 'application/pdf',
+      name: p.basename(artifacts.pdfFile.path),
+    ),
+    if (artifacts.originalEvidenceZip case final zipFile?)
+      XFile(
+        zipFile.path,
+        mimeType: 'application/zip',
+        name: p.basename(zipFile.path),
+      ),
+  ];
   await SharePlus.instance.share(
     ShareParams(
       subject: resolvedTexts.shareSubjectPdf,
-      files: [
-        XFile(
-          file.path,
-          mimeType: 'application/pdf',
-          name: p.basename(file.path),
-        ),
-      ],
+      files: files,
       sharePositionOrigin: origin,
     ),
   );

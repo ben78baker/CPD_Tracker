@@ -51,7 +51,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewDeletedProfessions => 'View Deleted Professions';
 
   @override
-  String get noProfessionsYet => 'No professions yet. Use menu → Add Profession.';
+  String get noProfessionsYet =>
+      'No professions yet. Use menu → Add Profession.';
 
   @override
   String get renameProfession => 'Rename Profession';
@@ -150,7 +151,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueLabel => 'Continue';
 
   @override
-  String get savedLocallyNotice => 'Saved locally. Some settings may sync on next launch.';
+  String get savedLocallyNotice =>
+      'Saved locally. Some settings may sync on next launch.';
 
   @override
   String get detectedDownloadableFile => 'Detected a downloadable file link';
@@ -171,7 +173,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get keepAsUrlOnly => 'Keep as URL only';
 
   @override
-  String get qrCertificateReminder => 'To receive any CPD certificate please follow the link from the scanned QR code at your leisure and add the certificate to this record.';
+  String get qrCertificateReminder =>
+      'To receive any CPD certificate please follow the link from the scanned QR code at your leisure and add the certificate to this record.';
 
   @override
   String get dontShowAgain => 'Don\'t show this message again';
@@ -234,7 +237,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get futureDateNotAllowedTitle => 'Future date not allowed';
 
   @override
-  String get futureDateNotAllowedBody => 'You can only add CPD entries dated today or earlier.';
+  String get futureDateNotAllowedBody =>
+      'You can only add CPD entries dated today or earlier.';
 
   @override
   String get takePhoto => 'Take photo';
@@ -306,7 +310,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveEntry => 'Save Entry';
 
   @override
-  String get attachmentsNote => 'Note: Attachments are saved in the app. Choose PDF with photographic evidence to embed supported photos, or PDF + original attachments (ZIP) to share original files.';
+  String get attachmentsNote =>
+      'Note: Attachments are saved in the app. Choose PDF with evidence to embed supported photos and PDF pages, or PDF + original attachments (ZIP) to share original files.';
 
   @override
   String get csvEditable => 'CSV (editable)';
@@ -318,19 +323,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfWithoutEvidence => 'PDF without embedded evidence';
 
   @override
-  String get pdfWithoutEvidenceSubtitle => 'Professional record with an evidence list';
+  String get pdfWithoutEvidenceSubtitle =>
+      'Professional record with an evidence list';
 
   @override
-  String get pdfWithEvidence => 'PDF with photographic evidence';
+  String get pdfWithEvidence => 'PDF with evidence';
 
   @override
-  String get pdfWithEvidenceSubtitle => 'Adds supported photos on dedicated evidence pages';
+  String get pdfWithEvidenceSubtitle =>
+      'Adds supported photos and PDF pages on dedicated evidence pages';
+
+  @override
+  String get pdfEvidenceOriginalsNoticeTitle => 'Original evidence included';
+
+  @override
+  String get pdfEvidenceOriginalsNoticeBody =>
+      'Some evidence files cannot be displayed within the PDF. Their original files will be included in an accompanying ZIP archive.';
 
   @override
   String get pdfAttachmentsBundle => 'PDF + original attachments (ZIP)';
 
   @override
-  String get pdfAttachmentsBundleSubtitle => 'Text-only PDF and original supporting files';
+  String get pdfAttachmentsBundleSubtitle =>
+      'Text-only PDF and original supporting files';
 
   @override
   String get noTitle => '(No title)';
@@ -437,7 +452,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cpdRecordsTitle => 'CPD Records';
 
   @override
-  String get cpdPdfDocumentTitle => 'Continuing Professional Development Record';
+  String get cpdPdfDocumentTitle =>
+      'Continuing Professional Development Record';
 
   @override
   String get cpdPdfDurationLabel => 'Duration';
@@ -466,12 +482,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cpdPdfPhotographicEvidenceLabel => 'Photographic Evidence';
 
   @override
+  String get cpdPdfDocumentEvidenceLabel => 'PDF document';
+
+  @override
+  String get cpdPdfDocumentaryEvidenceLabel => 'Documentary Evidence';
+
+  @override
+  String cpdPdfPagesShownBelow(Object filename, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pages shown below',
+      one: '1 page shown below',
+    );
+    return '$filename - $_temp0';
+  }
+
+  @override
+  String cpdPdfSourcePage(int page, int total) {
+    return 'Source page $page of $total';
+  }
+
+  @override
+  String cpdPdfUnableToRenderOriginalInZipWithName(Object filename) {
+    return '$filename - Unable to render; original file in accompanying ZIP';
+  }
+
+  @override
   String cpdPdfUnsupportedImageWithName(Object filename) {
     return 'Unsupported image: $filename';
   }
 
   @override
   String get cpdPdfFileEvidenceLabel => 'File';
+
+  @override
+  String cpdPdfOriginalFileInZipWithName(Object filename) {
+    return '$filename - Original file in accompanying ZIP';
+  }
 
   @override
   String get cpdPdfUnavailableEvidenceLabel => 'Unavailable';
@@ -492,10 +540,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachmentsEvidenceLabel => 'Attachments / Evidence:';
 
   @override
-  String get attachmentsInlineNotePdf => 'Attachments/Evidence available on request';
+  String get attachmentsInlineNotePdf =>
+      'Attachments/Evidence available on request';
 
   @override
-  String get attachmentsInlineNoteZip => 'For Attachments & Evidence see ZIP File';
+  String get attachmentsInlineNoteZip =>
+      'For Attachments & Evidence see ZIP File';
 
   @override
   String get cpdRecordsShareSubject => 'CPD records';
@@ -544,7 +594,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String cpdEntriesShareText(Object profession, Object from, Object to, int hours, int minutes) {
+  String cpdEntriesShareText(
+    Object profession,
+    Object from,
+    Object to,
+    int hours,
+    int minutes,
+  ) {
     return 'CPD entries for $profession ($from to $to) — Total ${hours}h ${minutes}m';
   }
 
@@ -704,7 +760,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get professionAlreadyExists => 'That profession already exists';
 
   @override
-  String get professionInDeletedRestoreInstead => 'That name is in Deleted. Restore it instead.';
+  String get professionInDeletedRestoreInstead =>
+      'That name is in Deleted. Restore it instead.';
 
   @override
   String get renameProfessionTitle => 'Rename profession';

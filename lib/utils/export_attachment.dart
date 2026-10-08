@@ -2,6 +2,7 @@ import 'attachment_io.dart';
 
 enum ExportAttachmentKind {
   localImage,
+  localPdf,
   localFile,
   httpUrl,
   httpsUrl,
@@ -74,6 +75,8 @@ class ExportAttachment {
       storedValue: storedValue,
       kind: isImagePath(resolvedPath)
           ? ExportAttachmentKind.localImage
+          : resolvedPath.toLowerCase().endsWith('.pdf')
+          ? ExportAttachmentKind.localPdf
           : ExportAttachmentKind.localFile,
       resolvedPath: resolvedPath,
     );
@@ -93,7 +96,9 @@ class ExportAttachment {
   };
 
   bool get isAvailableLocal => switch (kind) {
-    ExportAttachmentKind.localImage || ExportAttachmentKind.localFile => true,
+    ExportAttachmentKind.localImage ||
+    ExportAttachmentKind.localPdf ||
+    ExportAttachmentKind.localFile => true,
     _ => false,
   };
 }

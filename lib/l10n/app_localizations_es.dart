@@ -135,7 +135,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get weekStartsOn => 'La semana comienza el';
 
   @override
-  String get useDeviceLocaleRecommended => 'Usar idioma del dispositivo (recomendado)';
+  String get useDeviceLocaleRecommended =>
+      'Usar idioma del dispositivo (recomendado)';
 
   @override
   String get monday => 'Lunes';
@@ -150,7 +151,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get continueLabel => 'Continuar';
 
   @override
-  String get savedLocallyNotice => 'Guardado localmente. Algunos ajustes se sincronizarán al próximo inicio.';
+  String get savedLocallyNotice =>
+      'Guardado localmente. Algunos ajustes se sincronizarán al próximo inicio.';
 
   @override
   String get detectedDownloadableFile => 'Enlace de descarga detectado';
@@ -171,7 +173,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get keepAsUrlOnly => 'Conservar solo como URL';
 
   @override
-  String get qrCertificateReminder => 'Para obtener cualquier certificado de DPC, sigue el enlace del código QR escaneado cuando lo desees y añade el certificado a este registro.';
+  String get qrCertificateReminder =>
+      'Para obtener cualquier certificado de DPC, sigue el enlace del código QR escaneado cuando lo desees y añade el certificado a este registro.';
 
   @override
   String get dontShowAgain => 'No mostrar este mensaje de nuevo';
@@ -180,7 +183,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ok => 'OK';
 
   @override
-  String get couldNotSaveDetails => 'No se pudieron guardar los datos. Inténtalo de nuevo.';
+  String get couldNotSaveDetails =>
+      'No se pudieron guardar los datos. Inténtalo de nuevo.';
 
   @override
   String get restoreRecordTitle => '¿Restaurar registro?';
@@ -210,7 +214,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shareFailed => 'Error al compartir';
 
   @override
-  String get noRecordsInSelectedPeriod => 'No hay registros en el periodo seleccionado.';
+  String get noRecordsInSelectedPeriod =>
+      'No hay registros en el periodo seleccionado.';
 
   @override
   String get exportFailed => 'Error en la exportación';
@@ -234,7 +239,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get futureDateNotAllowedTitle => 'Fecha futura no permitida';
 
   @override
-  String get futureDateNotAllowedBody => 'Solo puedes añadir registros de DPC con fecha de hoy o anterior.';
+  String get futureDateNotAllowedBody =>
+      'Solo puedes añadir registros de DPC con fecha de hoy o anterior.';
 
   @override
   String get takePhoto => 'Tomar foto';
@@ -306,7 +312,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get saveEntry => 'Guardar registro';
 
   @override
-  String get attachmentsNote => 'Nota: los adjuntos se guardan en la app. Elige PDF con evidencia fotográfica para incluir fotos compatibles, o PDF + adjuntos originales (ZIP) para compartir los archivos originales.';
+  String get attachmentsNote =>
+      'Nota: los adjuntos se guardan en la app. Elige PDF con evidencia para incluir fotos y páginas PDF compatibles, o PDF + adjuntos originales (ZIP) para compartir los archivos originales.';
 
   @override
   String get csvEditable => 'CSV (editable)';
@@ -318,19 +325,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get pdfWithoutEvidence => 'PDF sin evidencia incrustada';
 
   @override
-  String get pdfWithoutEvidenceSubtitle => 'Registro profesional con una lista de evidencias';
+  String get pdfWithoutEvidenceSubtitle =>
+      'Registro profesional con una lista de evidencias';
 
   @override
-  String get pdfWithEvidence => 'PDF con evidencia fotográfica';
+  String get pdfWithEvidence => 'PDF con evidencia';
 
   @override
-  String get pdfWithEvidenceSubtitle => 'Añade fotos compatibles en páginas de evidencia dedicadas';
+  String get pdfWithEvidenceSubtitle =>
+      'Añade fotos y páginas PDF compatibles en páginas de evidencia dedicadas';
+
+  @override
+  String get pdfEvidenceOriginalsNoticeTitle =>
+      'Se incluyen los archivos originales';
+
+  @override
+  String get pdfEvidenceOriginalsNoticeBody =>
+      'Algunos archivos de evidencia no se pueden mostrar dentro del PDF. Sus archivos originales se incluirán en un archivo ZIP adjunto.';
 
   @override
   String get pdfAttachmentsBundle => 'PDF + adjuntos originales (ZIP)';
 
   @override
-  String get pdfAttachmentsBundleSubtitle => 'PDF de texto y archivos justificativos originales';
+  String get pdfAttachmentsBundleSubtitle =>
+      'PDF de texto y archivos justificativos originales';
 
   @override
   String get noTitle => '(Sin título)';
@@ -437,7 +455,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cpdRecordsTitle => 'Registros de DPC';
 
   @override
-  String get cpdPdfDocumentTitle => 'Registro de desarrollo profesional continuo';
+  String get cpdPdfDocumentTitle =>
+      'Registro de desarrollo profesional continuo';
 
   @override
   String get cpdPdfDurationLabel => 'Duración';
@@ -466,12 +485,44 @@ class AppLocalizationsEs extends AppLocalizations {
   String get cpdPdfPhotographicEvidenceLabel => 'Evidencia fotográfica';
 
   @override
+  String get cpdPdfDocumentEvidenceLabel => 'Documento PDF';
+
+  @override
+  String get cpdPdfDocumentaryEvidenceLabel => 'Evidencia documental';
+
+  @override
+  String cpdPdfPagesShownBelow(Object filename, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count páginas mostradas a continuación',
+      one: '1 página mostrada a continuación',
+    );
+    return '$filename - $_temp0';
+  }
+
+  @override
+  String cpdPdfSourcePage(int page, int total) {
+    return 'Página de origen $page de $total';
+  }
+
+  @override
+  String cpdPdfUnableToRenderOriginalInZipWithName(Object filename) {
+    return '$filename - No se puede mostrar; archivo original en el ZIP adjunto';
+  }
+
+  @override
   String cpdPdfUnsupportedImageWithName(Object filename) {
     return 'Imagen no compatible: $filename';
   }
 
   @override
   String get cpdPdfFileEvidenceLabel => 'Archivo';
+
+  @override
+  String cpdPdfOriginalFileInZipWithName(Object filename) {
+    return '$filename - Archivo original en el ZIP adjunto';
+  }
 
   @override
   String get cpdPdfUnavailableEvidenceLabel => 'No disponible';
@@ -492,10 +543,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get attachmentsEvidenceLabel => 'Adjuntos / evidencias:';
 
   @override
-  String get attachmentsInlineNotePdf => 'Adjuntos / evidencias disponibles bajo solicitud';
+  String get attachmentsInlineNotePdf =>
+      'Adjuntos / evidencias disponibles bajo solicitud';
 
   @override
-  String get attachmentsInlineNoteZip => 'Para adjuntos y evidencias, consulta el archivo ZIP';
+  String get attachmentsInlineNoteZip =>
+      'Para adjuntos y evidencias, consulta el archivo ZIP';
 
   @override
   String get cpdRecordsShareSubject => 'Registros de DPC';
@@ -544,7 +597,13 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String cpdEntriesShareText(Object profession, Object from, Object to, int hours, int minutes) {
+  String cpdEntriesShareText(
+    Object profession,
+    Object from,
+    Object to,
+    int hours,
+    int minutes,
+  ) {
     return 'Registros de DPC para $profession ($from a $to) — Total ${hours}h ${minutes}m';
   }
 
@@ -552,7 +611,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get couldNotOpenLink => 'No se pudo abrir el enlace.';
 
   @override
-  String get noAppToOpenLink => 'No hay ninguna app disponible para abrir el enlace.';
+  String get noAppToOpenLink =>
+      'No hay ninguna app disponible para abrir el enlace.';
 
   @override
   String cantOpenThisFile(Object message) {
@@ -568,7 +628,8 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get attachmentNotFoundOnDevice => 'Adjunto no encontrado en el dispositivo.';
+  String get attachmentNotFoundOnDevice =>
+      'Adjunto no encontrado en el dispositivo.';
 
   @override
   String get importFailed => 'Error al importar';
@@ -704,7 +765,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get professionAlreadyExists => 'Esta profesión ya existe';
 
   @override
-  String get professionInDeletedRestoreInstead => 'Este nombre está en Eliminadas. Restaúrala en su lugar.';
+  String get professionInDeletedRestoreInstead =>
+      'Este nombre está en Eliminadas. Restaúrala en su lugar.';
 
   @override
   String get renameProfessionTitle => 'Renombrar profesión';

@@ -12,6 +12,7 @@ import '../l10n/app_localizations.dart';
 import '../models.dart';
 import 'export_attachment.dart';
 import 'export_selection.dart';
+import 'pdf_evidence_rasterizer.dart';
 
 class PdfExportTexts {
   const PdfExportTexts({
@@ -36,7 +37,13 @@ class PdfExportTexts {
     required this.telephoneLinkLabel,
     required this.photoEvidenceLabel,
     required this.photographicEvidenceLabel,
+    required this.pdfDocumentLabel,
+    required this.documentaryEvidenceLabel,
+    required this.pdfPagesShownBelow,
+    required this.sourcePage,
+    required this.unrenderableOriginalInZipWithName,
     required this.fileEvidenceLabel,
+    required this.originalFileInZipWithName,
     required this.unavailableEvidenceLabel,
     required this.noTitle,
     required this.hoursText,
@@ -72,7 +79,16 @@ class PdfExportTexts {
     telephoneLinkLabel: 'Telephone',
     photoEvidenceLabel: 'Photo',
     photographicEvidenceLabel: 'Photographic Evidence',
+    pdfDocumentLabel: 'PDF document',
+    documentaryEvidenceLabel: 'Documentary Evidence',
+    pdfPagesShownBelow: (filename, count) =>
+        '$filename - $count ${count == 1 ? 'page' : 'pages'} shown below',
+    sourcePage: (page, total) => 'Source page $page of $total',
+    unrenderableOriginalInZipWithName: (filename) =>
+        '$filename - Unable to render; original file in accompanying ZIP',
     fileEvidenceLabel: 'File',
+    originalFileInZipWithName: (filename) =>
+        '$filename - Original file in accompanying ZIP',
     unavailableEvidenceLabel: 'Unavailable',
     noTitle: '(No title)',
     hoursText: (count) => count == 1 ? '1 hour' : '$count hours',
@@ -108,7 +124,14 @@ class PdfExportTexts {
     telephoneLinkLabel: loc.cpdPdfTelephoneLinkLabel,
     photoEvidenceLabel: loc.cpdPdfPhotoEvidenceLabel,
     photographicEvidenceLabel: loc.cpdPdfPhotographicEvidenceLabel,
+    pdfDocumentLabel: loc.cpdPdfDocumentEvidenceLabel,
+    documentaryEvidenceLabel: loc.cpdPdfDocumentaryEvidenceLabel,
+    pdfPagesShownBelow: loc.cpdPdfPagesShownBelow,
+    sourcePage: loc.cpdPdfSourcePage,
+    unrenderableOriginalInZipWithName:
+        loc.cpdPdfUnableToRenderOriginalInZipWithName,
     fileEvidenceLabel: loc.cpdPdfFileEvidenceLabel,
+    originalFileInZipWithName: loc.cpdPdfOriginalFileInZipWithName,
     unavailableEvidenceLabel: loc.cpdPdfUnavailableEvidenceLabel,
     noTitle: loc.noTitle,
     hoursText: loc.hoursPlural,
@@ -143,7 +166,13 @@ class PdfExportTexts {
   final String telephoneLinkLabel;
   final String photoEvidenceLabel;
   final String photographicEvidenceLabel;
+  final String pdfDocumentLabel;
+  final String documentaryEvidenceLabel;
+  final String Function(String filename, int count) pdfPagesShownBelow;
+  final String Function(int page, int total) sourcePage;
+  final String Function(String filename) unrenderableOriginalInZipWithName;
   final String fileEvidenceLabel;
+  final String Function(String filename) originalFileInZipWithName;
   final String unavailableEvidenceLabel;
   final String noTitle;
   final String Function(int count) hoursText;
@@ -190,7 +219,10 @@ class CpdPdfEvidence {
     required this.label,
     this.destination,
     this.image,
+    this.documentFilename,
+    this.documentPages = const [],
     this.isUnavailable = false,
+    this.requiresOriginalBundle = false,
   });
 
   final ExportAttachmentKind kind;
@@ -198,7 +230,10 @@ class CpdPdfEvidence {
   final String label;
   final Uri? destination;
   final CpdPdfImageData? image;
+  final String? documentFilename;
+  final List<CpdPdfDocumentPageData> documentPages;
   final bool isUnavailable;
+  final bool requiresOriginalBundle;
 
   bool get isLink => destination != null;
   bool get isMissing =>
@@ -221,6 +256,26 @@ class CpdPdfImageData {
   final Uint8List bytes;
   final int pixelWidth;
   final int pixelHeight;
+}
+
+/// A rasterised source PDF page safe to embed in the generated CPD report.
+///
+/// Only encoded JPEG bytes and display metadata are retained. The original
+/// attachment path is never exposed to the presentation or PDF renderer.
+class CpdPdfDocumentPageData {
+  const CpdPdfDocumentPageData({
+    required this.bytes,
+    required this.pixelWidth,
+    required this.pixelHeight,
+    required this.sourcePageNumber,
+    required this.totalSourcePages,
+  });
+
+  final Uint8List bytes;
+  final int pixelWidth;
+  final int pixelHeight;
+  final int sourcePageNumber;
+  final int totalSourcePages;
 }
 
 class CpdPdfRecord {
@@ -268,6 +323,23 @@ class CpdPdfPresentation {
         total + record.evidence.where((item) => item.image != null).length,
   );
 
+  int get documentaryPageCount => records.fold<int>(
+    0,
+    (total, record) =>
+        total +
+        record.evidence.fold<int>(
+          0,
+          (evidenceTotal, item) => evidenceTotal + item.documentPages.length,
+        ),
+  );
+
+  int get originalBundleEvidenceCount => records.fold<int>(
+    0,
+    (total, record) =>
+        total +
+        record.evidence.where((item) => item.requiresOriginalBundle).length,
+  );
+
   List<Uri> get hyperlinks {
     final links = <Uri>[];
     for (final record in records) {
@@ -304,12 +376,14 @@ class CpdPdfBuildResult {
     required this.pageCount,
     required this.pageLabels,
     required this.embeddedImageCount,
+    required this.documentaryPageCount,
   });
 
   final Uint8List bytes;
   final int pageCount;
   final List<String> pageLabels;
   final int embeddedImageCount;
+  final int documentaryPageCount;
 }
 
 typedef CpdPdfImageLoader = Future<Uint8List> Function(String path);
@@ -323,12 +397,24 @@ Future<CpdPdfPresentation> prepareCpdPdfPresentation({
   ExportAttachmentPathExists? attachmentPathExists,
   CpdPdfEvidenceMode evidenceMode = CpdPdfEvidenceMode.textOnly,
   CpdPdfImageLoader? imageLoader,
+  CpdPdfEvidenceRasterizer? pdfRasterizer,
+  Directory? pdfRasterDirectory,
 }) async {
   final loadImage = imageLoader ?? (path) => File(path).readAsBytes();
   final records = <CpdPdfRecord>[];
-  for (final entry in selection.records) {
+  for (
+    var recordIndex = 0;
+    recordIndex < selection.records.length;
+    recordIndex++
+  ) {
+    final entry = selection.records[recordIndex];
     final evidence = <CpdPdfEvidence>[];
-    for (final stored in entry.attachments) {
+    for (
+      var attachmentIndex = 0;
+      attachmentIndex < entry.attachments.length;
+      attachmentIndex++
+    ) {
+      final stored = entry.attachments[attachmentIndex];
       final attachment = await ExportAttachment.classify(
         stored,
         pathResolver: attachmentPathResolver,
@@ -340,6 +426,10 @@ Future<CpdPdfPresentation> prepareCpdPdfPresentation({
           texts,
           evidenceMode: evidenceMode,
           imageLoader: loadImage,
+          pdfRasterizer: pdfRasterizer,
+          pdfRasterDirectory: pdfRasterDirectory,
+          pdfRasterPrefix:
+              'record_${recordIndex + 1}_evidence_${attachmentIndex + 1}',
         ),
       );
     }
@@ -378,6 +468,9 @@ Future<CpdPdfEvidence> _evidencePresentation(
   PdfExportTexts texts, {
   required CpdPdfEvidenceMode evidenceMode,
   required CpdPdfImageLoader imageLoader,
+  required CpdPdfEvidenceRasterizer? pdfRasterizer,
+  required Directory? pdfRasterDirectory,
+  required String pdfRasterPrefix,
 }) async {
   switch (attachment.kind) {
     case ExportAttachmentKind.httpUrl:
@@ -423,20 +516,96 @@ Future<CpdPdfEvidence> _evidencePresentation(
         );
       } catch (error) {
         debugPrint('[PDF] Unsupported image evidence $filename: $error');
+        final includesOriginal =
+            evidenceMode == CpdPdfEvidenceMode.embeddedImages;
         return CpdPdfEvidence(
           kind: attachment.kind,
-          category: texts.unavailableEvidenceLabel,
-          label: texts.unsupportedImageWithName(filename),
+          category: includesOriginal
+              ? texts.photoEvidenceLabel
+              : texts.unavailableEvidenceLabel,
+          label: includesOriginal
+              ? texts.unrenderableOriginalInZipWithName(filename)
+              : texts.unsupportedImageWithName(filename),
           isUnavailable: true,
+          requiresOriginalBundle: includesOriginal,
+        );
+      }
+    case ExportAttachmentKind.localPdf:
+      final filename = _cleanEvidenceName(
+        attachment.resolvedPath ?? attachment.storedValue,
+      );
+      if (evidenceMode == CpdPdfEvidenceMode.textOnly) {
+        return CpdPdfEvidence(
+          kind: attachment.kind,
+          category: texts.pdfDocumentLabel,
+          label: filename,
+          documentFilename: filename,
+        );
+      }
+
+      if (pdfRasterizer == null || pdfRasterDirectory == null) {
+        return CpdPdfEvidence(
+          kind: attachment.kind,
+          category: texts.pdfDocumentLabel,
+          label: texts.unrenderableOriginalInZipWithName(filename),
+          documentFilename: filename,
+          isUnavailable: true,
+          requiresOriginalBundle: true,
+        );
+      }
+
+      try {
+        final rasterPages = await pdfRasterizer.rasterize(
+          sourcePath: attachment.resolvedPath!,
+          outputDirectory: pdfRasterDirectory,
+          outputPrefix: pdfRasterPrefix,
+        );
+        final pageCount = rasterPages.length;
+        final documentPages = <CpdPdfDocumentPageData>[];
+        for (final page in rasterPages) {
+          documentPages.add(
+            CpdPdfDocumentPageData(
+              bytes: await File(page.path).readAsBytes(),
+              pixelWidth: page.pixelWidth,
+              pixelHeight: page.pixelHeight,
+              sourcePageNumber: page.sourcePageNumber,
+              totalSourcePages: pageCount,
+            ),
+          );
+        }
+        return CpdPdfEvidence(
+          kind: attachment.kind,
+          category: texts.pdfDocumentLabel,
+          label: texts.pdfPagesShownBelow(filename, pageCount),
+          documentFilename: filename,
+          documentPages: List<CpdPdfDocumentPageData>.unmodifiable(
+            documentPages,
+          ),
+        );
+      } catch (error) {
+        debugPrint('[PDF] Could not render PDF evidence $filename: $error');
+        return CpdPdfEvidence(
+          kind: attachment.kind,
+          category: texts.pdfDocumentLabel,
+          label: texts.unrenderableOriginalInZipWithName(filename),
+          documentFilename: filename,
+          isUnavailable: true,
+          requiresOriginalBundle: true,
         );
       }
     case ExportAttachmentKind.localFile:
+      final filename = _cleanEvidenceName(
+        attachment.resolvedPath ?? attachment.storedValue,
+      );
+      final includesOriginal =
+          evidenceMode == CpdPdfEvidenceMode.embeddedImages;
       return CpdPdfEvidence(
         kind: attachment.kind,
         category: texts.fileEvidenceLabel,
-        label: _cleanEvidenceName(
-          attachment.resolvedPath ?? attachment.storedValue,
-        ),
+        label: includesOriginal
+            ? texts.originalFileInZipWithName(filename)
+            : filename,
+        requiresOriginalBundle: includesOriginal,
       );
     case ExportAttachmentKind.missingLocal:
       final filename = _cleanEvidenceName(
@@ -462,6 +631,7 @@ String _linkDisplayValue(ExportAttachment attachment) {
     case ExportAttachmentKind.httpsUrl:
       return uri.toString();
     case ExportAttachmentKind.localImage:
+    case ExportAttachmentKind.localPdf:
     case ExportAttachmentKind.localFile:
     case ExportAttachmentKind.missingLocal:
       throw StateError('A local attachment cannot be displayed as a link');
@@ -553,11 +723,16 @@ Future<CpdPdfBuildResult> renderCpdPdf({
           pw.Divider(color: _border, thickness: 0.8),
           pw.SizedBox(height: 18),
           if (presentation.evidenceMode == CpdPdfEvidenceMode.embeddedImages)
-            for (final evidence in record.evidence)
+            for (final evidence in record.evidence) ...[
               if (evidence.image != null) ...[
                 pw.NewPage(),
                 _buildPhotoEvidencePage(record, evidence, texts),
               ],
+              for (final page in evidence.documentPages) ...[
+                pw.NewPage(),
+                _buildDocumentaryEvidencePage(record, evidence, page, texts),
+              ],
+            ],
         ],
       ],
     ),
@@ -573,6 +748,7 @@ Future<CpdPdfBuildResult> renderCpdPdf({
       growable: false,
     ),
     embeddedImageCount: presentation.embeddedImageCount,
+    documentaryPageCount: presentation.documentaryPageCount,
   );
 }
 
@@ -870,7 +1046,7 @@ pw.Widget _sectionLabel(String label) {
 }
 
 pw.Widget _buildEvidenceRow(CpdPdfEvidence evidence) {
-  final display = _wrapLongText(evidence.label);
+  final display = _wrapLongText(evidence.label, maxSegmentLength: 96);
   final text = pw.Text(
     display,
     overflow: pw.TextOverflow.span,
@@ -973,6 +1149,95 @@ pw.Widget _buildPhotoEvidencePage(
             overflow: pw.TextOverflow.clip,
             style: const pw.TextStyle(fontSize: 8.5, color: _muted),
           ),
+        ),
+      ],
+    ),
+  );
+}
+
+pw.Widget _buildDocumentaryEvidencePage(
+  CpdPdfRecord record,
+  CpdPdfEvidence evidence,
+  CpdPdfDocumentPageData page,
+  PdfExportTexts texts,
+) {
+  final image = pw.MemoryImage(page.bytes);
+  return pw.Container(
+    height: 650,
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _sectionLabel(texts.documentaryEvidenceLabel),
+        pw.SizedBox(height: 5),
+        _buildDocumentaryEvidenceContext(record, texts),
+        pw.SizedBox(height: 6),
+        pw.Row(
+          children: [
+            pw.Expanded(
+              child: pw.Text(
+                _wrapLongText(evidence.documentFilename ?? evidence.label),
+                maxLines: 2,
+                overflow: pw.TextOverflow.clip,
+                style: pw.TextStyle(
+                  fontSize: 8.5,
+                  fontWeight: pw.FontWeight.bold,
+                  color: _bodyText,
+                ),
+              ),
+            ),
+            pw.SizedBox(width: 12),
+            pw.Text(
+              texts.sourcePage(page.sourcePageNumber, page.totalSourcePages),
+              style: const pw.TextStyle(fontSize: 8.5, color: _muted),
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 6),
+        pw.Expanded(
+          child: pw.Container(
+            width: double.infinity,
+            alignment: pw.Alignment.center,
+            padding: const pw.EdgeInsets.all(4),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.white,
+              border: pw.Border.all(color: _border, width: 0.7),
+            ),
+            child: pw.Image(image, fit: pw.BoxFit.contain),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+pw.Widget _buildDocumentaryEvidenceContext(
+  CpdPdfRecord record,
+  PdfExportTexts texts,
+) {
+  return pw.Container(
+    padding: const pw.EdgeInsets.fromLTRB(8, 3, 0, 4),
+    decoration: const pw.BoxDecoration(
+      border: pw.Border(left: pw.BorderSide(color: _accent, width: 2)),
+    ),
+    child: pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Expanded(
+          child: pw.Text(
+            _wrapLongText(record.title),
+            maxLines: 2,
+            overflow: pw.TextOverflow.clip,
+            style: pw.TextStyle(
+              fontSize: 10,
+              fontWeight: pw.FontWeight.bold,
+              color: _ink,
+            ),
+          ),
+        ),
+        pw.SizedBox(width: 12),
+        pw.Text(
+          '${texts.dateLabel.toUpperCase()}  ${record.date}',
+          style: const pw.TextStyle(fontSize: 8.2, color: _muted),
         ),
       ],
     ),

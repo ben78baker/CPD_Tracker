@@ -7,7 +7,12 @@ import 'package:cpd_tracker/models.dart';
 import 'package:cpd_tracker/utils/cpd_pdf_document.dart';
 import 'package:cpd_tracker/utils/export_attachment.dart';
 import 'package:cpd_tracker/utils/export_selection.dart';
-import 'package:cpd_tracker/utils/pdf_exporter.dart' show buildRecordsBundleZip;
+import 'package:cpd_tracker/utils/pdf_evidence_rasterizer.dart';
+import 'package:cpd_tracker/utils/pdf_exporter.dart'
+    show
+        buildRecordsBundleZip,
+        buildRecordsPdf,
+        buildRecordsPdfWithEvidenceArtifacts;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
@@ -74,6 +79,8 @@ void main() {
     String dateFormat = 'dd/MM/yyyy',
     CpdPdfProfile profile = const CpdPdfProfile(),
     CpdPdfEvidenceMode evidenceMode = CpdPdfEvidenceMode.textOnly,
+    CpdPdfEvidenceRasterizer? pdfRasterizer,
+    Directory? pdfRasterDirectory,
   }) {
     return prepareCpdPdfPresentation(
       selection: selected,
@@ -82,6 +89,8 @@ void main() {
       texts: texts,
       attachmentPathResolver: resolveFromTestDocuments,
       evidenceMode: evidenceMode,
+      pdfRasterizer: pdfRasterizer,
+      pdfRasterDirectory: pdfRasterDirectory,
     );
   }
 
@@ -330,8 +339,8 @@ void main() {
       final evidence = presentation.records.single.evidence;
 
       expect(evidence[0].label, 'certificate.pdf');
-      expect(evidence[0].kind, ExportAttachmentKind.localFile);
-      expect(evidence[0].category, 'File');
+      expect(evidence[0].kind, ExportAttachmentKind.localPdf);
+      expect(evidence[0].category, 'PDF document');
       expect(evidence[1].label, 'session-photo.jpg');
       expect(evidence[1].kind, ExportAttachmentKind.localImage);
       expect(evidence[1].category, 'Photo');
@@ -446,6 +455,410 @@ void main() {
       },
     );
 
+    test('renders a single-page PDF as documentary evidence', () async {
+      const storedPdf = 'attachments/course-certificate.pdf';
+      File(p.join(documentsDirectory.path, storedPdf))
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(<int>[37, 80, 68, 70, 45, 102, 105, 120]);
+      final rasterDirectory = Directory(
+        p.join(documentsDirectory.path, 'single-page-raster'),
+      )..createSync();
+      final rasterizer = _FixturePdfRasterizer({
+        'course-certificate.pdf': const [(360, 520)],
+      });
+
+      final presentation = await prepare(
+        selection([
+          entry(
+            id: 1,
+            date: DateTime(2026, 4, 3),
+            title: 'Certificate review',
+            attachments: const [storedPdf],
+          ),
+        ]),
+        evidenceMode: CpdPdfEvidenceMode.embeddedImages,
+        pdfRasterizer: rasterizer,
+        pdfRasterDirectory: rasterDirectory,
+      );
+      final evidence = presentation.records.single.evidence.single;
+      final result = await render(presentation);
+      final rawPdf = latin1.decode(result.bytes, allowInvalid: true);
+
+      expect(evidence.kind, ExportAttachmentKind.localPdf);
+      expect(evidence.category, 'PDF document');
+      expect(evidence.label, 'course-certificate.pdf - 1 page shown below');
+      expect(evidence.documentPages, hasLength(1));
+      expect(evidence.documentPages.single.sourcePageNumber, 1);
+      expect(evidence.documentPages.single.totalSourcePages, 1);
+      expect(presentation.documentaryPageCount, 1);
+      expect(result.documentaryPageCount, 1);
+      expect(result.pageLabels, hasLength(result.pageCount));
+      expect(presentation.originalBundleEvidenceCount, 0);
+      expect(rawPdf, contains('(DOCUMENTARY)'));
+      expect(rawPdf, contains('(EVIDENCE)'));
+      expect(rawPdf, contains('(Source)'));
+      expect(rawPdf, contains('(page)'));
+      expect(RegExp(r'\(Duration:\)').allMatches(rawPdf), hasLength(1));
+      expect(
+        RegExp(r'\(Certificate\)').allMatches(rawPdf).length,
+        greaterThanOrEqualTo(2),
+      );
+      expect(
+        RegExp(r'\(03/04/2026\)').allMatches(rawPdf).length,
+        greaterThanOrEqualTo(2),
+      );
+      expect(rawPdf, isNot(contains(documentsDirectory.path)));
+    });
+
+    test(
+      'preserves attachment order and portrait/landscape PDF page order',
+      () async {
+        const firstPdf = 'attachments/first-evidence.pdf';
+        const photo = 'attachments/activity-photo.bmp';
+        const document = 'attachments/reflection.docx';
+        const secondPdf = 'attachments/second-evidence.pdf';
+        for (final stored in [firstPdf, document, secondPdf]) {
+          File(p.join(documentsDirectory.path, stored))
+            ..createSync(recursive: true)
+            ..writeAsBytesSync(<int>[37, 80, 68, 70, 45]);
+        }
+        writeBmp(photo, width: 420, height: 280, paletteSeed: 12);
+        final rasterizer = _FixturePdfRasterizer({
+          'first-evidence.pdf': const [(400, 600), (700, 400)],
+          'second-evidence.pdf': const [(500, 500)],
+        });
+        final rasterDirectory = Directory(
+          p.join(documentsDirectory.path, 'ordered-raster'),
+        )..createSync();
+
+        final presentation = await prepare(
+          selection([
+            entry(
+              id: 1,
+              date: DateTime(2026, 4, 4),
+              title: 'Ordered evidence',
+              attachments: const [firstPdf, photo, document, secondPdf],
+            ),
+          ]),
+          evidenceMode: CpdPdfEvidenceMode.embeddedImages,
+          pdfRasterizer: rasterizer,
+          pdfRasterDirectory: rasterDirectory,
+        );
+        final evidence = presentation.records.single.evidence;
+
+        expect(evidence.map((item) => item.kind), [
+          ExportAttachmentKind.localPdf,
+          ExportAttachmentKind.localImage,
+          ExportAttachmentKind.localFile,
+          ExportAttachmentKind.localPdf,
+        ]);
+        expect(
+          evidence[0].documentPages.map(
+            (page) =>
+                (page.sourcePageNumber, page.pixelWidth, page.pixelHeight),
+          ),
+          [(1, 400, 600), (2, 700, 400)],
+        );
+        expect(
+          evidence[2].label,
+          'reflection.docx - Original file in accompanying ZIP',
+        );
+        expect(evidence[2].category, 'File');
+        expect(evidence[2].documentPages, isEmpty);
+        expect(evidence[2].requiresOriginalBundle, isTrue);
+        expect(evidence[3].documentPages.single.sourcePageNumber, 1);
+        expect(rasterizer.sourceFilenames, [
+          'first-evidence.pdf',
+          'second-evidence.pdf',
+        ]);
+        expect(presentation.embeddedImageCount, 1);
+        expect(presentation.documentaryPageCount, 3);
+        expect(presentation.originalBundleEvidenceCount, 1);
+
+        final result = await render(presentation);
+        expect(result.embeddedImageCount, 1);
+        expect(result.documentaryPageCount, 3);
+        expect(result.pageLabels, hasLength(result.pageCount));
+      },
+    );
+
+    test(
+      'isolates a corrupt PDF and continues with subsequent evidence',
+      () async {
+        const corruptPdf = 'attachments/corrupt.pdf';
+        const validPdf = 'attachments/valid.pdf';
+        for (final stored in [corruptPdf, validPdf]) {
+          File(p.join(documentsDirectory.path, stored))
+            ..createSync(recursive: true)
+            ..writeAsBytesSync(<int>[37, 80, 68, 70, 45]);
+        }
+        final rasterizer = _FixturePdfRasterizer(
+          {
+            'valid.pdf': const [(360, 500)],
+          },
+          failures: const {'corrupt.pdf'},
+        );
+        final rasterDirectory = Directory(
+          p.join(documentsDirectory.path, 'failure-raster'),
+        )..createSync();
+
+        final presentation = await prepare(
+          selection([
+            entry(
+              id: 1,
+              date: DateTime(2026, 4, 5),
+              title: 'Failure isolation',
+              attachments: const [corruptPdf, validPdf],
+            ),
+          ]),
+          evidenceMode: CpdPdfEvidenceMode.embeddedImages,
+          pdfRasterizer: rasterizer,
+          pdfRasterDirectory: rasterDirectory,
+        );
+        final evidence = presentation.records.single.evidence;
+
+        expect(evidence[0].isUnavailable, isTrue);
+        expect(evidence[0].category, 'PDF document');
+        expect(
+          evidence[0].label,
+          'corrupt.pdf - Unable to render; original file in accompanying ZIP',
+        );
+        expect(evidence[0].documentPages, isEmpty);
+        expect(evidence[0].requiresOriginalBundle, isTrue);
+        expect(evidence[1].isUnavailable, isFalse);
+        expect(evidence[1].requiresOriginalBundle, isFalse);
+        expect(evidence[1].documentPages, hasLength(1));
+        expect(presentation.documentaryPageCount, 1);
+        expect(presentation.originalBundleEvidenceCount, 1);
+        expect((await render(presentation)).documentaryPageCount, 1);
+      },
+    );
+
+    test(
+      'distinguishes unsupported, failed and missing evidence wording',
+      () async {
+        const document = 'attachments/learning-plan.docx';
+        const corruptPdf = 'attachments/protected-certificate.pdf';
+        const missing = 'attachments/missing-evidence.docx';
+        File(p.join(documentsDirectory.path, document))
+          ..createSync(recursive: true)
+          ..writeAsStringSync('document bytes');
+        File(p.join(documentsDirectory.path, corruptPdf))
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(<int>[37, 80, 68, 70, 45]);
+        final rasterizer = _FixturePdfRasterizer(
+          const {},
+          failures: const {'protected-certificate.pdf'},
+        );
+        final rasterDirectory = Directory(
+          p.join(documentsDirectory.path, 'wording-raster'),
+        )..createSync();
+
+        final presentation = await prepare(
+          selection([
+            entry(
+              id: 1,
+              date: DateTime(2026, 4, 6),
+              title: 'Evidence wording',
+              attachments: const [document, corruptPdf, missing],
+            ),
+          ]),
+          evidenceMode: CpdPdfEvidenceMode.embeddedImages,
+          pdfRasterizer: rasterizer,
+          pdfRasterDirectory: rasterDirectory,
+        );
+        final evidence = presentation.records.single.evidence;
+
+        expect(evidence[0].category, 'File');
+        expect(
+          evidence[0].label,
+          'learning-plan.docx - Original file in accompanying ZIP',
+        );
+        expect(evidence[0].requiresOriginalBundle, isTrue);
+        expect(evidence[1].category, 'PDF document');
+        expect(
+          evidence[1].label,
+          'protected-certificate.pdf - Unable to render; original file in '
+          'accompanying ZIP',
+        );
+        expect(evidence[1].requiresOriginalBundle, isTrue);
+        expect(evidence[2].category, 'Unavailable');
+        expect(evidence[2].label, 'Unavailable: missing-evidence.docx');
+        expect(evidence[2].label, isNot(contains('ZIP')));
+        expect(evidence[2].requiresOriginalBundle, isFalse);
+        expect(presentation.originalBundleEvidenceCount, 2);
+
+        final result = await render(presentation);
+        const previewPath = String.fromEnvironment(
+          'CPD_PDF_EVIDENCE_WORDING_PREVIEW_PATH',
+        );
+        if (previewPath.isNotEmpty) {
+          await File(previewPath).parent.create(recursive: true);
+          await File(previewPath).writeAsBytes(result.bytes, flush: true);
+        }
+        final rawPdf = latin1.decode(result.bytes, allowInvalid: true);
+        expect(rawPdf, contains('(Original)'));
+        expect(rawPdf, contains('(Unable)'));
+        expect(rawPdf, contains('(ZIP)'));
+      },
+    );
+
+    test(
+      'adds the original ZIP only when visible evidence cannot be rendered',
+      () async {
+        const corruptPdf = 'attachments/password-protected.pdf';
+        const document = 'attachments/reflection.docx';
+        final corruptBytes = <int>[37, 80, 68, 70, 45, 99, 111, 114, 114];
+        final documentBytes = utf8.encode('original reflection document');
+        File(p.join(documentsDirectory.path, corruptPdf))
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(corruptBytes, flush: true);
+        File(p.join(documentsDirectory.path, document))
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(documentBytes, flush: true);
+        final rasterizer = _FixturePdfRasterizer(
+          const {},
+          failures: const {'password-protected.pdf'},
+        );
+
+        final artifacts = await buildRecordsPdfWithEvidenceArtifacts(
+          selection: selection([
+            entry(
+              id: 1,
+              date: DateTime(2026, 4, 8),
+              title: 'Supporting documents',
+              attachments: const [corruptPdf, document],
+            ),
+          ]),
+          dateFormat: 'dd/MM/yyyy',
+          texts: texts,
+          attachmentPathResolver: resolveFromTestDocuments,
+          fonts: CpdPdfFonts.standard(),
+          appIconBytes: _bmpBytes(48, 48),
+          outputDirectory: documentsDirectory,
+          pdfEvidenceRasterizer: rasterizer,
+        );
+
+        expect(artifacts.pdfFile.existsSync(), isTrue);
+        expect(artifacts.includesOriginalEvidenceZip, isTrue);
+        expect(artifacts.originalBundleEvidenceCount, 2);
+        final archive = ZipDecoder().decodeBytes(
+          artifacts.originalEvidenceZip!.readAsBytesSync(),
+        );
+        final archivedPdf = archive.files.singleWhere(
+          (file) => file.name.endsWith('/password-protected.pdf'),
+        );
+        final archivedDocument = archive.files.singleWhere(
+          (file) => file.name.endsWith('/reflection.docx'),
+        );
+        expect(archivedPdf.readBytes(), corruptBytes);
+        expect(archivedDocument.readBytes(), documentBytes);
+      },
+    );
+
+    test('does not add an unnecessary ZIP when all evidence renders', () async {
+      const storedPdf = 'attachments/renderable.pdf';
+      const photo = 'attachments/renderable-photo.bmp';
+      File(p.join(documentsDirectory.path, storedPdf))
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(<int>[37, 80, 68, 70, 45], flush: true);
+      writeBmp(photo, width: 420, height: 280, paletteSeed: 14);
+      final rasterizer = _FixturePdfRasterizer({
+        'renderable.pdf': const [(360, 500)],
+      });
+
+      final artifacts = await buildRecordsPdfWithEvidenceArtifacts(
+        selection: selection([
+          entry(
+            id: 1,
+            date: DateTime(2026, 4, 9),
+            title: 'Fully visible evidence',
+            attachments: const [photo, storedPdf],
+          ),
+        ]),
+        dateFormat: 'dd/MM/yyyy',
+        texts: texts,
+        attachmentPathResolver: resolveFromTestDocuments,
+        fonts: CpdPdfFonts.standard(),
+        appIconBytes: _bmpBytes(48, 48),
+        outputDirectory: documentsDirectory,
+        pdfEvidenceRasterizer: rasterizer,
+      );
+
+      expect(artifacts.pdfFile.existsSync(), isTrue);
+      expect(artifacts.includesOriginalEvidenceZip, isFalse);
+      expect(artifacts.originalEvidenceZip, isNull);
+      expect(artifacts.originalBundleEvidenceCount, 0);
+    });
+
+    test('text-only PDF does not invoke documentary rasterisation', () async {
+      const storedPdf = 'attachments/reference.pdf';
+      File(p.join(documentsDirectory.path, storedPdf))
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(<int>[37, 80, 68, 70, 45]);
+      final rasterizer = _FixturePdfRasterizer({
+        'reference.pdf': const [(360, 500)],
+      });
+
+      final presentation = await prepare(
+        selection([
+          entry(
+            id: 1,
+            date: DateTime(2026, 4, 6),
+            title: 'Text-only evidence',
+            attachments: const [storedPdf],
+          ),
+        ]),
+        pdfRasterizer: rasterizer,
+      );
+      final evidence = presentation.records.single.evidence.single;
+
+      expect(rasterizer.sourceFilenames, isEmpty);
+      expect(evidence.kind, ExportAttachmentKind.localPdf);
+      expect(evidence.label, 'reference.pdf');
+      expect(evidence.documentPages, isEmpty);
+      expect(presentation.documentaryPageCount, 0);
+      expect((await render(presentation)).documentaryPageCount, 0);
+    });
+
+    test(
+      'cleans the operation-specific raster directory after building',
+      () async {
+        const storedPdf = 'attachments/cleanup.pdf';
+        final source = File(p.join(documentsDirectory.path, storedPdf))
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(<int>[37, 80, 68, 70, 45, 99, 108, 101, 97, 110]);
+        final originalBytes = source.readAsBytesSync();
+        final rasterizer = _FixturePdfRasterizer({
+          'cleanup.pdf': const [(360, 500), (500, 360)],
+        });
+
+        final output = await buildRecordsPdf(
+          selection: selection([
+            entry(
+              id: 1,
+              date: DateTime(2026, 4, 7),
+              title: 'Temporary cleanup',
+              attachments: const [storedPdf],
+            ),
+          ]),
+          dateFormat: 'dd/MM/yyyy',
+          texts: texts,
+          evidenceMode: CpdPdfEvidenceMode.embeddedImages,
+          attachmentPathResolver: resolveFromTestDocuments,
+          fonts: CpdPdfFonts.standard(),
+          appIconBytes: _bmpBytes(48, 48),
+          outputDirectory: documentsDirectory,
+          pdfEvidenceRasterizer: rasterizer,
+        );
+
+        expect(output.existsSync(), isTrue);
+        expect(rasterizer.outputDirectories, hasLength(1));
+        expect(rasterizer.outputDirectories.single.existsSync(), isFalse);
+        expect(source.readAsBytesSync(), originalBytes);
+      },
+    );
+
     test('embeds a supported PNG at its intrinsic square dimensions', () async {
       const storedPng = 'attachments/app-icon-evidence.png';
       final pngFile = File(p.join(documentsDirectory.path, storedPng));
@@ -493,11 +906,25 @@ void main() {
         for (final mode in CpdPdfEvidenceMode.values) {
           final presentation = await prepare(selected, evidenceMode: mode);
           final evidence = presentation.records.single.evidence;
-          expect(evidence[0].label, 'Unsupported image: corrupt-photo.jpg');
+          if (mode == CpdPdfEvidenceMode.embeddedImages) {
+            expect(evidence[0].category, 'Photo');
+            expect(
+              evidence[0].label,
+              'corrupt-photo.jpg - Unable to render; original file in '
+              'accompanying ZIP',
+            );
+            expect(evidence[0].requiresOriginalBundle, isTrue);
+          } else {
+            expect(evidence[0].category, 'Unavailable');
+            expect(evidence[0].label, 'Unsupported image: corrupt-photo.jpg');
+            expect(evidence[0].requiresOriginalBundle, isFalse);
+          }
           expect(evidence[0].isUnavailable, isTrue);
           expect(evidence[0].image, isNull);
           expect(evidence[1].label, 'Unavailable: missing-photo.jpg');
+          expect(evidence[1].label, isNot(contains('ZIP')));
           expect(evidence[1].isMissing, isTrue);
+          expect(evidence[1].requiresOriginalBundle, isFalse);
           expect(evidence[1].image, isNull);
           expect((await render(presentation)).bytes, isNotEmpty);
         }
@@ -705,10 +1132,17 @@ void main() {
         email: 'alex.morgan@example.com',
       );
       final withoutEvidence = await prepare(selected, profile: profile);
+      final previewRasterizer = _FixturePdfRasterizer({
+        'course-certificate.pdf': const [(1240, 1754), (1754, 1240)],
+      });
       final withEvidence = await prepare(
         selected,
         profile: profile,
         evidenceMode: CpdPdfEvidenceMode.embeddedImages,
+        pdfRasterizer: previewRasterizer,
+        pdfRasterDirectory: Directory(
+          p.join(documentsDirectory.path, 'preview-raster'),
+        ),
       );
       const withoutPreviewPath = String.fromEnvironment(
         'CPD_PDF_WITHOUT_EVIDENCE_PREVIEW_PATH',
@@ -747,12 +1181,62 @@ void main() {
       expect(withoutResult.embeddedImageCount, 0);
       expect(withResult.pageCount, greaterThan(withoutResult.pageCount));
       expect(withResult.embeddedImageCount, 2);
+      expect(withResult.documentaryPageCount, 2);
       expect(withoutEvidence.records, hasLength(3));
       expect(withEvidence.records, hasLength(3));
       expect(withoutEvidence.hyperlinks, hasLength(4));
       expect(withEvidence.hyperlinks, hasLength(4));
     });
   });
+}
+
+class _FixturePdfRasterizer implements CpdPdfEvidenceRasterizer {
+  _FixturePdfRasterizer(this.pagesByFilename, {this.failures = const {}});
+
+  final Map<String, List<(int, int)>> pagesByFilename;
+  final Set<String> failures;
+  final List<String> sourceFilenames = <String>[];
+  final List<Directory> outputDirectories = <Directory>[];
+
+  @override
+  Future<List<CpdPdfRasterPage>> rasterize({
+    required String sourcePath,
+    required Directory outputDirectory,
+    required String outputPrefix,
+  }) async {
+    final filename = p.basename(sourcePath);
+    sourceFilenames.add(filename);
+    outputDirectories.add(outputDirectory);
+    if (failures.contains(filename)) {
+      throw const FormatException('Fixture PDF could not be rendered');
+    }
+
+    final sizes = pagesByFilename[filename];
+    if (sizes == null || sizes.isEmpty) {
+      throw StateError('No fixture pages configured for $filename');
+    }
+    await outputDirectory.create(recursive: true);
+    final pages = <CpdPdfRasterPage>[];
+    for (var index = 0; index < sizes.length; index++) {
+      final size = sizes[index];
+      final file = File(
+        p.join(outputDirectory.path, '${outputPrefix}_page_${index + 1}.bmp'),
+      );
+      await file.writeAsBytes(
+        _bmpBytes(size.$1, size.$2, paletteSeed: index + 20),
+        flush: true,
+      );
+      pages.add(
+        CpdPdfRasterPage(
+          path: file.path,
+          pixelWidth: size.$1,
+          pixelHeight: size.$2,
+          sourcePageNumber: index + 1,
+        ),
+      );
+    }
+    return pages;
+  }
 }
 
 Uint8List _bmpBytes(int width, int height, {int paletteSeed = 0}) {
