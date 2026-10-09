@@ -1,5 +1,15 @@
 # CPD Tracker – Change Log
 
+## v1.3.0 — Enhanced PDF and Evidence Exports
+**Date:** October 2026
+
+- Improved professional PDF reports with clearer activity and evidence presentation.
+- Added PDF exports with embedded photographic and documentary evidence.
+- Added dedicated photographic evidence pages that preserve the complete image.
+- Added document rendering so attached PDF evidence appears within the report.
+- Original attachments are included alongside the report only when required.
+- Improved export and sharing reliability across the available formats.
+
 ## v1.0.0-beta — Pre-Release Polishing Milestone  
 **Date:** November 2025  
 
