@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
+import 'tactile_button.dart';
 
 /// Shows a bottom sheet for selecting export/share format.
 /// Returns the selected choice as a string: 'csv', 'pdf', 'pdf_evidence', or
@@ -70,8 +71,9 @@ Future<void> showPdfEvidenceOriginalsNotice(BuildContext context) {
       title: Text(loc.pdfEvidenceOriginalsNoticeTitle),
       content: Text(loc.pdfEvidenceOriginalsNoticeBody),
       actions: [
-        FilledButton(
+        TactileButton(
           onPressed: () => Navigator.pop(ctx),
+          variant: TactileButtonVariant.primary,
           child: Text(loc.continueLabel),
         ),
       ],

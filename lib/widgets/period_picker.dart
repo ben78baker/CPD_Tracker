@@ -4,6 +4,7 @@ import 'package:cpd_tracker/utils/date_utils.dart';
 import 'date_button.dart';
 import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
+import 'tactile_button.dart';
 
 String formatDate(DateTime date, String format) {
   return DateFormat(format).format(date);
@@ -34,7 +35,7 @@ Future<DateTimeRange?> showPeriodPicker({
             children: [
               const SizedBox(height: 8),
               Center(
-                child: FilledButton.icon(
+                child: TactileButton.icon(
                   onPressed: () {
                     Navigator.pop(
                       ctx,
@@ -46,6 +47,7 @@ Future<DateTimeRange?> showPeriodPicker({
                   },
                   icon: const Icon(Icons.select_all),
                   label: Text(loc.shareAll),
+                  variant: TactileButtonVariant.primary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -95,8 +97,7 @@ Future<DateTimeRange?> showPeriodPicker({
                     onPressed: () => Navigator.pop(ctx),
                   ),
                   const SizedBox(width: 8),
-                  ElevatedButton(
-                    child: Text(loc.ok),
+                  TactileButton(
                     onPressed: () {
                       if (from.isAfter(to)) {
                         // Swap to keep order
@@ -109,6 +110,8 @@ Future<DateTimeRange?> showPeriodPicker({
                         DateTimeRange(start: dateOnly(from), end: dateOnly(to)),
                       );
                     },
+                    variant: TactileButtonVariant.primary,
+                    child: Text(loc.ok),
                   ),
                 ],
               ),

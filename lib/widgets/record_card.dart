@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+import 'tactile_button.dart';
 
 /// A reusable card for rendering a single CPD entry.
 ///
@@ -136,10 +137,12 @@ class RecordCard extends StatelessWidget {
 
             if (showAttachmentsButton && hasAttachments) ...[
               const SizedBox(height: 10),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  FilledButton.icon(
+                  TactileButton.icon(
                     onPressed: onViewAttachments,
                     icon: const Icon(Icons.attach_file),
                     label: Text(
@@ -148,7 +151,6 @@ class RecordCard extends StatelessWidget {
                       )!.attachmentsCount(entry.attachments.length),
                     ),
                   ),
-                  const SizedBox(width: 8),
                   if (onShareAll != null)
                     IconButton(
                       tooltip: AppLocalizations.of(

@@ -3,27 +3,30 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'entry_repository.dart';
-
+import 'theme/app_accent.dart';
 
 class SettingsStore {
   SettingsStore._();
   static final SettingsStore instance = SettingsStore._();
 
   final ValueNotifier<Locale?> locale = ValueNotifier<Locale?>(null);
+  final ValueNotifier<AppAccent> appAccent = ValueNotifier<AppAccent>(
+    AppAccent.purple,
+  );
 
   // Always returns a non-null SharedPreferences instance, with simple backoff retries
-Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
-  for (var i = 0; i < attempts; i++) {
-    try {
-      // On iOS there can be a brief method-channel race just after app start
-      return await SharedPreferences.getInstance();
-    } catch (e) {
-      await Future.delayed(Duration(milliseconds: 150 * (i + 1)));
+  Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
+    for (var i = 0; i < attempts; i++) {
+      try {
+        // On iOS there can be a brief method-channel race just after app start
+        return await SharedPreferences.getInstance();
+      } catch (e) {
+        await Future.delayed(Duration(milliseconds: 150 * (i + 1)));
+      }
     }
+    // Final attempt – if this throws, surface it to the caller for visibility
+    return await SharedPreferences.getInstance();
   }
-  // Final attempt – if this throws, surface it to the caller for visibility
-  return await SharedPreferences.getInstance();
-}
 
   /// Pre-warm the SharedPreferences channel early in app startup
   Future<void> prewarm() async {
@@ -32,12 +35,34 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
     } catch (_) {
       // Ignore – UI flows will still retry lazily when needed
     }
-    // Also load saved language override (if any)
-    await _loadSavedLocale();
+    // Also load saved appearance and language overrides (if any).
+    await Future.wait(<Future<void>>[_loadSavedLocale(), _loadSavedAccent()]);
   }
 
   static const _kDateFormat = 'date_format';
   static const _kLocaleCode = 'locale_code';
+  static const _kAppAccent = 'app_accent';
+
+  Future<void> _loadSavedAccent() async {
+    try {
+      final prefs = await _prefsWithRetry();
+      appAccent.value = AppAccent.fromStorage(prefs.getString(_kAppAccent));
+    } catch (_) {
+      appAccent.value = AppAccent.purple;
+    }
+  }
+
+  Future<AppAccent> getAppAccent() async {
+    final prefs = await _prefsWithRetry();
+    return AppAccent.fromStorage(prefs.getString(_kAppAccent));
+  }
+
+  Future<void> setAppAccent(AppAccent accent) async {
+    appAccent.value = accent;
+    final prefs = await _prefsWithRetry();
+    await prefs.setString(_kAppAccent, accent.storageValue);
+  }
+
   Future<void> _loadSavedLocale() async {
     try {
       final prefs = await _prefsWithRetry();
@@ -52,10 +77,12 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
       locale.value = null;
     }
   }
+
   Future<String> getDateFormat() async {
     final prefs = await _prefsWithRetry();
     return prefs.getString(_kDateFormat) ?? 'dd/MM/yyyy';
   }
+
   Future<void> setDateFormat(String fmt) async {
     final prefs = await _prefsWithRetry();
     await prefs.setString(_kDateFormat, fmt);
@@ -85,7 +112,8 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
     final prefs = await _prefsWithRetry();
     await prefs.remove(_kWeekStart);
   }
-    static const _kProfessions = 'professions';
+
+  static const _kProfessions = 'professions';
   static const _kDeletedProfessions = 'deleted_professions';
 
   // Normalise a profession: trim, single-capitalise first letter, lower the rest
@@ -185,7 +213,9 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
     final name = _normalize(value);
     if (name.isEmpty) return;
     final deleted = await loadDeletedProfessions();
-    final next = deleted.where((p) => p.toLowerCase() != name.toLowerCase()).toList();
+    final next = deleted
+        .where((p) => p.toLowerCase() != name.toLowerCase())
+        .toList();
     await saveDeletedProfessions(next);
   }
 
@@ -194,8 +224,9 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
     final all = await loadProfessions();
     final deleted = await loadDeletedProfessions();
     final deletedSet = deleted.map((e) => e.toLowerCase()).toSet();
-    final active = all.where((p) => !deletedSet.contains(p.toLowerCase())).toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final active =
+        all.where((p) => !deletedSet.contains(p.toLowerCase())).toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     return active;
   }
 
@@ -214,6 +245,7 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
     final prefs = await _prefsWithRetry();
     await prefs.remove(_kProfessions);
   }
+
   // -------------------------------
   // Onboarding completion flag
   // -------------------------------
@@ -238,7 +270,6 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
   Future<bool> isQrHintDismissed() async {
     final prefs = await _prefsWithRetry();
     return prefs.getBool(_kQrHintDismissed) ?? false;
-    
   }
 
   /// Persist the user's choice for the QR reminder tip
@@ -283,54 +314,66 @@ Future<SharedPreferences> _prefsWithRetry({int attempts = 6}) async {
       'email': prefs.getString(_kProfileEmail) ?? '',
     };
   }
+
   static const _kTargetsKey = 'targets_v1';
 
-/// Cycle options
-static const targetCycles = ['week', 'month', 'year'];
+  /// Cycle options
+  static const targetCycles = ['week', 'month', 'year'];
 
-/// Load map: profession -> { minutes: int, cycle: 'week'|'month'|'year' }
-Future<Map<String, Map<String, dynamic>>> loadTargets() async {
-  final prefs = await SharedPreferences.getInstance();
-  final raw = prefs.getString(_kTargetsKey);
-  if (raw == null || raw.isEmpty) return {};
-  try {
-    final decoded = json.decode(raw);
-    if (decoded is Map<String, dynamic>) {
-      return decoded.map((k, v) => MapEntry(k, (v as Map).cast<String, dynamic>()));
-    }
-  } catch (_) {}
-  return {};
-}
+  /// Load map: profession -> { minutes: int, cycle: 'week'|'month'|'year' }
+  Future<Map<String, Map<String, dynamic>>> loadTargets() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kTargetsKey);
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = json.decode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return decoded.map(
+          (k, v) => MapEntry(k, (v as Map).cast<String, dynamic>()),
+        );
+      }
+    } catch (_) {}
+    return {};
+  }
 
-/// Return (minutes, cycle) or null if not set.
-Future<(int minutes, String cycle)?> getTarget(String profession) async {
-  final map = await loadTargets();
-  final item = map[profession];
-  if (item == null) return null;
-  final mins = (item['minutes'] ?? 0) as int;
-  final cycle = (item['cycle'] ?? 'week') as String;
-  return (mins, cycle);
-}
+  /// Return (minutes, cycle) or null if not set.
+  Future<(int minutes, String cycle)?> getTarget(String profession) async {
+    final map = await loadTargets();
+    final item = map[profession];
+    if (item == null) return null;
+    final mins = (item['minutes'] ?? 0) as int;
+    final cycle = (item['cycle'] ?? 'week') as String;
+    return (mins, cycle);
+  }
 
-/// Save/overwrite target for a profession.
-Future<void> setTarget(String profession, {required int minutes, required String cycle}) async {
-  final prefs = await SharedPreferences.getInstance();
-  final map = await loadTargets();
-  map[profession] = {'minutes': minutes, 'cycle': cycle};
-  await prefs.setString(_kTargetsKey, json.encode(map));
-}
+  /// Save/overwrite target for a profession.
+  Future<void> setTarget(
+    String profession, {
+    required int minutes,
+    required String cycle,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final map = await loadTargets();
+    map[profession] = {'minutes': minutes, 'cycle': cycle};
+    await prefs.setString(_kTargetsKey, json.encode(map));
+  }
 
-/// Remove target for a profession.
-Future<void> clearTarget(String profession) async {
-  final prefs = await SharedPreferences.getInstance();
-  final map = await loadTargets();
-  map.remove(profession);
-  await prefs.setString(_kTargetsKey, json.encode(map));
-}
-Future<int> sumMinutesForRange(String profession, DateTime start, DateTime end) async {
-  final repo = EntryRepository();
-  return repo.sumMinutesForRange(profession, start, end);
-}
+  /// Remove target for a profession.
+  Future<void> clearTarget(String profession) async {
+    final prefs = await SharedPreferences.getInstance();
+    final map = await loadTargets();
+    map.remove(profession);
+    await prefs.setString(_kTargetsKey, json.encode(map));
+  }
+
+  Future<int> sumMinutesForRange(
+    String profession,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final repo = EntryRepository();
+    return repo.sumMinutesForRange(profession, start, end);
+  }
 
   /// Persist an in-app language override.
   /// Pass '' or null to follow system language.

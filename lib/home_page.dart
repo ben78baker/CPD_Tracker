@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'settings_store.dart';
+import 'settings_page.dart';
 import 'add_entry_page.dart';
 import 'edit_details_page.dart';
 import 'qr_scan_page.dart';
 import 'cpd_records_page.dart';
 import 'l10n/app_localizations.dart';
 import 'global_search_page.dart';
+import 'theme/app_theme.dart';
+import 'widgets/branded_headers.dart';
+import 'widgets/profession_card.dart';
+import 'widgets/tactile_button.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -219,8 +224,9 @@ class _HomePageState extends State<HomePage> {
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(AppLocalizations.of(ctx)!.cancel),
             ),
-            FilledButton(
+            TactileButton(
               onPressed: () => Navigator.pop(ctx, true),
+              variant: TactileButtonVariant.primary,
               child: Text(AppLocalizations.of(ctx)!.save),
             ),
           ],
@@ -242,115 +248,6 @@ class _HomePageState extends State<HomePage> {
         _targets = Map.of(_targets)..[profession] = (minutes, selected);
       });
     }
-  }
-
-  /// Edit the week start preference (locale/monday/saturday/sunday)
-  Future<void> _editWeekStart() async {
-    String current = 'locale';
-    try {
-      current = await SettingsStore.instance.getWeekStart();
-    } catch (_) {}
-    if (!mounted) return;
-    String choice = current;
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSt) {
-          final loc = AppLocalizations.of(ctx)!;
-          return AlertDialog(
-            title: Text(loc.weekStartsOn),
-            content: DropdownButtonFormField<String>(
-              initialValue: choice,
-              isExpanded: true,
-              items: [
-                DropdownMenuItem(
-                  value: 'locale',
-                  child: Text(loc.useDeviceLocaleRecommended),
-                ),
-                DropdownMenuItem(value: 'monday', child: Text(loc.monday)),
-                DropdownMenuItem(value: 'saturday', child: Text(loc.saturday)),
-                DropdownMenuItem(value: 'sunday', child: Text(loc.sunday)),
-              ],
-              onChanged: (v) {
-                if (v == null) return;
-                setSt(() => choice = v);
-              },
-              decoration: InputDecoration(labelText: loc.weekStartsOn),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(loc.cancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(loc.save),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-    if (saved == true) {
-      if (choice == 'locale') {
-        await SettingsStore.instance.clearWeekStart();
-      } else {
-        await SettingsStore.instance.setWeekStart(choice);
-      }
-      if (!mounted) return;
-      setState(() {
-        _progressBump++;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.weekStartUpdated)),
-      );
-    }
-  }
-
-  Future<void> _pickLanguage() async {
-    final loc = AppLocalizations.of(context)!;
-
-    final selected = await showDialog<String?>(
-      context: context,
-      builder: (ctx) {
-        return SimpleDialog(
-          title: Text(loc.language),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(ctx, ''),
-              child: Text(loc.followSystemLanguage),
-            ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(ctx, 'en'),
-              child: Text(loc.english),
-            ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(ctx, 'fr'),
-              child: Text(loc.french),
-            ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(ctx, 'de'),
-              child: Text(loc.german),
-            ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(ctx, 'es'),
-              child: Text(loc.spanish),
-            ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(ctx, 'pt'),
-              child: Text(loc.portuguese),
-            ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(ctx, 'hi'),
-              child: Text(loc.hindi),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (!mounted) return;
-    await SettingsStore.instance.setLocaleCode(selected ?? '');
   }
 
   Future<int> _computeCompletedMinutes(String profession, String cycle) async {
@@ -451,12 +348,13 @@ class _HomePageState extends State<HomePage> {
             onPressed: () => Navigator.pop(ctx),
             child: Text(AppLocalizations.of(ctx)!.cancel),
           ),
-          FilledButton(
+          TactileButton(
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 Navigator.pop(ctx, controller.text);
               }
             },
+            variant: TactileButtonVariant.primary,
             child: Text(AppLocalizations.of(ctx)!.addNew),
           ),
         ],
@@ -509,12 +407,13 @@ class _HomePageState extends State<HomePage> {
             onPressed: () => Navigator.pop(ctx),
             child: Text(AppLocalizations.of(ctx)!.cancel),
           ),
-          FilledButton(
+          TactileButton(
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 Navigator.pop(ctx, controller.text);
               }
             },
+            variant: TactileButtonVariant.primary,
             child: Text(AppLocalizations.of(ctx)!.save),
           ),
         ],
@@ -548,8 +447,9 @@ class _HomePageState extends State<HomePage> {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(AppLocalizations.of(ctx)!.cancel),
           ),
-          FilledButton(
+          TactileButton(
             onPressed: () => Navigator.pop(ctx, true),
+            variant: TactileButtonVariant.destructive,
             child: Text(AppLocalizations.of(ctx)!.delete),
           ),
         ],
@@ -571,93 +471,119 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final brand = context.brandColors;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Search all records',
-          icon: const Icon(Icons.search),
-          onPressed: () {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const GlobalSearchPage()));
-          },
+        toolbarHeight: 64,
+        titleSpacing: 16,
+        backgroundColor: AppColors.canvas,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(height: 1, color: brand.outlineVariant),
         ),
-        title: Text(AppLocalizations.of(context)!.appTitle),
-        actions: [
-          Material(
-            color: Colors.transparent,
-            child: PopupMenuButton<String>(
-              tooltip: AppLocalizations.of(context)!.menuTooltip,
-              onSelected: (value) async {
-                final nav = Navigator.of(context);
-                final scaffold = ScaffoldMessenger.of(context);
-                if (value == 'add_profession') {
-                  await _addProfessionDialog();
-                } else if (value == 'edit_details') {
-                  await nav.push(
-                    MaterialPageRoute(builder: (_) => const EditDetailsPage()),
-                  );
-                  if (mounted) setState(() {});
-                } else if (value == 'week_start') {
-                  await _editWeekStart();
-                } else if (value == 'language') {
-                  await _pickLanguage();
-                } else if (value == 'reset_tips') {
-                  await SettingsStore.instance.resetQrHint();
-                  if (!mounted) return;
-                  scaffold.showSnackBar(
-                    SnackBar(
-                      content: Text(AppLocalizations.of(context)!.tipsRestored),
-                    ),
-                  );
-                } else if (value == 'view_deleted') {
-                  await nav.push(
-                    MaterialPageRoute(
-                      builder: (_) => const DeletedProfessionsPage(),
-                    ),
-                  );
-                  await _load();
-                }
-              },
-              itemBuilder: (ctx) => [
-                PopupMenuItem(
-                  value: 'add_profession',
-                  child: Text(AppLocalizations.of(ctx)!.addProfession),
-                ),
-                PopupMenuItem(
-                  value: 'edit_details',
-                  child: Text(AppLocalizations.of(ctx)!.editPersonalDetails),
-                ),
-                PopupMenuItem(
-                  value: 'week_start',
-                  child: Text(AppLocalizations.of(ctx)!.setWeekStartDay),
-                ),
-                PopupMenuItem(
-                  value: 'language',
-                  child: Text(AppLocalizations.of(ctx)!.language),
-                ),
-                PopupMenuItem(
-                  value: 'reset_tips',
-                  child: Text(AppLocalizations.of(ctx)!.resetTips),
-                ),
-                PopupMenuItem(
-                  value: 'view_deleted',
-                  child: Text(AppLocalizations.of(ctx)!.viewDeletedProfessions),
-                ),
-              ],
+        title: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(9),
+              child: Image.asset(
+                'assets/icon/1024x1024_app_icon.png',
+                key: const ValueKey('home-brand-logo'),
+                width: 34,
+                height: 34,
+                fit: BoxFit.cover,
+                excludeFromSemantics: true,
+              ),
             ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  AppLocalizations.of(context)!.appTitle,
+                  key: const ValueKey('home-app-title'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: brand.onAccentLight,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            key: const ValueKey('home-search-action'),
+            tooltip: 'Search all records',
+            style: _homeHeaderActionStyle(context),
+            icon: const Icon(Icons.search_rounded),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const GlobalSearchPage()),
+              );
+            },
+          ),
+          PopupMenuButton<String>(
+            key: const ValueKey('home-menu-action'),
+            tooltip: AppLocalizations.of(context)!.menuTooltip,
+            icon: const Icon(Icons.more_vert_rounded),
+            style: _homeHeaderActionStyle(context),
+            onSelected: (value) async {
+              final nav = Navigator.of(context);
+              if (value == 'add_profession') {
+                await _addProfessionDialog();
+              } else if (value == 'edit_details') {
+                await nav.push(
+                  MaterialPageRoute(builder: (_) => const EditDetailsPage()),
+                );
+                if (mounted) setState(() {});
+              } else if (value == 'settings') {
+                await nav.push(
+                  MaterialPageRoute(builder: (_) => const SettingsPage()),
+                );
+                if (mounted) setState(() => _progressBump++);
+              } else if (value == 'view_deleted') {
+                await nav.push(
+                  MaterialPageRoute(
+                    builder: (_) => const DeletedProfessionsPage(),
+                  ),
+                );
+                await _load();
+              }
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'add_profession',
+                child: Text(AppLocalizations.of(ctx)!.addProfession),
+              ),
+              PopupMenuItem(
+                value: 'edit_details',
+                child: Text(AppLocalizations.of(ctx)!.editPersonalDetails),
+              ),
+              PopupMenuItem(
+                value: 'settings',
+                child: Text(AppLocalizations.of(ctx)!.settings),
+              ),
+              PopupMenuItem(
+                value: 'view_deleted',
+                child: Text(AppLocalizations.of(ctx)!.viewDeletedProfessions),
+              ),
+            ],
           ),
         ],
       ),
       body: _professions.isEmpty
           ? Center(child: Text(AppLocalizations.of(context)!.noProfessionsYet))
           : ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               itemCount: _professions.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final name = _professions[index];
-                return _ProfessionCard(
+                return ProfessionCard(
                   name: name,
                   target: _targets[name],
                   computeCompleted: (cycle) =>
@@ -689,143 +615,26 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class _ProfessionCard extends StatelessWidget {
-  const _ProfessionCard({
-    required this.name,
-    required this.onAdd,
-    required this.onScan,
-    required this.onView,
-    required this.onSearch,
-    required this.onRename,
-    required this.onDelete,
-    required this.target,
-    required this.computeCompleted,
-    required this.onSetTarget,
-    required this.refreshToken,
-  });
-  final int refreshToken;
-  final String name;
-  final VoidCallback onAdd;
-  final VoidCallback onScan;
-  final VoidCallback onView;
-  final VoidCallback onSearch;
-  final VoidCallback onRename;
-  final VoidCallback onDelete;
-
-  final (int minutes, String cycle)? target;
-  final Future<int> Function(String cycle) computeCompleted;
-  final VoidCallback onSetTarget;
-
-  @override
-  Widget build(BuildContext context) {
-    final pad = const EdgeInsets.all(16.0);
-
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: pad,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min, // important for ListView items
-            children: [
-              // Header: name + kebab menu
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      name,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Material(
-                    color: Colors.transparent,
-                    child: PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert),
-                      onSelected: (value) {
-                        if (value == 'set_target') onSetTarget();
-                        if (value == 'search_records') onSearch();
-                        if (value == 'rename') onRename();
-                        if (value == 'delete') onDelete();
-                      },
-                      itemBuilder: (ctx) => [
-                        PopupMenuItem(
-                          value: 'set_target',
-                          child: Text(AppLocalizations.of(ctx)!.setEditTarget),
-                        ),
-                        const PopupMenuItem(
-                          value: 'search_records',
-                          child: Text('Search Records'),
-                        ),
-                        PopupMenuItem(
-                          value: 'rename',
-                          child: Text(
-                            AppLocalizations.of(ctx)!.renameProfession,
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Text(
-                            AppLocalizations.of(ctx)!.deleteProfession,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Action row
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: onAdd,
-                      icon: const Icon(Icons.add),
-                      label: Text(AppLocalizations.of(context)!.addEntry),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: onScan,
-                      icon: const Icon(Icons.qr_code_scanner),
-                      label: Text(AppLocalizations.of(context)!.scanQr),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              // View records full-width
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: onView,
-                  icon: const Icon(Icons.list),
-                  label: Text(AppLocalizations.of(context)!.viewRecords),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _TargetProgress(
-                key: ValueKey('$name-$refreshToken'),
-                target: target,
-                computeCompleted: computeCompleted,
-                onSetTarget: onSetTarget,
-                refreshToken: refreshToken,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+ButtonStyle _homeHeaderActionStyle(BuildContext context) {
+  final brand = context.brandColors;
+  return ButtonStyle(
+    minimumSize: const WidgetStatePropertyAll(Size.square(48)),
+    maximumSize: const WidgetStatePropertyAll(Size.square(48)),
+    padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+    foregroundColor: WidgetStatePropertyAll(brand.accentDark),
+    backgroundColor: WidgetStateProperty.resolveWith((states) {
+      if (states.contains(WidgetState.pressed) ||
+          states.contains(WidgetState.hovered) ||
+          states.contains(WidgetState.focused)) {
+        return brand.accentLight;
+      }
+      return Colors.transparent;
+    }),
+    overlayColor: WidgetStatePropertyAll(brand.accent.withValues(alpha: 0.08)),
+    shape: WidgetStatePropertyAll(
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+  );
 }
 
 class DeletedProfessionsPage extends StatefulWidget {
@@ -873,8 +682,9 @@ class _DeletedProfessionsPageState extends State<DeletedProfessionsPage> {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(AppLocalizations.of(ctx)!.cancel),
           ),
-          FilledButton(
+          TactileButton(
             onPressed: () => Navigator.pop(ctx, true),
+            variant: TactileButtonVariant.destructive,
             child: Text(AppLocalizations.of(ctx)!.delete),
           ),
         ],
@@ -901,201 +711,95 @@ class _DeletedProfessionsPageState extends State<DeletedProfessionsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.deletedProfessionsTitle),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _deleted.isEmpty
-          ? Center(
-              child: Text(AppLocalizations.of(context)!.noDeletedProfessions),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: _deleted.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final name = _deleted[index];
-                return Card(
-                  elevation: 1,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
+      appBar: AppBar(),
+      body: Column(
+        children: [
+          BrandedPageHeader(
+            title: AppLocalizations.of(context)!.deletedProfessionsTitle,
+            icon: Icons.work_off_outlined,
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _deleted.isEmpty
+                ? Center(
+                    child: Text(
+                      AppLocalizations.of(context)!.noDeletedProfessions,
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                    itemCount: _deleted.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final name = _deleted[index];
+                      return Card(
+                        clipBehavior: Clip.antiAlias,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: FilledButton.icon(
-                                onPressed: () => _restore(name),
-                                icon: const Icon(Icons.restore),
-                                label: Text(
-                                  AppLocalizations.of(context)!.restore,
-                                ),
-                              ),
+                            BrandedSectionHeader(
+                              title: name,
+                              icon: Icons.work_outline_rounded,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () => _deleteForever(name),
-                                icon: const Icon(Icons.delete_forever),
-                                label: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.deletePermanently,
-                                ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final loc = AppLocalizations.of(context)!;
+                                  final stackActions =
+                                      tactileButtonsNeedStacking(
+                                        context,
+                                        constraints.maxWidth,
+                                        [loc.restore, loc.deletePermanently],
+                                      );
+                                  final restoreButton = TactileButton.icon(
+                                    onPressed: () => _restore(name),
+                                    icon: const Icon(Icons.restore),
+                                    label: Text(
+                                      AppLocalizations.of(context)!.restore,
+                                    ),
+                                    variant: TactileButtonVariant.primary,
+                                  );
+                                  final deleteButton = TactileButton.icon(
+                                    onPressed: () => _deleteForever(name),
+                                    icon: const Icon(Icons.delete_forever),
+                                    label: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.deletePermanently,
+                                    ),
+                                    variant: TactileButtonVariant.destructive,
+                                  );
+                                  if (stackActions) {
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        restoreButton,
+                                        const SizedBox(height: 8),
+                                        deleteButton,
+                                      ],
+                                    );
+                                  }
+                                  return Row(
+                                    children: [
+                                      Expanded(child: restoreButton),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: deleteButton),
+                                    ],
+                                  );
+                                },
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-    );
-  }
-}
-
-class _TargetProgress extends StatefulWidget {
-  const _TargetProgress({
-    super.key,
-    required this.target,
-    required this.computeCompleted,
-    required this.onSetTarget,
-    required this.refreshToken,
-  });
-
-  final (int minutes, String cycle)? target;
-  final Future<int> Function(String cycle) computeCompleted;
-  final VoidCallback onSetTarget;
-  final int refreshToken;
-
-  @override
-  State<_TargetProgress> createState() => _TargetProgressState();
-}
-
-class _TargetProgressState extends State<_TargetProgress> {
-  (int minutes, String cycle)? _t;
-  int _completed = 0;
-  bool _loading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _t = widget.target;
-    _refresh();
-  }
-
-  @override
-  void didUpdateWidget(covariant _TargetProgress oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.target != widget.target ||
-        oldWidget.refreshToken != widget.refreshToken) {
-      _t = widget.target;
-      _refresh();
-    }
-  }
-
-  Future<void> _refresh() async {
-    final t = _t;
-    if (t == null) return;
-    setState(() => _loading = true);
-    final mins = await widget.computeCompleted(t.$2);
-    if (!mounted) return;
-    setState(() {
-      _completed = mins;
-      _loading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final t = _t;
-    if (_loading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 8.0),
-        child: LinearProgressIndicator(minHeight: 10),
-      );
-    }
-    if (t == null) {
-      return OutlinedButton.icon(
-        onPressed: widget.onSetTarget,
-        icon: const Icon(Icons.flag_outlined),
-        label: Text(AppLocalizations.of(context)!.setEditTarget),
-      );
-    }
-
-    final total = t.$1; // minutes
-    final cycle = t.$2; // 'week' | 'month' | 'year'
-    final ratio = total <= 0 ? 0.0 : (_completed / total).clamp(0.0, 1.0);
-
-    final remaining = (total - _completed).clamp(0, total);
-    final remainingH = remaining ~/ 60;
-    final remainingM = remaining % 60;
-    final loc = AppLocalizations.of(context)!;
-    final cycleLabel = switch (cycle) {
-      'week' => loc.thisWeek,
-      'month' => loc.thisMonth,
-      _ => loc.thisYear,
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          remaining == 0
-              ? loc.targetAchieved(cycleLabel)
-              : loc.timeRemaining(remainingH, remainingM, cycleLabel),
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(minHeight: 10, value: ratio),
-        ),
-        FutureBuilder<String>(
-          future: SettingsStore.instance.getWeekStart(),
-          builder: (context, snapshot) {
-            final val = snapshot.data ?? 'locale';
-            String? label;
-            switch (val) {
-              case 'monday':
-                label = loc.weekStartsOnDay(loc.monday);
-                break;
-              case 'sunday':
-                label = loc.weekStartsOnDay(loc.sunday);
-                break;
-              case 'saturday':
-                label = loc.weekStartsOnDay(loc.saturday);
-                break;
-              default:
-                label = null; // hide when following device locale
-            }
-            if (label == null) return const SizedBox.shrink();
-            return Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize:
-                      (Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14) -
-                      2,
-                  color: Colors.grey[600],
-                ),
-              ),
-            );
-          },
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'attachment_tile.dart';
 import '../l10n/app_localizations.dart';
+import 'tactile_button.dart';
 
 /// Shows a dialog listing attachments (paths or URLs).
 /// - Tapping an item opens it (image preview / file viewer / link launcher).
@@ -84,8 +85,9 @@ Future<void> showAttachmentsDialog({
                                       AppLocalizations.of(dctx)!.cancel,
                                     ),
                                   ),
-                                  FilledButton(
+                                  TactileButton(
                                     onPressed: () => Navigator.pop(dctx, true),
+                                    variant: TactileButtonVariant.destructive,
                                     child: Text(
                                       AppLocalizations.of(dctx)!.remove,
                                     ),

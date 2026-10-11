@@ -16,6 +16,8 @@ import 'utils/pdf_exporter.dart';
 import 'widgets/record_card.dart';
 import 'widgets/attachments_dialog.dart';
 import 'widgets/share_format_sheet.dart';
+import 'widgets/branded_headers.dart';
+import 'widgets/tactile_button.dart';
 import 'l10n/app_localizations.dart';
 
 class CpdRecordsPage extends StatefulWidget {
@@ -109,8 +111,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(AppLocalizations.of(ctx)!.cancel),
           ),
-          FilledButton(
+          TactileButton(
             onPressed: () => Navigator.pop(ctx, true),
+            variant: e.deleted
+                ? TactileButtonVariant.primary
+                : TactileButtonVariant.destructive,
             child: Text(
               e.deleted
                   ? AppLocalizations.of(ctx)!.restore
@@ -370,18 +375,6 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(widget.profession),
-            if (_lastRange != null)
-              Text(
-                '${AppLocalizations.of(context)!.periodLabel}: ${formatDate(_lastRange!.start, _fmt)} – ${formatDate(_lastRange!.end, _fmt)}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-          ],
-        ),
         bottom: _showSearch
             ? PreferredSize(
                 preferredSize: const Size.fromHeight(68),
@@ -431,43 +424,61 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
             ),
         ],
       ),
-      body: _entries.isEmpty
-          ? Center(child: Text(AppLocalizations.of(context)!.noCpdRecordsYet))
-          : _filteredEntries.isEmpty
-          ? const Center(child: Text('No matching records found'))
-          : ListView.builder(
-              itemCount: _filteredEntries.length,
-              itemBuilder: (context, i) {
-                final e = _filteredEntries[i];
-                return RecordCard(
-                  entry: e,
-                  dateFormat: _fmt,
-                  onEdit: () => _edit(e),
-                  onDelete: () => _toggleDelete(e),
-                  onViewAttachments: () => showAttachmentsDialog(
-                    context: context,
-                    attachments: e.attachments,
-                    title: AppLocalizations.of(context)!.attachments,
-                    enableLongPressActions: true,
-                    onShareOne: (path) => _shareAttachmentPath(path),
-                    onRemoveIndex: (idx) async {
-                      if (idx < 0 || idx >= e.attachments.length) return;
-                      e.attachments.removeAt(idx);
-                      await _repo.updateEntry(e);
-                      if (!context.mounted) return;
-                      setState(() {});
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            AppLocalizations.of(context)!.attachmentRemoved,
-                          ),
+      body: Column(
+        children: [
+          BrandedPageHeader(
+            title: widget.profession,
+            icon: Icons.work_outline_rounded,
+            subtitle: _lastRange == null
+                ? null
+                : '${AppLocalizations.of(context)!.periodLabel}: ${formatDate(_lastRange!.start, _fmt)} – ${formatDate(_lastRange!.end, _fmt)}',
+          ),
+          Expanded(
+            child: _entries.isEmpty
+                ? Center(
+                    child: Text(AppLocalizations.of(context)!.noCpdRecordsYet),
+                  )
+                : _filteredEntries.isEmpty
+                ? const Center(child: Text('No matching records found'))
+                : ListView.builder(
+                    padding: const EdgeInsets.only(top: 4, bottom: 8),
+                    itemCount: _filteredEntries.length,
+                    itemBuilder: (context, i) {
+                      final e = _filteredEntries[i];
+                      return RecordCard(
+                        entry: e,
+                        dateFormat: _fmt,
+                        onEdit: () => _edit(e),
+                        onDelete: () => _toggleDelete(e),
+                        onViewAttachments: () => showAttachmentsDialog(
+                          context: context,
+                          attachments: e.attachments,
+                          title: AppLocalizations.of(context)!.attachments,
+                          enableLongPressActions: true,
+                          onShareOne: (path) => _shareAttachmentPath(path),
+                          onRemoveIndex: (idx) async {
+                            if (idx < 0 || idx >= e.attachments.length) return;
+                            e.attachments.removeAt(idx);
+                            await _repo.updateEntry(e);
+                            if (!context.mounted) return;
+                            setState(() {});
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.attachmentRemoved,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       );
                     },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: SafeArea(
         top: false,
         child: BottomAppBar(

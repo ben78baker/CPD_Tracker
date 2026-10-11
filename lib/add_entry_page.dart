@@ -10,7 +10,10 @@ import 'package:path/path.dart' as p;
 import 'utils/attachment_io.dart';
 import 'utils/date_utils.dart';
 import 'widgets/attachment_tile.dart';
+import 'widgets/branded_headers.dart';
 import 'widgets/duration_fields.dart';
+import 'widgets/form_section_tile.dart';
+import 'widgets/tactile_button.dart';
 
 class AddEntryPage extends StatefulWidget {
   const AddEntryPage({
@@ -113,8 +116,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
         title: Text(AppLocalizations.of(ctx)!.futureDateNotAllowedTitle),
         content: Text(AppLocalizations.of(ctx)!.futureDateNotAllowedBody),
         actions: [
-          FilledButton(
+          TactileButton(
             onPressed: () => Navigator.pop(ctx),
+            variant: TactileButtonVariant.primary,
             child: Text(AppLocalizations.of(ctx)!.ok),
           ),
         ],
@@ -362,151 +366,184 @@ class _AddEntryPageState extends State<AddEntryPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final dateLabel = formatDate(_date, _dateFormat);
-    final titleText = _editing
-        ? loc.editEntry
-        : '${loc.newEntry} – ${widget.profession}';
+    final titleText = _editing ? loc.editEntry : loc.newEntry;
 
     return Scaffold(
-      appBar: AppBar(title: Text(titleText)),
+      appBar: AppBar(),
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.zero,
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             children: [
-              // Profession (read-only)
-              Text(
-                loc.professionLabel,
-                style: Theme.of(context).textTheme.labelMedium,
+              BrandedPageHeader(
+                title: titleText,
+                subtitle: widget.profession,
+                icon: _editing
+                    ? Icons.edit_note_rounded
+                    : Icons.note_add_outlined,
               ),
-              const SizedBox(height: 4),
-              Text(
-                widget.profession,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 16),
-
-              // Date
-              Text(
-                loc.dateLabel,
-                style: Theme.of(context).textTheme.labelMedium,
-              ),
-              const SizedBox(height: 4),
-              OutlinedButton(
-                onPressed: _pickDate,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(dateLabel),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Title
-              TextFormField(
-                controller: _title,
-                decoration: InputDecoration(labelText: loc.titleLabel),
-                maxLength: 150,
-                validator: (v) =>
-                    (v ?? '').trim().isEmpty ? loc.enterTitle : null,
-              ),
-              const SizedBox(height: 8),
-
-              // Details
-              TextFormField(
-                controller: _details,
-                decoration: InputDecoration(labelText: loc.detailsLabel),
-                maxLines: 4,
-              ),
-              const SizedBox(height: 16),
-
-              // Time
-              Text(
-                loc.timeLabel,
-                style: Theme.of(context).textTheme.labelMedium,
-              ),
-              const SizedBox(height: 4),
-              DurationFields(
-                hours: _hoursVal,
-                minutes: _minutesVal,
-                onChanged: (h, m) => setState(() {
-                  _hoursVal = h;
-                  _minutesVal = m;
-                }),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Attachments
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    loc.attachmentsEvidence,
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                  TextButton.icon(
-                    onPressed: _addAttachment,
-                    icon: const Icon(Icons.add),
-                    label: Text(loc.add),
-                  ),
-                ],
-              ),
-              if (_attachments.isEmpty)
-                Text(loc.noAttachmentsAdded)
-              else
-                ..._attachments.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final value = entry.value;
-                  return AttachmentTile(
-                    value: value,
-                    onRemove: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) {
-                          final loc = AppLocalizations.of(ctx)!;
-                          return AlertDialog(
-                            title: Text(loc.removeAttachmentTitle),
-                            content: Text(loc.removeAttachmentBody),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx, false),
-                                child: Text(loc.cancel),
-                              ),
-                              FilledButton(
-                                onPressed: () => Navigator.pop(ctx, true),
-                                child: Text(loc.remove),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FormSectionTile(
+                      label: loc.professionLabel,
+                      icon: Icons.work_outline_rounded,
+                      child: Text(
+                        widget.profession,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FormSectionTile(
+                      label: loc.dateLabel,
+                      icon: Icons.event_outlined,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: TactileButton(
+                          onPressed: _pickDate,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_month_outlined),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  dateLabel,
+                                  textAlign: TextAlign.left,
+                                ),
                               ),
                             ],
-                          );
-                        },
-                      );
-                      if (!context.mounted)
-                        return; // guard directly after the await
-                      if (confirm != true) return;
-                      _removeAttachment(i);
-                      if (!context.mounted)
-                        return; // final guard just before context use
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            AppLocalizations.of(context)!.attachmentRemoved,
                           ),
                         ),
-                      );
-                    },
-                  );
-                }),
-
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _save,
-                  child: Text(_editing ? loc.saveChanges : loc.saveEntry),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FormSectionTile(
+                      label: loc.titleLabel,
+                      icon: Icons.title_rounded,
+                      child: TextFormField(
+                        controller: _title,
+                        decoration: InputDecoration(hintText: loc.titleLabel),
+                        maxLength: 150,
+                        validator: (v) =>
+                            (v ?? '').trim().isEmpty ? loc.enterTitle : null,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FormSectionTile(
+                      label: loc.detailsLabel,
+                      icon: Icons.notes_rounded,
+                      child: TextFormField(
+                        key: const ValueKey('entry-details-field'),
+                        controller: _details,
+                        decoration: InputDecoration(hintText: loc.detailsLabel),
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        minLines: 4,
+                        maxLines: 10,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FormSectionTile(
+                      label: loc.timeLabel,
+                      icon: Icons.timer_outlined,
+                      child: DurationFields(
+                        hours: _hoursVal,
+                        minutes: _minutesVal,
+                        onChanged: (h, m) => setState(() {
+                          _hoursVal = h;
+                          _minutesVal = m;
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FormSectionTile(
+                      label: loc.attachmentsEvidence,
+                      icon: Icons.attach_file_rounded,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TactileButton.icon(
+                            onPressed: _addAttachment,
+                            icon: const Icon(
+                              Icons.add_photo_alternate_outlined,
+                            ),
+                            label: Text(loc.add),
+                            variant: TactileButtonVariant.primary,
+                          ),
+                          const SizedBox(height: 12),
+                          if (_attachments.isEmpty)
+                            Text(
+                              loc.noAttachmentsAdded,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            )
+                          else
+                            ..._attachments.asMap().entries.map((entry) {
+                              final i = entry.key;
+                              final value = entry.value;
+                              return AttachmentTile(
+                                value: value,
+                                onRemove: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) {
+                                      final loc = AppLocalizations.of(ctx)!;
+                                      return AlertDialog(
+                                        title: Text(loc.removeAttachmentTitle),
+                                        content: Text(loc.removeAttachmentBody),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, false),
+                                            child: Text(loc.cancel),
+                                          ),
+                                          TactileButton(
+                                            onPressed: () =>
+                                                Navigator.pop(ctx, true),
+                                            variant: TactileButtonVariant
+                                                .destructive,
+                                            child: Text(loc.remove),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                  if (!context.mounted) return;
+                                  if (confirm != true) return;
+                                  _removeAttachment(i);
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.attachmentRemoved,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            }),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TactileButton(
+                        onPressed: _save,
+                        minimumSize: const Size(64, 56),
+                        variant: TactileButtonVariant.primary,
+                        child: Text(_editing ? loc.saveChanges : loc.saveEntry),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
             ],
           ),
         ),

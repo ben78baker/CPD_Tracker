@@ -5,6 +5,8 @@ import '../entry_repository.dart';
 import '../models.dart';
 import '../settings_store.dart';
 import '../utils/record_search.dart';
+import 'widgets/branded_headers.dart';
+import 'widgets/tactile_button.dart';
 
 class GlobalSearchPage extends StatefulWidget {
   const GlobalSearchPage({super.key});
@@ -121,108 +123,141 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Search All Records')),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  child: TextField(
-                    controller: _searchController,
-                    autofocus: true,
-                    onChanged: (value) {
-                      setState(() {
-                        _query = value;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Search all professions and records',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _query.isEmpty
-                          ? null
-                          : IconButton(
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _query = '';
-                                });
-                              },
-                              icon: const Icon(Icons.clear),
-                            ),
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: _query.trim().isEmpty
-                      ? const Center(
-                          child: Text('Type to search across all professions'),
-                        )
-                      : _matchingProfessions.isEmpty
-                      ? const Center(child: Text('No matching records found'))
-                      : ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          itemCount: _matchingProfessions.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            final profession = _matchingProfessions[index];
-                            final count = _matchCountForProfession(profession);
-                            final isProfessionMatch = _professionNameMatches(
-                              profession,
-                              _query,
-                            );
-                            final opensFilteredRecords = count > 0;
-
-                            return Card(
-                              elevation: 1,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      profession,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleMedium,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      count == 0
-                                          ? (isProfessionMatch
-                                                ? 'Profession name match'
-                                                : 'No matching records')
-                                          : '$count matching record${count == 1 ? '' : 's'}',
-                                    ),
-                                    const SizedBox(height: 12),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: OutlinedButton.icon(
-                                        onPressed: () =>
-                                            _openFilteredRecords(profession),
-                                        icon: const Icon(Icons.search),
-                                        label: Text(
-                                          opensFilteredRecords
-                                              ? 'Open filtered records'
-                                              : 'Open all records',
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
+      appBar: AppBar(),
+      body: Column(
+        children: [
+          const BrandedPageHeader(
+            title: 'Search All Records',
+            icon: Icons.manage_search_rounded,
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                        child: TextField(
+                          controller: _searchController,
+                          autofocus: true,
+                          onChanged: (value) {
+                            setState(() {
+                              _query = value;
+                            });
                           },
+                          decoration: InputDecoration(
+                            hintText: 'Search all professions and records',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _query.isEmpty
+                                ? null
+                                : IconButton(
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {
+                                        _query = '';
+                                      });
+                                    },
+                                    icon: const Icon(Icons.clear),
+                                  ),
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                          ),
                         ),
-                ),
-              ],
-            ),
+                      ),
+                      Expanded(
+                        child: _query.trim().isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'Type to search across all professions',
+                                ),
+                              )
+                            : _matchingProfessions.isEmpty
+                            ? const Center(
+                                child: Text('No matching records found'),
+                              )
+                            : ListView.separated(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  0,
+                                  16,
+                                  16,
+                                ),
+                                itemCount: _matchingProfessions.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  final profession =
+                                      _matchingProfessions[index];
+                                  final count = _matchCountForProfession(
+                                    profession,
+                                  );
+                                  final isProfessionMatch =
+                                      _professionNameMatches(
+                                        profession,
+                                        _query,
+                                      );
+                                  final opensFilteredRecords = count > 0;
+
+                                  return Card(
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        BrandedSectionHeader(
+                                          title: profession,
+                                          icon: Icons.work_outline_rounded,
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                            16,
+                                            8,
+                                            16,
+                                            16,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                count == 0
+                                                    ? (isProfessionMatch
+                                                          ? 'Profession name match'
+                                                          : 'No matching records')
+                                                    : '$count matching record${count == 1 ? '' : 's'}',
+                                              ),
+                                              const SizedBox(height: 12),
+                                              SizedBox(
+                                                width: double.infinity,
+                                                child: TactileButton.icon(
+                                                  onPressed: () =>
+                                                      _openFilteredRecords(
+                                                        profession,
+                                                      ),
+                                                  icon: const Icon(
+                                                    Icons.search,
+                                                  ),
+                                                  label: Text(
+                                                    opensFilteredRecords
+                                                        ? 'Open filtered records'
+                                                        : 'Open all records',
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

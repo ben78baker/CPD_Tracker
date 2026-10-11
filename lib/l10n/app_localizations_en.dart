@@ -36,6 +36,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tipsRestored => 'Tips restored';
 
   @override
+  String get settings => 'Settings';
+
+  @override
+  String get settingsSubtitle => 'Personalise your app preferences';
+
+  @override
+  String get appColour => 'App colour';
+
+  @override
+  String get chooseYourAppColour => 'Choose your app colour';
+
+  @override
+  String get resetTipsDescription => 'Show helpful tips again';
+
+  @override
+  String get colourPurple => 'Purple';
+
+  @override
+  String get colourBlue => 'Blue';
+
+  @override
+  String get colourTeal => 'Teal';
+
+  @override
+  String get colourGreen => 'Green';
+
+  @override
+  String get colourOrange => 'Orange';
+
+  @override
+  String get colourRed => 'Red';
+
+  @override
+  String get colourPink => 'Pink';
+
+  @override
+  String get colourIndigo => 'Indigo';
+
+  @override
   String get addProfession => 'Add Profession';
 
   @override

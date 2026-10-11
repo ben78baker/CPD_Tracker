@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'settings_store.dart';
 import 'l10n/app_localizations.dart';
+import 'widgets/branded_headers.dart';
+import 'widgets/tactile_button.dart';
 
 class EditDetailsPage extends StatefulWidget {
   const EditDetailsPage({super.key});
@@ -76,56 +78,82 @@ class _EditDetailsPageState extends State<EditDetailsPage> {
 
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: Text(loc.editPersonalDetails)),
-        body: Center(child: CircularProgressIndicator()),
+        appBar: AppBar(),
+        body: Column(
+          children: [
+            BrandedPageHeader(
+              title: loc.editPersonalDetails,
+              icon: Icons.person_outline_rounded,
+            ),
+            const Expanded(child: Center(child: CircularProgressIndicator())),
+          ],
+        ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(loc.editPersonalDetails)),
+      appBar: AppBar(),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              TextFormField(
-                controller: _name,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(labelText: loc.nameOptional),
+        child: Column(
+          children: [
+            BrandedPageHeader(
+              title: loc.editPersonalDetails,
+              icon: Icons.person_outline_rounded,
+            ),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                  children: [
+                    TextFormField(
+                      controller: _name,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(labelText: loc.nameOptional),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _company,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(
+                        labelText: loc.companyOptional,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _address,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        labelText: loc.addressOptional,
+                      ),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(labelText: loc.emailOptional),
+                      validator: (v) {
+                        final t = v?.trim() ?? '';
+                        if (t.isEmpty) return null;
+                        final ok = RegExp(r'^.+@.+\..+$').hasMatch(t);
+                        return ok ? null : loc.enterValidEmail;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TactileButton(
+                        onPressed: _save,
+                        variant: TactileButtonVariant.primary,
+                        child: Text(loc.save),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _company,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(labelText: loc.companyOptional),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _address,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(labelText: loc.addressOptional),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(labelText: loc.emailOptional),
-                validator: (v) {
-                  final t = v?.trim() ?? '';
-                  if (t.isEmpty) return null;
-                  final ok = RegExp(r'^.+@.+\..+$').hasMatch(t);
-                  return ok ? null : loc.enterValidEmail;
-                },
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(onPressed: _save, child: Text(loc.save)),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

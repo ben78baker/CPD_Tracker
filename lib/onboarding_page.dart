@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'settings_store.dart';
 import 'l10n/app_localizations.dart';
+import 'theme/app_accent.dart';
+import 'widgets/app_colour_selector.dart';
+import 'widgets/branded_headers.dart';
+import 'widgets/form_section_tile.dart';
+import 'widgets/tactile_button.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -71,41 +76,47 @@ class _OnboardingPageState extends State<OnboardingPage> {
       builder: (context, forcedLocale, _) {
         final loc = AppLocalizations.of(context)!;
         return Scaffold(
-          appBar: AppBar(title: Text(loc.welcome)),
+          appBar: AppBar(),
           body: SafeArea(
             child: Form(
               key: _formKey,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.zero,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              loc.language,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          ValueListenableBuilder<Locale?>(
+                  BrandedPageHeader.brand(
+                    title: loc.welcome,
+                    subtitle: loc.appTitle,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        FormSectionTile(
+                          label: loc.language,
+                          icon: Icons.language_rounded,
+                          child: ValueListenableBuilder<Locale?>(
                             valueListenable: SettingsStore.instance.locale,
                             builder: (context, forcedLocale, _) {
                               final current = forcedLocale?.languageCode ?? '';
-                              return DropdownButton<String>(
-                                value: current,
-                                onChanged: (v) async {
+                              return DropdownButtonFormField<String>(
+                                key: const ValueKey('onboarding-language'),
+                                initialValue: current,
+                                isExpanded: true,
+                                onChanged: (value) async {
                                   await SettingsStore.instance.setLocaleCode(
-                                    v ?? '',
+                                    value ?? '',
                                   );
                                 },
                                 items: [
                                   DropdownMenuItem(
                                     value: '',
-                                    child: Text(loc.followSystemLanguage),
+                                    child: Text(
+                                      loc.followSystemLanguage,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                   DropdownMenuItem(
                                     value: 'en',
@@ -135,119 +146,134 @@ class _OnboardingPageState extends State<OnboardingPage> {
                               );
                             },
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    loc.setupYourDetails,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _name,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(labelText: loc.nameOptional),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _company,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(labelText: loc.companyOptional),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _address,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: InputDecoration(labelText: loc.addressOptional),
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(labelText: loc.emailOptional),
-                    validator: (v) {
-                      final t = v?.trim() ?? '';
-                      if (t.isEmpty) return null;
-                      return RegExp(r'^.+@.+\..+$').hasMatch(t)
-                          ? null
-                          : loc.enterValidEmail;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _profession,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                      labelText: loc.firstProfessionRequired,
-                      hintText: loc.professionExample,
-                    ),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? loc.enterProfession
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    loc.weekStartsOn,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  DropdownButtonFormField<String>(
-                    initialValue: _weekStart,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                    ),
-                    items: [
-                      DropdownMenuItem(
-                        value: 'locale',
-                        child: Text(
-                          loc.useDeviceLocaleRecommended,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      DropdownMenuItem(
-                        value: 'monday',
-                        child: Text(
-                          loc.monday,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 12),
+                        ValueListenableBuilder<AppAccent>(
+                          valueListenable: SettingsStore.instance.appAccent,
+                          builder: (context, selected, _) => FormSectionTile(
+                            key: const ValueKey('onboarding-app-colour'),
+                            label: loc.chooseYourAppColour,
+                            icon: Icons.palette_outlined,
+                            supportingText: appAccentLabel(loc, selected),
+                            child: AppColourSelector(
+                              selectedAccent: selected,
+                              onChanged: (accent) {
+                                SettingsStore.instance.setAppAccent(accent);
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                      DropdownMenuItem(
-                        value: 'sunday',
-                        child: Text(
-                          loc.sunday,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 12),
+                        FormSectionTile(
+                          label: loc.setupYourDetails,
+                          icon: Icons.person_outline_rounded,
+                          child: Column(
+                            children: [
+                              TextFormField(
+                                controller: _name,
+                                textCapitalization: TextCapitalization.words,
+                                decoration: InputDecoration(
+                                  labelText: loc.nameOptional,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _company,
+                                textCapitalization: TextCapitalization.words,
+                                decoration: InputDecoration(
+                                  labelText: loc.companyOptional,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _address,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                decoration: InputDecoration(
+                                  labelText: loc.addressOptional,
+                                ),
+                                minLines: 1,
+                                maxLines: 3,
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _email,
+                                keyboardType: TextInputType.emailAddress,
+                                decoration: InputDecoration(
+                                  labelText: loc.emailOptional,
+                                ),
+                                validator: (value) {
+                                  final text = value?.trim() ?? '';
+                                  if (text.isEmpty) return null;
+                                  return RegExp(r'^.+@.+\..+$').hasMatch(text)
+                                      ? null
+                                      : loc.enterValidEmail;
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      DropdownMenuItem(
-                        value: 'saturday',
-                        child: Text(
-                          loc.saturday,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        const SizedBox(height: 12),
+                        FormSectionTile(
+                          label: loc.firstProfessionRequired,
+                          icon: Icons.work_outline_rounded,
+                          child: TextFormField(
+                            controller: _profession,
+                            textCapitalization: TextCapitalization.words,
+                            decoration: InputDecoration(
+                              hintText: loc.professionExample,
+                            ),
+                            validator: (value) =>
+                                (value == null || value.trim().isEmpty)
+                                ? loc.enterProfession
+                                : null,
+                          ),
                         ),
-                      ),
-                    ],
-                    onChanged: (v) {
-                      if (v != null) setState(() => _weekStart = v);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _save,
-                      child: Text(loc.continueLabel),
+                        const SizedBox(height: 12),
+                        FormSectionTile(
+                          label: loc.weekStartsOn,
+                          icon: Icons.calendar_view_week_outlined,
+                          child: DropdownButtonFormField<String>(
+                            key: const ValueKey('onboarding-week-start'),
+                            initialValue: _weekStart,
+                            isExpanded: true,
+                            items: [
+                              DropdownMenuItem(
+                                value: 'locale',
+                                child: Text(
+                                  loc.useDeviceLocaleRecommended,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 'monday',
+                                child: Text(loc.monday),
+                              ),
+                              DropdownMenuItem(
+                                value: 'sunday',
+                                child: Text(loc.sunday),
+                              ),
+                              DropdownMenuItem(
+                                value: 'saturday',
+                                child: Text(loc.saturday),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() => _weekStart = value);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TactileButton(
+                          onPressed: _save,
+                          variant: TactileButtonVariant.primary,
+                          minimumSize: const Size.fromHeight(52),
+                          child: Text(loc.continueLabel),
+                        ),
+                      ],
                     ),
                   ),
                 ],

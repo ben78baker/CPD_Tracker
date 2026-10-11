@@ -36,6 +36,45 @@ class AppLocalizationsHi extends AppLocalizations {
   String get tipsRestored => 'Tips restored';
 
   @override
+  String get settings => 'सेटिंग्स';
+
+  @override
+  String get settingsSubtitle => 'अपनी ऐप प्राथमिकताएँ चुनें';
+
+  @override
+  String get appColour => 'ऐप का रंग';
+
+  @override
+  String get chooseYourAppColour => 'अपने ऐप का रंग चुनें';
+
+  @override
+  String get resetTipsDescription => 'सहायक सुझाव फिर से दिखाएँ';
+
+  @override
+  String get colourPurple => 'बैंगनी';
+
+  @override
+  String get colourBlue => 'नीला';
+
+  @override
+  String get colourTeal => 'टील';
+
+  @override
+  String get colourGreen => 'हरा';
+
+  @override
+  String get colourOrange => 'नारंगी';
+
+  @override
+  String get colourRed => 'लाल';
+
+  @override
+  String get colourPink => 'गुलाबी';
+
+  @override
+  String get colourIndigo => 'इंडिगो';
+
+  @override
   String get addProfession => 'पेशा जोड़ें';
 
   @override

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../utils/date_utils.dart';
 import '../l10n/app_localizations.dart';
+import 'tactile_button.dart';
 
 class DateButton extends StatelessWidget {
   const DateButton({
@@ -18,7 +19,7 @@ class DateButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    return OutlinedButton(
+    return TactileButton(
       onPressed: () async {
         final picked = await showDatePicker(
           context: context,

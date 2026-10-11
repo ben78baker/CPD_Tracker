@@ -36,6 +36,45 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tipsRestored => 'Tipps wiederhergestellt';
 
   @override
+  String get settings => 'Einstellungen';
+
+  @override
+  String get settingsSubtitle => 'App-Einstellungen personalisieren';
+
+  @override
+  String get appColour => 'App-Farbe';
+
+  @override
+  String get chooseYourAppColour => 'Wählen Sie Ihre App-Farbe';
+
+  @override
+  String get resetTipsDescription => 'Hilfreiche Tipps wieder anzeigen';
+
+  @override
+  String get colourPurple => 'Violett';
+
+  @override
+  String get colourBlue => 'Blau';
+
+  @override
+  String get colourTeal => 'Türkis';
+
+  @override
+  String get colourGreen => 'Grün';
+
+  @override
+  String get colourOrange => 'Orange';
+
+  @override
+  String get colourRed => 'Rot';
+
+  @override
+  String get colourPink => 'Rosa';
+
+  @override
+  String get colourIndigo => 'Indigo';
+
+  @override
   String get addProfession => 'Beruf hinzufügen';
 
   @override

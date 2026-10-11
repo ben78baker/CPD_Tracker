@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'qr_scan_page.dart';
@@ -5,10 +7,13 @@ import 'onboarding_page.dart';
 import 'settings_store.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
+import 'theme/app_accent.dart';
+import 'theme/app_theme.dart';
 
-
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Load saved appearance/language without holding the first Flutter frame.
+  unawaited(SettingsStore.instance.prewarm());
   // Debug-only: render any widget build exception on-screen so a blank body doesn't hide errors.
   assert(() {
     FlutterError.onError = (FlutterErrorDetails details) {
@@ -37,10 +42,17 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-   Future<bool> _shouldStartOnboarding() async {
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final Future<bool> _startOnboarding = _shouldStartOnboarding();
+
+  Future<bool> _shouldStartOnboarding() async {
     // Start onboarding if not completed yet
     final done = await SettingsStore.instance.isOnboardingComplete();
     return !done;
@@ -51,44 +63,47 @@ class MyApp extends StatelessWidget {
     return ValueListenableBuilder<Locale?>(
       valueListenable: SettingsStore.instance.locale,
       builder: (context, forcedLocale, _) {
-        return MaterialApp(
-          locale: forcedLocale,
-          title: 'CPD Tracker',
-          debugShowCheckedModeBanner: false,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1565C0)),
-            useMaterial3: true,
-          ),
-          home: FutureBuilder<bool>(
-            future: _shouldStartOnboarding(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snapshot.hasError) {
-                return const OnboardingPage();
-              }
-              final startOnboarding = snapshot.data ?? true;
-              return startOnboarding ? const OnboardingPage() : const HomePage();
-            },
-          ),
-          routes: {
-            '/onboarding': (_) => const OnboardingPage(),
-            '/home': (_) => const HomePage(),
-            '/scan': (_) => const QrScanPage(profession: ''),
+        return ValueListenableBuilder<AppAccent>(
+          valueListenable: SettingsStore.instance.appAccent,
+          builder: (context, selectedAccent, _) {
+            return MaterialApp(
+              locale: forcedLocale,
+              title: 'CPD Tracker',
+              debugShowCheckedModeBanner: false,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: AppLocalizations.supportedLocales,
+              theme: AppTheme.forAccent(selectedAccent),
+              home: FutureBuilder<bool>(
+                future: _startOnboarding,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Scaffold(
+                      body: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  if (snapshot.hasError) {
+                    return const OnboardingPage();
+                  }
+                  final startOnboarding = snapshot.data ?? true;
+                  return startOnboarding
+                      ? const OnboardingPage()
+                      : const HomePage();
+                },
+              ),
+              routes: {
+                '/onboarding': (_) => const OnboardingPage(),
+                '/home': (_) => const HomePage(),
+                '/scan': (_) => const QrScanPage(profession: ''),
+              },
+              onUnknownRoute: (_) =>
+                  MaterialPageRoute(builder: (_) => const HomePage()),
+            );
           },
-          onUnknownRoute: (_) => MaterialPageRoute(
-            builder: (_) => const HomePage(),
-          ),
         );
       },
     );

@@ -160,6 +160,84 @@ abstract class AppLocalizations {
   /// **'Tips restored'**
   String get tipsRestored;
 
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @settingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalise your app preferences'**
+  String get settingsSubtitle;
+
+  /// No description provided for @appColour.
+  ///
+  /// In en, this message translates to:
+  /// **'App colour'**
+  String get appColour;
+
+  /// No description provided for @chooseYourAppColour.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your app colour'**
+  String get chooseYourAppColour;
+
+  /// No description provided for @resetTipsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Show helpful tips again'**
+  String get resetTipsDescription;
+
+  /// No description provided for @colourPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get colourPurple;
+
+  /// No description provided for @colourBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get colourBlue;
+
+  /// No description provided for @colourTeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get colourTeal;
+
+  /// No description provided for @colourGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get colourGreen;
+
+  /// No description provided for @colourOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get colourOrange;
+
+  /// No description provided for @colourRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get colourRed;
+
+  /// No description provided for @colourPink.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink'**
+  String get colourPink;
+
+  /// No description provided for @colourIndigo.
+  ///
+  /// In en, this message translates to:
+  /// **'Indigo'**
+  String get colourIndigo;
+
   /// No description provided for @addProfession.
   ///
   /// In en, this message translates to:
