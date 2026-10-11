@@ -1,5 +1,15 @@
 # CPD Tracker – Change Log
 
+## v1.4.0 — Refreshed Experience and Evidence Reports
+**Date:** October 2026
+
+- Refreshed the app interface with improved forms, settings and selectable app colours.
+- Improved professional CPD PDF reports with clearer layouts and continuation pages.
+- Added PDF with evidence, including dedicated photographic and documentary evidence pages.
+- Added attached PDF documents directly to reports as rendered evidence pages.
+- Unsupported evidence is included in an accompanying ZIP only when required.
+- Improved export and sharing reliability across the available formats.
+
 ## v1.3.0 — Enhanced PDF and Evidence Exports
 **Date:** October 2026
 
