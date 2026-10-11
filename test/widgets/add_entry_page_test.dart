@@ -1,5 +1,6 @@
 import 'package:cpd_tracker/add_entry_page.dart';
 import 'package:cpd_tracker/l10n/app_localizations.dart';
+import 'package:cpd_tracker/theme/app_accent.dart';
 import 'package:cpd_tracker/theme/app_theme.dart';
 import 'package:cpd_tracker/widgets/form_section_tile.dart';
 import 'package:cpd_tracker/widgets/tactile_button.dart';
@@ -11,10 +12,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 Widget _testApp({
   required Locale locale,
   required String profession,
+  AppAccent accent = AppAccent.purple,
   TextScaler textScaler = TextScaler.noScaling,
 }) {
   return MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.forAccent(accent),
     locale: locale,
     localizationsDelegates: const [
       AppLocalizations.delegate,
@@ -83,6 +85,20 @@ void main() {
     expect(editableText.keyboardType, TextInputType.multiline);
     expect(editableText.textInputAction, TextInputAction.newline);
 
+    final dateAction = tester.widget<TactileButton>(
+      find.byKey(const ValueKey('entry-date-action')),
+    );
+    expect(dateAction.surfaceTreatment, TactileButtonSurfaceTreatment.neutral);
+
+    final addAttachmentAction = tester.widget<TactileButton>(
+      find.byKey(const ValueKey('entry-add-attachment-action')),
+    );
+    expect(addAttachmentAction.variant, TactileButtonVariant.primary);
+    expect(
+      addAttachmentAction.surfaceTreatment,
+      TactileButtonSurfaceTreatment.neutral,
+    );
+
     expect(find.byType(TactileButton), findsWidgets);
     await tester.scrollUntilVisible(
       find.text('Save Entry'),
@@ -90,6 +106,14 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Save Entry'), findsOneWidget);
+    final saveAction = tester.widget<TactileButton>(
+      find.ancestor(
+        of: find.text('Save Entry'),
+        matching: find.byType(TactileButton),
+      ),
+    );
+    expect(saveAction.variant, TactileButtonVariant.primary);
+    expect(saveAction.surfaceTreatment, TactileButtonSurfaceTreatment.tonal);
     expect(tester.takeException(), isNull);
   });
 
@@ -115,6 +139,60 @@ void main() {
 
         expect(find.byType(FormSectionTile), findsNWidgets(6));
         expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  for (final accent in <AppAccent>[AppAccent.purple, AppAccent.teal]) {
+    testWidgets(
+      'entry utility overlays stay neutral with ${accent.name} accents',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        tester.view.physicalSize = const Size(800, 1200);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          _testApp(
+            locale: const Locale('en'),
+            profession: 'Electrician',
+            accent: accent,
+          ),
+        );
+        await tester.pump();
+
+        final dateAction = find.descendant(
+          of: find.byKey(const ValueKey('entry-date-action')),
+          matching: find.byType(FilledButton),
+        );
+        await tester.ensureVisible(dateAction);
+        await tester.tap(dateAction);
+        await tester.pumpAndSettle();
+
+        final dateDialog = tester.widget<Dialog>(
+          find.descendant(
+            of: find.byType(DatePickerDialog),
+            matching: find.byType(Dialog),
+          ),
+        );
+        expect(dateDialog.backgroundColor, AppColors.surface);
+        expect(dateDialog.surfaceTintColor, Colors.transparent);
+
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+
+        final attachmentAction = find.descendant(
+          of: find.byKey(const ValueKey('entry-add-attachment-action')),
+          matching: find.byType(FilledButton),
+        );
+        await tester.ensureVisible(attachmentAction);
+        await tester.tap(attachmentAction);
+        await tester.pumpAndSettle();
+
+        final bottomSheet = tester.widget<BottomSheet>(
+          find.byType(BottomSheet),
+        );
+        expect(bottomSheet.backgroundColor, AppColors.surface);
       },
     );
   }

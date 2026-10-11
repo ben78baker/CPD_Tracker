@@ -49,6 +49,34 @@ void main() {
       expect(AppTheme.forAccent(accent).colorScheme.primary, brand.accent);
     }
   });
+
+  test('utility overlay surfaces stay neutral for purple and teal', () {
+    for (final accent in <AppAccent>[AppAccent.purple, AppAccent.teal]) {
+      final theme = AppTheme.forAccent(accent);
+      final brand = AppBrandColors.fromAccent(accent);
+
+      expect(theme.datePickerTheme.backgroundColor, AppColors.surface);
+      expect(
+        theme.datePickerTheme.rangePickerBackgroundColor,
+        AppColors.surface,
+      );
+      expect(theme.datePickerTheme.surfaceTintColor, Colors.transparent);
+      expect(
+        theme.datePickerTheme.rangePickerSurfaceTintColor,
+        Colors.transparent,
+      );
+
+      expect(theme.bottomSheetTheme.backgroundColor, AppColors.surface);
+      expect(theme.bottomSheetTheme.modalBackgroundColor, AppColors.surface);
+      expect(theme.bottomSheetTheme.surfaceTintColor, Colors.transparent);
+
+      expect(theme.colorScheme.primary, brand.accent);
+      expect(
+        theme.textButtonTheme.style!.foregroundColor!.resolve(<WidgetState>{}),
+        brand.accentDark,
+      );
+    }
+  });
 }
 
 double _contrastRatio(Color foreground, Color background) {

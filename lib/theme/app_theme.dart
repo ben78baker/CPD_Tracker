@@ -252,6 +252,17 @@ class AppTheme {
           side: BorderSide(color: brand.outlineVariant),
         ),
       ),
+      datePickerTheme: const DatePickerThemeData(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        rangePickerBackgroundColor: AppColors.surface,
+        rangePickerSurfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surface,
+        modalBackgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,

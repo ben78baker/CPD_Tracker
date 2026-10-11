@@ -405,7 +405,10 @@ class _AddEntryPageState extends State<AddEntryPage> {
                       child: SizedBox(
                         width: double.infinity,
                         child: TactileButton(
+                          key: const ValueKey('entry-date-action'),
                           onPressed: _pickDate,
+                          surfaceTreatment:
+                              TactileButtonSurfaceTreatment.neutral,
                           child: Row(
                             children: [
                               const Icon(Icons.calendar_month_outlined),
@@ -468,12 +471,15 @@ class _AddEntryPageState extends State<AddEntryPage> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           TactileButton.icon(
+                            key: const ValueKey('entry-add-attachment-action'),
                             onPressed: _addAttachment,
                             icon: const Icon(
                               Icons.add_photo_alternate_outlined,
                             ),
                             label: Text(loc.add),
                             variant: TactileButtonVariant.primary,
+                            surfaceTreatment:
+                                TactileButtonSurfaceTreatment.neutral,
                           ),
                           const SizedBox(height: 12),
                           if (_attachments.isEmpty)

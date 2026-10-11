@@ -5,6 +5,8 @@ import '../theme/app_theme.dart';
 
 enum TactileButtonVariant { primary, secondary, destructive }
 
+enum TactileButtonSurfaceTreatment { tonal, neutral }
+
 /// Determines whether equally sized action buttons need a vertical layout to
 /// preserve complete localised labels at the current text scale.
 bool tactileButtonsNeedStacking(
@@ -43,6 +45,7 @@ class TactileButton extends StatefulWidget {
     this.loading = false,
     this.minimumSize,
     this.padding,
+    this.surfaceTreatment = TactileButtonSurfaceTreatment.tonal,
   });
 
   const TactileButton.icon({
@@ -54,6 +57,7 @@ class TactileButton extends StatefulWidget {
     this.loading = false,
     this.minimumSize,
     this.padding,
+    this.surfaceTreatment = TactileButtonSurfaceTreatment.tonal,
   }) : child = label;
 
   final VoidCallback? onPressed;
@@ -63,6 +67,7 @@ class TactileButton extends StatefulWidget {
   final bool loading;
   final Size? minimumSize;
   final EdgeInsetsGeometry? padding;
+  final TactileButtonSurfaceTreatment surfaceTreatment;
 
   @override
   State<TactileButton> createState() => _TactileButtonState();
@@ -228,6 +233,10 @@ class _TactileButtonState extends State<TactileButton> {
     bool enabled,
   ) {
     if (!enabled) return colors.onSurface.withValues(alpha: 0.06);
+    if (!pressed &&
+        widget.surfaceTreatment == TactileButtonSurfaceTreatment.neutral) {
+      return AppColors.surface;
+    }
     return switch (widget.variant) {
       TactileButtonVariant.primary =>
         pressed ? brand.accentSoft : brand.accentLight,

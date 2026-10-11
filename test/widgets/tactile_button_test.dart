@@ -74,4 +74,51 @@ void main() {
       );
     },
   );
+
+  testWidgets('neutral surface keeps accent details and press feedback', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: Center(
+            child: TactileButton(
+              onPressed: () {},
+              variant: TactileButtonVariant.primary,
+              surfaceTreatment: TactileButtonSurfaceTreatment.neutral,
+              child: const Text('Add Evidence'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    ButtonStyle buttonStyle() =>
+        tester.widget<FilledButton>(find.byType(FilledButton)).style!;
+
+    expect(
+      buttonStyle().backgroundColor!.resolve(<WidgetState>{}),
+      AppColors.surface,
+    );
+    expect(
+      buttonStyle().foregroundColor!.resolve(<WidgetState>{}),
+      AppColors.brandPurpleDark,
+    );
+    expect(
+      buttonStyle().side!.resolve(<WidgetState>{})!.color,
+      AppColors.brandPurple,
+    );
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.text('Add Evidence')),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(
+      buttonStyle().backgroundColor!.resolve(<WidgetState>{}),
+      AppColors.brandPurpleSoft,
+    );
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 160));
+  });
 }
