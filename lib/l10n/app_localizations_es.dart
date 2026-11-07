@@ -826,4 +826,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String movedToDeleted(Object name) {
     return '«$name» movida a Eliminadas';
   }
+
+  @override
+  String get deletedRecordsTitle => 'Registros eliminados';
+
+  @override
+  String get noDeletedRecords => 'No hay registros eliminados';
+
+  @override
+  String get deletedRecordsLoadFailed =>
+      'No se pudieron cargar los registros eliminados. Inténtalo de nuevo.';
+
+  @override
+  String get recordRestoreFailed =>
+      'No se pudo restaurar el registro. Inténtalo de nuevo.';
+
+  @override
+  String restoreRecordProfessionConfirm(String profession) {
+    return 'Al restaurar este registro también se añadirá o restaurará la profesión \"$profession\". Sus otros registros guardados y no eliminados también serán visibles. ¿Continuar?';
+  }
 }

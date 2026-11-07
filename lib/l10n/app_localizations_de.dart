@@ -823,4 +823,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String movedToDeleted(Object name) {
     return '„$name“ nach Gelöscht verschoben';
   }
+
+  @override
+  String get deletedRecordsTitle => 'Gelöschte Einträge';
+
+  @override
+  String get noDeletedRecords => 'Keine gelöschten Einträge';
+
+  @override
+  String get deletedRecordsLoadFailed =>
+      'Gelöschte Einträge konnten nicht geladen werden. Bitte erneut versuchen.';
+
+  @override
+  String get recordRestoreFailed =>
+      'Der Eintrag konnte nicht wiederhergestellt werden. Bitte erneut versuchen.';
+
+  @override
+  String restoreRecordProfessionConfirm(String profession) {
+    return 'Beim Wiederherstellen dieses Eintrags wird auch der Beruf \"$profession\" hinzugefügt oder wiederhergestellt. Seine anderen gespeicherten, nicht gelöschten Einträge werden ebenfalls sichtbar. Fortfahren?';
+  }
 }

@@ -819,4 +819,23 @@ class AppLocalizationsHi extends AppLocalizations {
   String movedToDeleted(Object name) {
     return 'Moved \"$name\" to Deleted';
   }
+
+  @override
+  String get deletedRecordsTitle => 'हटाए गए रिकॉर्ड';
+
+  @override
+  String get noDeletedRecords => 'कोई हटाया गया रिकॉर्ड नहीं';
+
+  @override
+  String get deletedRecordsLoadFailed =>
+      'हटाए गए रिकॉर्ड लोड नहीं हो सके। कृपया फिर से प्रयास करें।';
+
+  @override
+  String get recordRestoreFailed =>
+      'रिकॉर्ड बहाल नहीं हो सका। कृपया फिर से प्रयास करें।';
+
+  @override
+  String restoreRecordProfessionConfirm(String profession) {
+    return 'इस रिकॉर्ड को बहाल करने पर \"$profession\" पेशा भी जोड़ा या बहाल किया जाएगा। इसके अन्य सहेजे गए रिकॉर्ड, जो हटाए नहीं गए हैं, भी दिखाई देंगे। जारी रखें?';
+  }
 }

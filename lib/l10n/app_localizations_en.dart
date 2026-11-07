@@ -820,4 +820,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String movedToDeleted(Object name) {
     return 'Moved \"$name\" to Deleted';
   }
+
+  @override
+  String get deletedRecordsTitle => 'Deleted Records';
+
+  @override
+  String get noDeletedRecords => 'No deleted records';
+
+  @override
+  String get deletedRecordsLoadFailed =>
+      'Could not load deleted records. Please try again.';
+
+  @override
+  String get recordRestoreFailed =>
+      'Could not restore the record. Please try again.';
+
+  @override
+  String restoreRecordProfessionConfirm(String profession) {
+    return 'Restoring this record will also add or restore the profession \"$profession\". Its other saved, non-deleted records will become visible too. Continue?';
+  }
 }

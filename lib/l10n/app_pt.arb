@@ -359,5 +359,10 @@
   "@removeProfessionConfirm": { "placeholders": { "name": {} } },
 
   "movedToDeleted": "\"{name}\" movida para Excluídas",
-  "@movedToDeleted": { "placeholders": { "name": {} } }
+  "@movedToDeleted": { "placeholders": { "name": {} } },
+  "deletedRecordsTitle": "Registros excluídos",
+  "noDeletedRecords": "Nenhum registro excluído",
+  "deletedRecordsLoadFailed": "Não foi possível carregar os registros excluídos. Tente novamente.",
+  "recordRestoreFailed": "Não foi possível restaurar o registro. Tente novamente.",
+  "restoreRecordProfessionConfirm": "Restaurar este registro também adicionará ou restaurará a profissão \"{profession}\". Seus outros registros salvos e não excluídos também ficarão visíveis. Continuar?"
 }

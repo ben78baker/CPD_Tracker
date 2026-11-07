@@ -359,5 +359,10 @@
   "@removeProfessionConfirm": { "placeholders": { "name": {} } },
 
   "movedToDeleted": "«{name}» movida a Eliminadas",
-  "@movedToDeleted": { "placeholders": { "name": {} } }
+  "@movedToDeleted": { "placeholders": { "name": {} } },
+  "deletedRecordsTitle": "Registros eliminados",
+  "noDeletedRecords": "No hay registros eliminados",
+  "deletedRecordsLoadFailed": "No se pudieron cargar los registros eliminados. Inténtalo de nuevo.",
+  "recordRestoreFailed": "No se pudo restaurar el registro. Inténtalo de nuevo.",
+  "restoreRecordProfessionConfirm": "Al restaurar este registro también se añadirá o restaurará la profesión \"{profession}\". Sus otros registros guardados y no eliminados también serán visibles. ¿Continuar?"
 }

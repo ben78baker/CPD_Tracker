@@ -825,4 +825,23 @@ class AppLocalizationsPt extends AppLocalizations {
   String movedToDeleted(Object name) {
     return '\"$name\" movida para Excluídas';
   }
+
+  @override
+  String get deletedRecordsTitle => 'Registros excluídos';
+
+  @override
+  String get noDeletedRecords => 'Nenhum registro excluído';
+
+  @override
+  String get deletedRecordsLoadFailed =>
+      'Não foi possível carregar os registros excluídos. Tente novamente.';
+
+  @override
+  String get recordRestoreFailed =>
+      'Não foi possível restaurar o registro. Tente novamente.';
+
+  @override
+  String restoreRecordProfessionConfirm(String profession) {
+    return 'Restaurar este registro também adicionará ou restaurará a profissão \"$profession\". Seus outros registros salvos e não excluídos também ficarão visíveis. Continuar?';
+  }
 }

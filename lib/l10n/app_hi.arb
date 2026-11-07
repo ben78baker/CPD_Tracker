@@ -360,5 +360,10 @@
   "@removeProfessionConfirm": { "placeholders": { "name": {} } },
 
   "movedToDeleted": "Moved \"{name}\" to Deleted",
-  "@movedToDeleted": { "placeholders": { "name": {} } }
+  "@movedToDeleted": { "placeholders": { "name": {} } },
+  "deletedRecordsTitle": "हटाए गए रिकॉर्ड",
+  "noDeletedRecords": "कोई हटाया गया रिकॉर्ड नहीं",
+  "deletedRecordsLoadFailed": "हटाए गए रिकॉर्ड लोड नहीं हो सके। कृपया फिर से प्रयास करें।",
+  "recordRestoreFailed": "रिकॉर्ड बहाल नहीं हो सका। कृपया फिर से प्रयास करें।",
+  "restoreRecordProfessionConfirm": "इस रिकॉर्ड को बहाल करने पर \"{profession}\" पेशा भी जोड़ा या बहाल किया जाएगा। इसके अन्य सहेजे गए रिकॉर्ड, जो हटाए नहीं गए हैं, भी दिखाई देंगे। जारी रखें?"
 }

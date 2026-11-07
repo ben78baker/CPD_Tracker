@@ -1539,6 +1539,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Moved \"{name}\" to Deleted'**
   String movedToDeleted(Object name);
+
+  /// No description provided for @deletedRecordsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted Records'**
+  String get deletedRecordsTitle;
+
+  /// No description provided for @noDeletedRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'No deleted records'**
+  String get noDeletedRecords;
+
+  /// No description provided for @deletedRecordsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load deleted records. Please try again.'**
+  String get deletedRecordsLoadFailed;
+
+  /// No description provided for @recordRestoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore the record. Please try again.'**
+  String get recordRestoreFailed;
+
+  /// No description provided for @restoreRecordProfessionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring this record will also add or restore the profession \"{profession}\". Its other saved, non-deleted records will become visible too. Continue?'**
+  String restoreRecordProfessionConfirm(String profession);
 }
 
 class _AppLocalizationsDelegate

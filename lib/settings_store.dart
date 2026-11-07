@@ -141,7 +141,9 @@ class SettingsStore {
     }
     final list = canonical.values.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    await prefs.setStringList(_kDeletedProfessions, list);
+    if (!await prefs.setStringList(_kDeletedProfessions, list)) {
+      throw StateError('Could not save deleted professions.');
+    }
     return list;
   }
 
@@ -155,7 +157,9 @@ class SettingsStore {
     }
     final list = canonical.values.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    await prefs.setStringList(_kDeletedProfessions, list);
+    if (!await prefs.setStringList(_kDeletedProfessions, list)) {
+      throw StateError('Could not save deleted professions.');
+    }
   }
 
   Future<void> saveProfessions(List<String> items) async {
@@ -170,7 +174,9 @@ class SettingsStore {
     }
     final list = canonical.values.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    await prefs.setStringList(_kProfessions, list);
+    if (!await prefs.setStringList(_kProfessions, list)) {
+      throw StateError('Could not save professions.');
+    }
   }
 
   /// Check if a profession exists (case-insensitive)
@@ -188,6 +194,98 @@ class SettingsStore {
     if (current.any((p) => p.toLowerCase() == norm.toLowerCase())) return;
     current.add(norm);
     await saveProfessions(current);
+  }
+
+  /// Rename the profession and its references without merging existing data.
+  /// The destination is made visible before references move; the old name is
+  /// removed last so an interrupted write cannot hide the moved records.
+  Future<void> renameProfession(String oldValue, String newValue) async {
+    final oldKey = oldValue.trim().toLowerCase();
+    final name = _normalize(newValue);
+    if (name.isEmpty) throw StateError('Please enter a profession name.');
+    final newKey = name.toLowerCase();
+    final prefs = await _prefsWithRetry();
+    final all = List<String>.of(await loadProfessions());
+    final deleted = await loadDeletedProfessions();
+    if (!all.any((p) => p.trim().toLowerCase() == oldKey)) {
+      throw StateError('This profession no longer exists. Please refresh.');
+    }
+    final originalEntries = prefs.getStringList('entries_json_list');
+    final entries = (originalEntries ?? <String>[])
+        .map((raw) => jsonDecode(raw) as Map<String, dynamic>)
+        .toList();
+    // Unlike the display helper, do not treat malformed saved targets as empty:
+    // a rename must never overwrite data it cannot understand.
+    final oldTargets = prefs.getString(_kTargetsKey);
+    Map<String, Map<String, dynamic>> targets;
+    try {
+      final decoded = oldTargets == null
+          ? <String, dynamic>{}
+          : jsonDecode(oldTargets) as Map<String, dynamic>;
+      targets = decoded.map(
+        (key, value) => MapEntry(key, (value as Map).cast<String, dynamic>()),
+      );
+    } catch (_) {
+      throw StateError(
+        'Saved targets could not be read. Rename cancelled to preserve them.',
+      );
+    }
+    bool destination(String value) => value.trim().toLowerCase() == newKey;
+    if (newKey != oldKey &&
+        (all.any(destination) ||
+            deleted.any(destination) ||
+            entries.any((e) => destination(e['profession'] as String)) ||
+            targets.keys.any(destination))) {
+      throw StateError(
+        'That profession name already has saved data. Choose another name.',
+      );
+    }
+    final sourceTargets = targets.keys
+        .where((key) => key.trim().toLowerCase() == oldKey)
+        .toList();
+    if (sourceTargets.length > 1) {
+      throw StateError(
+        'This profession has conflicting saved targets. Rename cancelled to preserve them.',
+      );
+    }
+    final movedTargets = Map<String, Map<String, dynamic>>.of(targets);
+    if (sourceTargets.isNotEmpty) {
+      movedTargets[name] = movedTargets.remove(sourceTargets.single)!;
+    }
+    final movedEntries = entries.map((entry) {
+      if ((entry['profession'] as String).trim().toLowerCase() == oldKey) {
+        return jsonEncode({...entry, 'profession': name});
+      }
+      return jsonEncode(entry);
+    }).toList();
+    final finalNames = all
+        .map((p) => p.trim().toLowerCase() == oldKey ? name : p)
+        .toList();
+    final finalDeleted = deleted
+        .map((p) => p.trim().toLowerCase() == oldKey ? name : p)
+        .toList();
+    try {
+      await saveProfessions([...all, name]);
+      if (!await prefs.setStringList('entries_json_list', movedEntries) ||
+          !await prefs.setString(_kTargetsKey, jsonEncode(movedTargets))) {
+        throw StateError('Could not save the rename.');
+      }
+      await saveDeletedProfessions(finalDeleted);
+      await saveProfessions(finalNames);
+    } catch (_) {
+      // Best-effort rollback on storage failure, without removing any records.
+      if (originalEntries != null) {
+        final restored = await prefs.setStringList(
+          'entries_json_list',
+          originalEntries,
+        );
+        if (!restored) rethrow; // Keep both names accessible if rollback fails.
+      }
+      if (oldTargets != null) await prefs.setString(_kTargetsKey, oldTargets);
+      await saveProfessions(all);
+      await saveDeletedProfessions(deleted);
+      rethrow;
+    }
   }
 
   /// Mark a profession as deleted (soft delete)
@@ -212,11 +310,38 @@ class SettingsStore {
   Future<void> restoreProfession(String value) async {
     final name = _normalize(value);
     if (name.isEmpty) return;
+    await addProfession(name);
     final deleted = await loadDeletedProfessions();
     final next = deleted
         .where((p) => p.toLowerCase() != name.toLowerCase())
         .toList();
     await saveDeletedProfessions(next);
+  }
+
+  /// Recovery is explicit: callers must obtain consent before reactivating or
+  /// recreating a profession, which may also reveal its other saved records.
+  Future<void> restoreRecord(int id, {bool recoverProfession = false}) async {
+    final repo = EntryRepository();
+    final records = await repo.loadAll();
+    final matches = records.where((entry) => entry.id == id).toList();
+    if (matches.length != 1) {
+      throw StateError('The saved record could not be identified safely.');
+    }
+    final entry = matches.single;
+    final active = await loadActiveProfessions();
+    final exists = active.any(
+      (p) => p.trim().toLowerCase() == entry.profession.trim().toLowerCase(),
+    );
+    if (!exists) {
+      if (!recoverProfession) {
+        throw StateError('Restore this profession first.');
+      }
+      if (entry.profession.trim().isEmpty) {
+        throw StateError('This record has no profession name.');
+      }
+      await restoreProfession(entry.profession);
+    }
+    await repo.setDeleted(id, false);
   }
 
   /// Return only professions not soft-deleted

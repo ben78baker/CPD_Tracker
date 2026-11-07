@@ -5,6 +5,7 @@ import 'add_entry_page.dart';
 import 'edit_details_page.dart';
 import 'qr_scan_page.dart';
 import 'cpd_records_page.dart';
+import 'deleted_records_page.dart';
 import 'l10n/app_localizations.dart';
 import 'global_search_page.dart';
 import 'theme/app_theme.dart';
@@ -421,17 +422,25 @@ class _HomePageState extends State<HomePage> {
     );
     if (!mounted) return;
     if (result != null && result.isNotEmpty) {
-      // Update local list, then save via centralized save (which normalizes/dedupes/sorts)
-      final next = List<String>.of(_professions);
-      next[index] = result;
-      await SettingsStore.instance.saveProfessions(next);
-      final refreshed = await SettingsStore.instance.loadActiveProfessions();
-      final deleted = await SettingsStore.instance.loadDeletedProfessions();
-      if (!mounted) return;
-      setState(() {
-        _professions = List.of(refreshed);
-        _deleted = List.of(deleted);
-      });
+      try {
+        await SettingsStore.instance.renameProfession(
+          _professions[index],
+          result,
+        );
+        await _load();
+        if (mounted) setState(() => _progressBump++);
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error is StateError
+                  ? error.message
+                  : 'Could not rename the profession. Please try again.',
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -545,6 +554,12 @@ class _HomePageState extends State<HomePage> {
                   MaterialPageRoute(builder: (_) => const SettingsPage()),
                 );
                 if (mounted) setState(() => _progressBump++);
+              } else if (value == 'deleted_records') {
+                await nav.push(
+                  MaterialPageRoute(builder: (_) => const DeletedRecordsPage()),
+                );
+                await _load();
+                if (mounted) setState(() => _progressBump++);
               } else if (value == 'view_deleted') {
                 await nav.push(
                   MaterialPageRoute(
@@ -566,6 +581,10 @@ class _HomePageState extends State<HomePage> {
               PopupMenuItem(
                 value: 'settings',
                 child: Text(AppLocalizations.of(ctx)!.settings),
+              ),
+              PopupMenuItem(
+                value: 'deleted_records',
+                child: Text(AppLocalizations.of(ctx)!.deletedRecordsTitle),
               ),
               PopupMenuItem(
                 value: 'view_deleted',
@@ -671,43 +690,6 @@ class _DeletedProfessionsPageState extends State<DeletedProfessionsPage> {
     );
   }
 
-  Future<void> _deleteForever(String name) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(ctx)!.permanentlyDeleteTitle),
-        content: Text(AppLocalizations.of(ctx)!.permanentlyDeleteBody(name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(ctx)!.cancel),
-          ),
-          TactileButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            variant: TactileButtonVariant.destructive,
-            child: Text(AppLocalizations.of(ctx)!.delete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    // TODO: also delete DB records tied to this profession once DatabaseHelper support exists
-    await SettingsStore.instance.removeProfession(name);
-    await SettingsStore.instance.restoreProfession(
-      name,
-    ); // ensure it’s no longer marked deleted
-    await _load();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          AppLocalizations.of(context)!.professionDeletedPermanently(name),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -762,7 +744,7 @@ class _DeletedProfessionsPageState extends State<DeletedProfessionsPage> {
                                     variant: TactileButtonVariant.primary,
                                   );
                                   final deleteButton = TactileButton.icon(
-                                    onPressed: () => _deleteForever(name),
+                                    onPressed: null,
                                     icon: const Icon(Icons.delete_forever),
                                     label: Text(
                                       AppLocalizations.of(

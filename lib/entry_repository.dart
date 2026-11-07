@@ -1,15 +1,18 @@
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models.dart';
 
 class EntryRepository {
   static const _kEntries = 'entries_json_list'; // list<String> (json per entry)
   static const _kNextId = 'next_entry_id';
-  
 
-    Future<void> _saveAll(List<CpdEntry> entries) async {
+  Future<void> _saveAll(List<CpdEntry> entries) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_kEntries, entries.map((e) => e.toJson()).toList());
+    if (!await prefs.setStringList(
+      _kEntries,
+      entries.map((e) => e.toJson()).toList(),
+    )) {
+      throw StateError('Could not save records.');
+    }
   }
 
   Future<void> updateEntry(CpdEntry updated) async {
@@ -92,31 +95,49 @@ class EntryRepository {
     return entry;
   }
 
+  Future<List<CpdEntry>> loadDeleted() async {
+    final entries = (await loadAll()).where((entry) => entry.deleted).toList();
+    entries.sort((a, b) => b.date.compareTo(a.date));
+    return entries;
+  }
+
   Future<List<CpdEntry>> loadForProfession(String profession) async {
     final all = await loadAll();
-    return all.where((e) => e.profession.toLowerCase() == profession.toLowerCase() && !e.deleted).toList();
+    return all
+        .where(
+          (e) =>
+              e.profession.trim().toLowerCase() ==
+                  profession.trim().toLowerCase() &&
+              !e.deleted,
+        )
+        .toList();
   }
+
   /// Sum of minutes for [profession] where entry date is in [start, end)
-/// and entry is not deleted.
-Future<int> sumMinutesForRange(String profession, DateTime start, DateTime end) async {
-  final all = await loadAll();
-  final p = profession.toLowerCase();
+  /// and entry is not deleted.
+  Future<int> sumMinutesForRange(
+    String profession,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final all = await loadAll();
+    final p = profession.trim().toLowerCase();
 
-  int total = 0;
-  for (final e in all) {
-    if (e.deleted) continue;
-    if (e.profession.toLowerCase() != p) continue;
+    int total = 0;
+    for (final e in all) {
+      if (e.deleted) continue;
+      if (e.profession.trim().toLowerCase() != p) continue;
 
-    final d = e.date;
-final inRange = !d.isBefore(start) && d.isBefore(end); // [start, end)
-if (!inRange) continue;
+      final d = e.date;
+      final inRange = !d.isBefore(start) && d.isBefore(end); // [start, end)
+      if (!inRange) continue;
 
-// Coalesce hours/minutes to ints even if null/strings
-final h = e.hours;
-final m = e.minutes;
+      // Coalesce hours/minutes to ints even if null/strings
+      final h = e.hours;
+      final m = e.minutes;
 
-total += (h * 60) + m;
+      total += (h * 60) + m;
+    }
+    return total;
   }
-  return total;
-}
 }

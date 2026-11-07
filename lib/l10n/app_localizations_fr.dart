@@ -832,4 +832,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String movedToDeleted(Object name) {
     return '« $name » déplacée vers Supprimées';
   }
+
+  @override
+  String get deletedRecordsTitle => 'Enregistrements supprimés';
+
+  @override
+  String get noDeletedRecords => 'Aucun enregistrement supprimé';
+
+  @override
+  String get deletedRecordsLoadFailed =>
+      'Impossible de charger les enregistrements supprimés. Veuillez réessayer.';
+
+  @override
+  String get recordRestoreFailed =>
+      'Impossible de restaurer cet enregistrement. Veuillez réessayer.';
+
+  @override
+  String restoreRecordProfessionConfirm(String profession) {
+    return 'La restauration de cet enregistrement ajoutera ou restaurera également la profession « $profession ». Ses autres enregistrements conservés et non supprimés redeviendront également visibles. Continuer ?';
+  }
 }

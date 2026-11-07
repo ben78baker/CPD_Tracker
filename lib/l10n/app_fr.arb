@@ -359,5 +359,10 @@
   "@removeProfessionConfirm": { "placeholders": { "name": {} } },
 
   "movedToDeleted": "« {name} » déplacée vers Supprimées",
-  "@movedToDeleted": { "placeholders": { "name": {} } }
+  "@movedToDeleted": { "placeholders": { "name": {} } },
+  "deletedRecordsTitle": "Enregistrements supprimés",
+  "noDeletedRecords": "Aucun enregistrement supprimé",
+  "deletedRecordsLoadFailed": "Impossible de charger les enregistrements supprimés. Veuillez réessayer.",
+  "recordRestoreFailed": "Impossible de restaurer cet enregistrement. Veuillez réessayer.",
+  "restoreRecordProfessionConfirm": "La restauration de cet enregistrement ajoutera ou restaurera également la profession « {profession} ». Ses autres enregistrements conservés et non supprimés redeviendront également visibles. Continuer ?"
 }

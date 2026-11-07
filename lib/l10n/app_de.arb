@@ -359,5 +359,10 @@
   "@removeProfessionConfirm": { "placeholders": { "name": {} } },
 
   "movedToDeleted": "„{name}“ nach Gelöscht verschoben",
-  "@movedToDeleted": { "placeholders": { "name": {} } }
+  "@movedToDeleted": { "placeholders": { "name": {} } },
+  "deletedRecordsTitle": "Gelöschte Einträge",
+  "noDeletedRecords": "Keine gelöschten Einträge",
+  "deletedRecordsLoadFailed": "Gelöschte Einträge konnten nicht geladen werden. Bitte erneut versuchen.",
+  "recordRestoreFailed": "Der Eintrag konnte nicht wiederhergestellt werden. Bitte erneut versuchen.",
+  "restoreRecordProfessionConfirm": "Beim Wiederherstellen dieses Eintrags wird auch der Beruf \"{profession}\" hinzugefügt oder wiederhergestellt. Seine anderen gespeicherten, nicht gelöschten Einträge werden ebenfalls sichtbar. Fortfahren?"
 }
