@@ -14,3 +14,8 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Project design and research
+
+- [Custom Fields UI specification](docs/custom_fields_ui.md)
+- [Profession template research library](research/cpd_templates/README.md)

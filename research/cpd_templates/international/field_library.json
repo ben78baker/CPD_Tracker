@@ -1,0 +1,2998 @@
+{
+  "status": "Research only; definitions, types, validation and choice IDs require approval.",
+  "schemaVersion": 1,
+  "researchDate": "2026-11-20",
+  "usageLegend": {
+    "M": "source-backed per-record content or required submission data in indicated scope",
+    "C": "conditional or scheme/portfolio-level expectation; see report",
+    "R": "recommended; may be recommended by source or inferred design",
+    "O": "optional product proposal"
+  },
+  "deliveryLegend": {
+    "entry": "candidate built from established planning baseline; not approved for release",
+    "phase_candidate": "dependent on phased capability approval",
+    "review": "awaits narrower verification or UX approval",
+    "portfolio": "research only; keep out of ordinary Add Field"
+  },
+  "schemeScopes": {
+    "SRA": "Solicitors in England and Wales",
+    "NMC": "UK nurses, midwives and nursing associates",
+    "HCPC": "UK HCPC registrants",
+    "CA_RN": "California registered nurses",
+    "GDC": "UK dental registrants",
+    "SWE": "England social workers",
+    "NZ_NURSING": "New Zealand enrolled and registered nurses",
+    "ACCA": "ACCA standard unit-route members",
+    "IET": "IET members and applicable registered engineers",
+    "CPA_AU": "CPA Australia members",
+    "CNO": "Ontario nurses, General or Extended class",
+    "ICAEW": "ICAEW in-scope members",
+    "CORU": "Ireland CORU physiotherapists",
+    "RICS": "RICS qualified members",
+    "CII": "Qualified CII, PFS and SMB members",
+    "ARB": "UK registered architects",
+    "CIOB": "CIOB members",
+    "NICEIC": "NICEIC-certified electrical businesses and sole traders",
+    "GPHC": "Great Britain pharmacists and pharmacy technicians",
+    "NSW": "NSW Proficient Teachers",
+    "CPAO": "CPA Ontario in-scope members",
+    "LBP": "New Zealand Licensed Building Practitioners",
+    "CALBAR": "California State Bar standard MCLE licensees",
+    "SNB": "Singapore nursing practising-certificate holders in applicable cohorts",
+    "MTA": "In-scope Malta accountancy warrant holders"
+  },
+  "definitions": [
+    {
+      "catalogueId": "activity.title",
+      "definitionVersion": "research-v1",
+      "label": "Activity title",
+      "aliases": [
+        "course name",
+        "session",
+        "training title"
+      ],
+      "category": "activity details",
+      "type": "short_text",
+      "purpose": "Identify the activity succinctly.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SRA",
+          "profession": "Solicitors in England and Wales",
+          "status": "R"
+        },
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "R"
+        },
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "R"
+        },
+        {
+          "schemeId": "CA_RN",
+          "profession": "California registered nurses",
+          "status": "M"
+        },
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "M"
+        }
+      ],
+      "validation": "Trim text; use title or meaningful description for drafts.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "L1",
+        "N1",
+        "H1",
+        "U1",
+        "D3"
+      ],
+      "reuseAndDeduplication": "Share identity across schemes; course provider is separate.",
+      "requiredCapability": "standard binding",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "activity.date",
+      "definitionVersion": "research-v1",
+      "label": "Activity date",
+      "aliases": [
+        "completion date",
+        "learning date",
+        "date attended"
+      ],
+      "category": "activity details",
+      "type": "date",
+      "purpose": "Record the activity or completion date according to the applicable scheme.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "M"
+        },
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "M"
+        },
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "M"
+        },
+        {
+          "schemeId": "CA_RN",
+          "profession": "California registered nurses",
+          "status": "M"
+        },
+        {
+          "schemeId": "NZ_NURSING",
+          "profession": "New Zealand enrolled and registered nurses",
+          "status": "M"
+        }
+      ],
+      "validation": "Date-only; preserve recorded calendar day; do not use as creation revision.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1",
+        "D2",
+        "W1",
+        "U1",
+        "Z2"
+      ],
+      "reuseAndDeduplication": "Reuse canonical date; scheme-specific completion rule belongs to policy.",
+      "requiredCapability": "standard binding",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "activity.start_date",
+      "definitionVersion": "research-v1",
+      "label": "Activity start date",
+      "aliases": [
+        "from date",
+        "first day",
+        "multi-day course"
+      ],
+      "category": "activity details",
+      "type": "date",
+      "purpose": "Record start of an activity spanning multiple dates.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "C"
+        },
+        {
+          "schemeId": "NZ_NURSING",
+          "profession": "New Zealand enrolled and registered nurses",
+          "status": "C"
+        }
+      ],
+      "validation": "Cannot follow activity completion date.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1",
+        "Z2"
+      ],
+      "reuseAndDeduplication": "Activity range component; distinct from a regulatory cycle.",
+      "requiredCapability": "cross-field dates",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "activity.description",
+      "definitionVersion": "research-v1",
+      "label": "Activity description",
+      "aliases": [
+        "details",
+        "session summary",
+        "what I did"
+      ],
+      "category": "activity details",
+      "type": "long_text",
+      "purpose": "Describe the activity and context so the entry is intelligible later.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "M"
+        },
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "R"
+        },
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "R"
+        },
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "M"
+        },
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "M"
+        }
+      ],
+      "validation": "Plain text; avoid identifiable third-party information.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1",
+        "H1",
+        "A2",
+        "W1",
+        "D3"
+      ],
+      "reuseAndDeduplication": "Reuse standard details or an approved scheme label; distinguish from reflection.",
+      "requiredCapability": "standard binding",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "activity.provider",
+      "definitionVersion": "research-v1",
+      "label": "Learning provider",
+      "aliases": [
+        "training provider",
+        "issuer",
+        "organiser",
+        "instructor"
+      ],
+      "category": "activity details",
+      "type": "short_text",
+      "purpose": "Identify the organisation that provided or verified the learning.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "R"
+        },
+        {
+          "schemeId": "CA_RN",
+          "profession": "California registered nurses",
+          "status": "M"
+        },
+        {
+          "schemeId": "CPA_AU",
+          "profession": "CPA Australia members",
+          "status": "R"
+        }
+      ],
+      "validation": "Text; preserve official name. Provider name alone does not establish eligibility.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "D2",
+        "U1",
+        "AU2"
+      ],
+      "reuseAndDeduplication": "Reusable name field; certificate and approval number stay separate.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "activity.provider_id",
+      "definitionVersion": "research-v1",
+      "label": "Provider approval reference",
+      "aliases": [
+        "provider number",
+        "CEP number",
+        "accreditation ID"
+      ],
+      "category": "assessment and verification",
+      "type": "short_text",
+      "purpose": "Capture the recognised provider identifier where applicable.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CA_RN",
+          "profession": "California registered nurses",
+          "status": "R"
+        }
+      ],
+      "validation": "Preserve leading zeros; external verification is a user action.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "U1"
+      ],
+      "reuseAndDeduplication": "Scheme-specific eligibility; use text, independent of provider name.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "activity.method",
+      "definitionVersion": "research-v1",
+      "label": "Learning method",
+      "aliases": [
+        "CPD method",
+        "workshop",
+        "course format",
+        "method"
+      ],
+      "category": "activity details",
+      "type": "short_text",
+      "purpose": "Describe how the learning took place in the user’s own words.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "M"
+        },
+        {
+          "schemeId": "IET",
+          "profession": "IET members and applicable registered engineers",
+          "status": "R"
+        }
+      ],
+      "validation": "Short informative text; do not infer hours from description.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1",
+        "E1"
+      ],
+      "reuseAndDeduplication": "Free-text method remains distinct from controlled categories.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "activity.hcpc_category",
+      "definitionVersion": "research-v1",
+      "label": "HCPC learning category",
+      "aliases": [
+        "HCPC",
+        "work based",
+        "formal",
+        "self directed",
+        "professional activity"
+      ],
+      "category": "activity details",
+      "type": "single_select",
+      "purpose": "Classify learning for a portfolio mix check.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "R"
+        }
+      ],
+      "validation": "Identify one applicable category for summary; validate classification with owner.",
+      "choiceSetId": "hcpc.categories",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "X1",
+        "H1"
+      ],
+      "reuseAndDeduplication": "Schema reusable; exact vocabulary scoped to HCPC.",
+      "requiredCapability": "controlled choices",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "activity.swe_type",
+      "definitionVersion": "research-v1",
+      "label": "Social Work England activity type",
+      "aliases": [
+        "SWE CPD type",
+        "peer supervision",
+        "CPD type"
+      ],
+      "category": "activity details",
+      "type": "single_select",
+      "purpose": "Capture portal type for transfer of a reflective record.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "M"
+        }
+      ],
+      "validation": "Map only to current portal options; allow required Other explanation.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": "pending SWE portal option review",
+      "sourceRefs": [
+        "W1"
+      ],
+      "reuseAndDeduplication": "Separate from HCPC and other category vocabularies.",
+      "requiredCapability": "conditional choices",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "activity.awarded_reference",
+      "definitionVersion": "research-v1",
+      "label": "Course or certificate reference",
+      "aliases": [
+        "certificate number",
+        "course ID",
+        "event code"
+      ],
+      "category": "assessment and verification",
+      "type": "short_text",
+      "purpose": "Retain a searchable reference printed on a record or certificate.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "O"
+        },
+        {
+          "schemeId": "CA_RN",
+          "profession": "California registered nurses",
+          "status": "O"
+        }
+      ],
+      "validation": "Preserve original formatting; allow blank.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "D2",
+        "U1"
+      ],
+      "reuseAndDeduplication": "A source reference is independent of provider approval ID and evidence file.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "learning.objective",
+      "definitionVersion": "research-v1",
+      "label": "Learning objective",
+      "aliases": [
+        "aim",
+        "intended outcome",
+        "goal"
+      ],
+      "category": "learning objectives",
+      "type": "long_text",
+      "purpose": "Describe what the professional intended to learn.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "R"
+        },
+        {
+          "schemeId": "IET",
+          "profession": "IET members and applicable registered engineers",
+          "status": "R"
+        }
+      ],
+      "validation": "Allow early draft; avoid duplicating a bound role-plan item.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "D1",
+        "E1"
+      ],
+      "reuseAndDeduplication": "Generic text works across schemes; distinct from addressing a need or linking a plan.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "learning.need",
+      "definitionVersion": "research-v1",
+      "label": "Learning need and how identified",
+      "aliases": [
+        "development gap",
+        "PDP need",
+        "identified need",
+        "why chosen"
+      ],
+      "category": "professional development planning",
+      "type": "long_text",
+      "purpose": "Capture the need, how it was identified and why it matters.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SRA",
+          "profession": "Solicitors in England and Wales",
+          "status": "R"
+        },
+        {
+          "schemeId": "CNO",
+          "profession": "Ontario nurses, General or Extended class",
+          "status": "R"
+        },
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "C"
+        },
+        {
+          "schemeId": "ICAEW",
+          "profession": "ICAEW in-scope members",
+          "status": "R"
+        }
+      ],
+      "validation": "Prompt for origin of need if relevant; author drafts in own words.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "L1",
+        "C2",
+        "A2",
+        "Q2"
+      ],
+      "reuseAndDeduplication": "Related to objectives, with different semantics. SRA uses it in evidence of competence.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "learning.plan_reference",
+      "definitionVersion": "research-v1",
+      "label": "Development plan reference",
+      "aliases": [
+        "PDP link",
+        "learning goal ID",
+        "plan reference"
+      ],
+      "category": "professional development planning",
+      "type": "short_text",
+      "purpose": "Identify the learning plan objective addressed by an activity.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "R"
+        },
+        {
+          "schemeId": "IET",
+          "profession": "IET members and applicable registered engineers",
+          "status": "R"
+        },
+        {
+          "schemeId": "CNO",
+          "profession": "Ontario nurses, General or Extended class",
+          "status": "R"
+        },
+        {
+          "schemeId": "CORU",
+          "profession": "Ireland CORU physiotherapists",
+          "status": "R"
+        }
+      ],
+      "validation": "Use a short traceable label; a formal plan has its own scope and dates.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "D1",
+        "E1",
+        "C2",
+        "I3"
+      ],
+      "reuseAndDeduplication": "Shared reference concept; later entity linkage may replace text without erasing history.",
+      "requiredCapability": "optional goal links",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "learning.relevance",
+      "definitionVersion": "research-v1",
+      "label": "Relevance to my practice",
+      "aliases": [
+        "scope relevance",
+        "role relevance",
+        "why this activity"
+      ],
+      "category": "learning objectives",
+      "type": "long_text",
+      "purpose": "Explain why the topic is relevant to role, registration or learning goals.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "M"
+        },
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "M"
+        },
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "R"
+        },
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "C"
+        },
+        {
+          "schemeId": "ICAEW",
+          "profession": "ICAEW in-scope members",
+          "status": "R"
+        }
+      ],
+      "validation": "Use the scheme prompt or bind to existing details; avoid collecting the same answer twice.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1",
+        "W1",
+        "H1",
+        "A2",
+        "Q2"
+      ],
+      "reuseAndDeduplication": "Reusable description facet; a planned objective may be different.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "learning.outcome",
+      "definitionVersion": "research-v1",
+      "label": "What I learned",
+      "aliases": [
+        "learning points",
+        "learning achieved",
+        "knowledge gained",
+        "reflection"
+      ],
+      "category": "learning and reflection",
+      "type": "long_text",
+      "purpose": "Record the knowledge, skills or judgement gained.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "M"
+        },
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "C"
+        },
+        {
+          "schemeId": "IET",
+          "profession": "IET members and applicable registered engineers",
+          "status": "R"
+        },
+        {
+          "schemeId": "CORU",
+          "profession": "Ireland CORU physiotherapists",
+          "status": "R"
+        }
+      ],
+      "validation": "Use scheme word guidance as readiness feedback; preserve line breaks.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "W1",
+        "A2",
+        "E1",
+        "I3"
+      ],
+      "reuseAndDeduplication": "Generic outcome; impact and action are distinct when a scheme asks separately.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "learning.peer_reflection",
+      "definitionVersion": "research-v1",
+      "label": "Peer reflection",
+      "aliases": [
+        "discussed with peer",
+        "peer learning",
+        "colleague reflection"
+      ],
+      "category": "learning and reflection",
+      "type": "long_text",
+      "purpose": "Describe learning gained from a discussion with a peer.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "C"
+        }
+      ],
+      "validation": "Suppress identifiable details; annual requirement checked separately; word guidance from current form.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "W1",
+        "W2"
+      ],
+      "reuseAndDeduplication": "Scoped field; dialogue is distinct from ordinary private reflection.",
+      "requiredCapability": "long text with word guidance",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "learning.reflective_account_link",
+      "definitionVersion": "research-v1",
+      "label": "Reflective account reference",
+      "aliases": [
+        "NMC reflection",
+        "approved form reference",
+        "written reflective account"
+      ],
+      "category": "learning and reflection",
+      "type": "short_text",
+      "purpose": "Link to a separately maintained reflective account.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "O"
+        }
+      ],
+      "validation": "Never represent an entry note as the mandatory approved NMC form.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N2"
+      ],
+      "reuseAndDeduplication": "Reference only. Approved revalidation form is a portfolio-level document.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "outcome.practice_impact",
+      "definitionVersion": "research-v1",
+      "label": "Impact on professional practice",
+      "aliases": [
+        "application",
+        "change in practice",
+        "workplace use",
+        "effectiveness"
+      ],
+      "category": "professional practice outcomes",
+      "type": "long_text",
+      "purpose": "Explain observed or intended changes in professional practice.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "R"
+        },
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "C"
+        },
+        {
+          "schemeId": "SRA",
+          "profession": "Solicitors in England and Wales",
+          "status": "R"
+        },
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "M"
+        }
+      ],
+      "validation": "Permit prospective or observed outcome as scheme allows; retain personal text privately where appropriate.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "H1",
+        "A2",
+        "L1",
+        "W1"
+      ],
+      "reuseAndDeduplication": "Shared impact concept. For SWE combine with people impact in the portal prompt.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "outcome.service_user_impact",
+      "definitionVersion": "research-v1",
+      "label": "Benefit to service users",
+      "aliases": [
+        "patient benefit",
+        "people impact",
+        "service quality"
+      ],
+      "category": "professional practice outcomes",
+      "type": "long_text",
+      "purpose": "Describe benefit sought or achieved for others.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "R"
+        },
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "C"
+        }
+      ],
+      "validation": "Require anonymisation; use combined prompt where applicable.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "H1",
+        "H2",
+        "W1"
+      ],
+      "reuseAndDeduplication": "Separate from practitioner’s own learning; merge presentation only when the scheme does.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "outcome.follow_up",
+      "definitionVersion": "research-v1",
+      "label": "Follow-up action",
+      "aliases": [
+        "next steps",
+        "further action",
+        "apply learning",
+        "review plan"
+      ],
+      "category": "professional development planning",
+      "type": "long_text",
+      "purpose": "Record next action or an unresolved development need.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SRA",
+          "profession": "Solicitors in England and Wales",
+          "status": "R"
+        },
+        {
+          "schemeId": "IET",
+          "profession": "IET members and applicable registered engineers",
+          "status": "R"
+        },
+        {
+          "schemeId": "CNO",
+          "profession": "Ontario nurses, General or Extended class",
+          "status": "R"
+        },
+        {
+          "schemeId": "ICAEW",
+          "profession": "ICAEW in-scope members",
+          "status": "R"
+        }
+      ],
+      "validation": "Optional draft; do not misrepresent future action as completed CPD.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "L1",
+        "E1",
+        "C2",
+        "Q2"
+      ],
+      "reuseAndDeduplication": "Generic action; distinct from completed action or due date.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "outcome.review_date",
+      "definitionVersion": "research-v1",
+      "label": "Review date",
+      "aliases": [
+        "revisit date",
+        "follow-up date",
+        "goal due"
+      ],
+      "category": "professional development planning",
+      "type": "date",
+      "purpose": "Record an intended review date when planning follow-up.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CNO",
+          "profession": "Ontario nurses, General or Extended class",
+          "status": "O"
+        },
+        {
+          "schemeId": "SRA",
+          "profession": "Solicitors in England and Wales",
+          "status": "O"
+        }
+      ],
+      "validation": "Future dates allowed; never included in activity period calculations.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "C2",
+        "L2"
+      ],
+      "reuseAndDeduplication": "Plan metadata or optional personal field; separate from canonical activity date.",
+      "requiredCapability": "supports future-date configuration",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "time.credited_minutes",
+      "definitionVersion": "research-v1",
+      "label": "Credited CPD duration",
+      "aliases": [
+        "CPD hours",
+        "hours and minutes",
+        "time spent",
+        "CPD time"
+      ],
+      "category": "time and credits",
+      "type": "duration",
+      "purpose": "Retain the existing credited duration of an activity.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "M"
+        },
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "M"
+        },
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "M"
+        },
+        {
+          "schemeId": "IET",
+          "profession": "IET members and applicable registered engineers",
+          "status": "C"
+        },
+        {
+          "schemeId": "NZ_NURSING",
+          "profession": "New Zealand enrolled and registered nurses",
+          "status": "M"
+        }
+      ],
+      "validation": "Nonnegative integer minutes; no rounding individual activities without a verified rule.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1",
+        "D2",
+        "A1",
+        "E2",
+        "Z2"
+      ],
+      "reuseAndDeduplication": "Canonical binding. Unit conversions or evidence eligibility are reporting policy.",
+      "requiredCapability": "standard binding",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "time.participatory_minutes",
+      "definitionVersion": "research-v1",
+      "label": "Participatory CPD time",
+      "aliases": [
+        "participatory hours",
+        "interactive learning",
+        "peer interaction",
+        "NMC"
+      ],
+      "category": "time and credits",
+      "type": "duration",
+      "purpose": "Record the portion of credited time spent in participatory learning.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "M"
+        }
+      ],
+      "validation": "Zero to credited minutes; distinguish blank from explicit zero.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1"
+      ],
+      "reuseAndDeduplication": "Shared duration type, distinct meaning from credits, ethics or formal learning.",
+      "requiredCapability": "duration subset validation",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "time.ethics_minutes",
+      "definitionVersion": "research-v1",
+      "label": "Ethics CPD time",
+      "aliases": [
+        "ethics hours",
+        "professional ethics",
+        "verified ethics"
+      ],
+      "category": "time and credits",
+      "type": "duration",
+      "purpose": "Record the ethics portion where a scheme tracks it.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CPA_AU",
+          "profession": "CPA Australia members",
+          "status": "C"
+        },
+        {
+          "schemeId": "ICAEW",
+          "profession": "ICAEW in-scope members",
+          "status": "R"
+        }
+      ],
+      "validation": "Zero to credited minutes; verified ethics qualification comes from scheme policy.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "AU1",
+        "Q2",
+        "Q3"
+      ],
+      "reuseAndDeduplication": "Reusable duration concept; CPA or ICAEW minimums remain scoped.",
+      "requiredCapability": "duration subset validation",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "time.verifiability",
+      "definitionVersion": "research-v1",
+      "label": "Verifiability",
+      "aliases": [
+        "verifiable units",
+        "verified",
+        "non-verifiable",
+        "proof"
+      ],
+      "category": "assessment and verification",
+      "type": "single_select",
+      "purpose": "Classify whether a whole activity meets applicable verifiability criteria.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "C"
+        },
+        {
+          "schemeId": "ICAEW",
+          "profession": "ICAEW in-scope members",
+          "status": "R"
+        }
+      ],
+      "validation": "Blank is unclassified; confirmation requires chosen scheme evidence and scope checks.",
+      "choiceSetId": "verification.status",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "A1",
+        "A2",
+        "Q2"
+      ],
+      "reuseAndDeduplication": "Reusable classification structure. ACCA hours convert to units through its own scheme rule.",
+      "requiredCapability": "conditional choices and summaries",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "time.gdc_evidence_state",
+      "definitionVersion": "research-v1",
+      "label": "GDC evidence eligibility",
+      "aliases": [
+        "GDC verifiable",
+        "pending proof",
+        "qualifying evidence"
+      ],
+      "category": "assessment and verification",
+      "type": "single_select",
+      "purpose": "Capture whether evidence is sufficient for the user to count the activity towards GDC totals.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "R"
+        }
+      ],
+      "validation": "Blank defaults to unconfirmed; claim requires qualifying evidence or a traceable reference.",
+      "choiceSetId": "gdc.evidence_status",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "D1",
+        "D2"
+      ],
+      "reuseAndDeduplication": "Different evidence criteria from ACCA. Do not sum merely because an attachment exists.",
+      "requiredCapability": "conditional choices and summaries",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "time.formality",
+      "definitionVersion": "research-v1",
+      "label": "Formal learning classification",
+      "aliases": [
+        "formal hours",
+        "informal CPD",
+        "structured learning"
+      ],
+      "category": "assessment and verification",
+      "type": "single_select",
+      "purpose": "Classify activity against the selected scheme’s recognised formal learning definition.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "RICS",
+          "profession": "RICS qualified members",
+          "status": "C"
+        },
+        {
+          "schemeId": "CII",
+          "profession": "Qualified CII, PFS and SMB members",
+          "status": "C"
+        }
+      ],
+      "validation": "Vocabulary and eligibility must be pinned to the selected body and date.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": "pending scheme-specific vocabulary confirmation",
+      "sourceRefs": [
+        "RICS",
+        "CII"
+      ],
+      "reuseAndDeduplication": "Formal and structured are not interchangeable across schemes. Use jurisdiction-specific variants when validated.",
+      "requiredCapability": "scoped controlled choices",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "time.coru_credits",
+      "definitionVersion": "research-v1",
+      "label": "CORU credits claimed",
+      "aliases": [
+        "CPD credits",
+        "CORU points",
+        "Ireland allied health"
+      ],
+      "category": "time and credits",
+      "type": "decimal",
+      "purpose": "Record credits claimed under the applicable CORU board rule.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CORU",
+          "profession": "Ireland CORU physiotherapists",
+          "status": "C"
+        }
+      ],
+      "validation": "Nonnegative exact decimal; retain scheme; confirm allowed increments for the specific board.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "I2",
+        "I3"
+      ],
+      "reuseAndDeduplication": "Distinct unit. A timed activity cannot determine these credits automatically.",
+      "requiredCapability": "typed credit quantities",
+      "delivery": "phase_candidate",
+      "unit": "CORU credit"
+    },
+    {
+      "catalogueId": "time.ca_contact_hours",
+      "definitionVersion": "research-v1",
+      "label": "California RN contact hours",
+      "aliases": [
+        "contact hour",
+        "CE credits",
+        "provider hours",
+        "California BRN"
+      ],
+      "category": "time and credits",
+      "type": "decimal",
+      "purpose": "Capture exact contact hours recognised by the provider.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CA_RN",
+          "profession": "California registered nurses",
+          "status": "M"
+        }
+      ],
+      "validation": "Nonnegative exact decimal; retain source and scope; duplicate course claims need review.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "U1"
+      ],
+      "reuseAndDeduplication": "Distinct from elapsed or credited minutes. Never apply a general conversion.",
+      "requiredCapability": "typed credit quantities",
+      "delivery": "phase_candidate",
+      "unit": "California BRN contact hour"
+    },
+    {
+      "catalogueId": "time.annual_credit_adjustment",
+      "definitionVersion": "research-v1",
+      "label": "Prior-year credit carried forward",
+      "aliases": [
+        "carry forward",
+        "credit adjustment",
+        "prior-year units"
+      ],
+      "category": "regulatory declarations",
+      "type": "decimal",
+      "purpose": "Record a user-confirmed allowance applied to a reporting cycle.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "C"
+        }
+      ],
+      "validation": "Check scope, bounds and originating period under policy; prevent counting it as an activity.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "A1"
+      ],
+      "reuseAndDeduplication": "Report-level adjustment. Separate from new activity minutes.",
+      "requiredCapability": "cycle adjustment workflow",
+      "delivery": "portfolio",
+      "unit": "ACCA CPD unit"
+    },
+    {
+      "catalogueId": "standards.nmc_code",
+      "definitionVersion": "research-v1",
+      "label": "Relevant part of the NMC Code",
+      "aliases": [
+        "NMC Code",
+        "themes",
+        "prioritise people",
+        "preserve safety"
+      ],
+      "category": "professional standards and competencies",
+      "type": "multi_select",
+      "purpose": "Map an activity to relevant parts of the NMC Code.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "M"
+        }
+      ],
+      "validation": "Select one or more relevant official Code themes. Preserve chosen theme IDs across revisions.",
+      "choiceSetId": "nmc.code_themes",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1",
+        "X2",
+        "N3"
+      ],
+      "reuseAndDeduplication": "Scope to this edition of the NMC Code.",
+      "requiredCapability": "controlled choice version",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "standards.gdc_outcomes",
+      "definitionVersion": "research-v1",
+      "label": "GDC development outcomes",
+      "aliases": [
+        "GDC outcomes",
+        "A B C D",
+        "development outcomes",
+        "enhanced CPD"
+      ],
+      "category": "professional standards and competencies",
+      "type": "multi_select",
+      "purpose": "Capture the applicable GDC development outcomes.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "M"
+        }
+      ],
+      "validation": "Use outcome IDs and align with evidence. Require at least one when scheme-ready.",
+      "choiceSetId": "gdc.outcomes",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "D1",
+        "X3",
+        "D3"
+      ],
+      "reuseAndDeduplication": "Scope to GDC. A general competency label cannot substitute for this vocabulary.",
+      "requiredCapability": "multi-select controlled vocabulary",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "standards.swe",
+      "definitionVersion": "research-v1",
+      "label": "Social Work England CPD standards",
+      "aliases": [
+        "SWE standards",
+        "4.6",
+        "4.7",
+        "professional standards"
+      ],
+      "category": "professional standards and competencies",
+      "type": "multi_select",
+      "purpose": "Capture relevant standards for portal transfer.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "M"
+        }
+      ],
+      "validation": "Do not silently mark defaults in local proof. Treatment of portal defaults requires verification.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": "pending SWE form crosswalk",
+      "sourceRefs": [
+        "W1"
+      ],
+      "reuseAndDeduplication": "Distinct standards across versions; avoid claiming the portal record was submitted.",
+      "requiredCapability": "multi-select controlled vocabulary",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "standards.nz_pou",
+      "definitionVersion": "research-v1",
+      "label": "Relevant Nursing Council pou",
+      "aliases": [
+        "pou",
+        "NZ nursing competency",
+        "competence standards"
+      ],
+      "category": "professional standards and competencies",
+      "type": "single_select",
+      "purpose": "Associate learning with the relevant scope-specific standard.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NZ_NURSING",
+          "profession": "New Zealand enrolled and registered nurses",
+          "status": "M"
+        }
+      ],
+      "validation": "Use correct EN or RN version; do not transfer selections across unlike scopes.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": "pending scope-specific official wording and form review",
+      "sourceRefs": [
+        "Z2"
+      ],
+      "reuseAndDeduplication": "Different from GDC outcome or NMC Code selections.",
+      "requiredCapability": "scoped controlled choices",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "standards.arb_topic",
+      "definitionVersion": "research-v1",
+      "label": "ARB mandatory topic",
+      "aliases": [
+        "fire safety",
+        "environmental sustainability",
+        "ARB topics"
+      ],
+      "category": "professional standards and competencies",
+      "type": "multi_select",
+      "purpose": "Track relevant mandatory topics in ARB drafting.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "ARB",
+          "profession": "UK registered architects",
+          "status": "R"
+        }
+      ],
+      "validation": "Allow other valid activity; pin year and current mandated topics.",
+      "choiceSetId": "arb.topics",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "B1"
+      ],
+      "reuseAndDeduplication": "The required topic is a scope-specific reporting concept.",
+      "requiredCapability": "multi-select controlled vocabulary",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "standards.reference",
+      "definitionVersion": "research-v1",
+      "label": "Competency reference",
+      "aliases": [
+        "standard reference",
+        "competence code",
+        "skill framework"
+      ],
+      "category": "professional standards and competencies",
+      "type": "short_text",
+      "purpose": "Reference a standard when no approved scheme selector is available.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "IET",
+          "profession": "IET members and applicable registered engineers",
+          "status": "O"
+        },
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "O"
+        }
+      ],
+      "validation": "Plain text; do not infer coverage from text alone.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "E1",
+        "H1"
+      ],
+      "reuseAndDeduplication": "Generic fallback; use scoped choices when the regulator expects exact mapping.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "verification.checklist",
+      "definitionVersion": "research-v1",
+      "label": "Review confirmations",
+      "aliases": [
+        "reviewed evidence",
+        "ready to submit",
+        "anonymised"
+      ],
+      "category": "assessment and verification",
+      "type": "boolean",
+      "purpose": "Record user review of a specific statement where a workflow needs it.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "C"
+        }
+      ],
+      "validation": "Unchecked or null is not confirmed; do not infer endorsement, submission or third-party verification.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "W1"
+      ],
+      "reuseAndDeduplication": "Generic binary type; separate authorities and signatures remain distinct.",
+      "requiredCapability": "optional explicit confirmation",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "verification.confirmation_reference",
+      "definitionVersion": "research-v1",
+      "label": "Independent verification reference",
+      "aliases": [
+        "supervisor sign-off",
+        "confirmer",
+        "reviewer reference"
+      ],
+      "category": "regulatory declarations",
+      "type": "short_text",
+      "purpose": "Record where separate evidence of confirmation is retained.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "C"
+        },
+        {
+          "schemeId": "NZ_NURSING",
+          "profession": "New Zealand enrolled and registered nurses",
+          "status": "C"
+        }
+      ],
+      "validation": "No implied signature; restrict personally identifying details in exports.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N3",
+        "Z2"
+      ],
+      "reuseAndDeduplication": "Portfolio reference. Do not place on every activity by default.",
+      "requiredCapability": "portfolio data and privacy",
+      "delivery": "portfolio"
+    },
+    {
+      "catalogueId": "verification.renewal_declaration",
+      "definitionVersion": "research-v1",
+      "label": "Renewal declaration status",
+      "aliases": [
+        "annual declaration",
+        "submitted",
+        "renewal status"
+      ],
+      "category": "regulatory declarations",
+      "type": "single_select",
+      "purpose": "Track the user’s progress towards a separate official declaration.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "C"
+        },
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "C"
+        },
+        {
+          "schemeId": "CNO",
+          "profession": "Ontario nurses, General or Extended class",
+          "status": "C"
+        },
+        {
+          "schemeId": "NZ_NURSING",
+          "profession": "New Zealand enrolled and registered nurses",
+          "status": "C"
+        }
+      ],
+      "validation": "User-reported states; include period and submission date at portfolio level.",
+      "choiceSetId": "declaration.progress",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "D2",
+        "A2",
+        "C1",
+        "Z1"
+      ],
+      "reuseAndDeduplication": "This tracks status. The official declaration remains in the authorised system.",
+      "requiredCapability": "portfolio tracking",
+      "delivery": "portfolio"
+    },
+    {
+      "catalogueId": "evidence.files",
+      "definitionVersion": "research-v1",
+      "label": "Supporting evidence",
+      "aliases": [
+        "certificate",
+        "attendance proof",
+        "file",
+        "CPD evidence"
+      ],
+      "category": "evidence and attachments",
+      "type": "file",
+      "purpose": "Associate an original file or existing managed reference with the activity.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "M"
+        },
+        {
+          "schemeId": "GDC",
+          "profession": "UK dental registrants",
+          "status": "C"
+        },
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "C"
+        },
+        {
+          "schemeId": "CA_RN",
+          "profession": "California registered nurses",
+          "status": "M"
+        },
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "R"
+        }
+      ],
+      "validation": "Preserve byte identity and missing-source state; warn about third-party data and scheme limits.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1",
+        "D2",
+        "A2",
+        "U1",
+        "H2"
+      ],
+      "reuseAndDeduplication": "Canonical evidence pattern; accepted evidence depends on scheme and output.",
+      "requiredCapability": "standard binding",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "evidence.photo",
+      "definitionVersion": "research-v1",
+      "label": "Evidence photograph",
+      "aliases": [
+        "photograph",
+        "scan",
+        "attendance photo",
+        "camera"
+      ],
+      "category": "evidence and attachments",
+      "type": "photo",
+      "purpose": "Capture a photograph of suitable CPD evidence for later review.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "O"
+        },
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "O"
+        }
+      ],
+      "validation": "Require a supported image, bounded dimensions and user consent before sharing identifiable material.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1",
+        "H2"
+      ],
+      "reuseAndDeduplication": "Configuration of managed attachment with a photo capture constraint.",
+      "requiredCapability": "attachment subtype configuration",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "evidence.external_reference",
+      "definitionVersion": "research-v1",
+      "label": "External evidence reference",
+      "aliases": [
+        "where stored",
+        "certificate location",
+        "employer evidence",
+        "portfolio link"
+      ],
+      "category": "evidence and attachments",
+      "type": "short_text",
+      "purpose": "Describe where evidence is kept when it cannot be copied into the app.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NMC",
+          "profession": "UK nurses, midwives and nursing associates",
+          "status": "C"
+        },
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "C"
+        },
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "R"
+        }
+      ],
+      "validation": "Accept an opaque locator; avoid credentials or sensitive case identifiers.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "N1",
+        "A2",
+        "H2"
+      ],
+      "reuseAndDeduplication": "Reuse across schemes; do not treat a reference as evidence verification.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "evidence.url",
+      "definitionVersion": "research-v1",
+      "label": "Evidence URL",
+      "aliases": [
+        "web link",
+        "course link",
+        "online evidence"
+      ],
+      "category": "evidence and attachments",
+      "type": "url",
+      "purpose": "Record a link to relevant supporting material.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "O"
+        },
+        {
+          "schemeId": "ACCA",
+          "profession": "ACCA standard unit-route members",
+          "status": "O"
+        }
+      ],
+      "validation": "Use approved schemes such as HTTPS; explicit open only; no background fetch or assumption of continued availability.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "H2",
+        "A2"
+      ],
+      "reuseAndDeduplication": "A typed link can be a text or managed reference configuration.",
+      "requiredCapability": "URL handling",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "evidence.additional_reflection",
+      "definitionVersion": "research-v1",
+      "label": "Additional reflection document",
+      "aliases": [
+        "social work additional reflection",
+        "SWE document",
+        "supporting narrative"
+      ],
+      "category": "evidence and attachments",
+      "type": "file",
+      "purpose": "Attach an optional anonymised reflection document for the portal workflow.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "O"
+        }
+      ],
+      "validation": "Use applicable portal formats. Exclude certificates and correspondence from this export.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "W1"
+      ],
+      "reuseAndDeduplication": "Distinct evidence scope from course completion proof.",
+      "requiredCapability": "attachment inclusion policy",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "activity.cii_structured",
+      "definitionVersion": "research-v1",
+      "label": "CII structured CPD classification",
+      "aliases": [
+        "structured hours",
+        "CII",
+        "PFS",
+        "insurance adviser CPD"
+      ],
+      "category": "time and credits",
+      "type": "single_select",
+      "purpose": "Classify activity under the CII membership definition of structured CPD.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CII",
+          "profession": "Qualified CII, PFS and SMB members",
+          "status": "M"
+        }
+      ],
+      "validation": "Confirm structured status from the member rules; do not copy other scheme classifications.",
+      "choiceSetId": "structured.status",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "CII",
+        "CII2"
+      ],
+      "reuseAndDeduplication": "Same input shape as RICS. Scheme meaning and evidence remain separate.",
+      "requiredCapability": "controlled choices and summaries",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "activity.ciob_theme",
+      "definitionVersion": "research-v1",
+      "label": "CIOB learning theme",
+      "aliases": [
+        "CIOB",
+        "mandatory theme",
+        "construction management",
+        "sustainability"
+      ],
+      "category": "professional standards and competencies",
+      "type": "single_select",
+      "purpose": "Assign the primary theme used in a CIOB subscription-year summary.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CIOB",
+          "profession": "CIOB members",
+          "status": "C"
+        }
+      ],
+      "validation": "Count time in one theme only by default; confirm multi-theme rules before enabling allocations.",
+      "choiceSetId": "ciob.themes",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "CIOB"
+      ],
+      "reuseAndDeduplication": "Distinct from an ARB topic or RICS mandatory topic.",
+      "requiredCapability": "category subtotals and version",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "activity.ciob_learning_format",
+      "definitionVersion": "research-v1",
+      "label": "CIOB learning format",
+      "aliases": [
+        "formal",
+        "self directed",
+        "CIOB learning type"
+      ],
+      "category": "activity details",
+      "type": "single_select",
+      "purpose": "Record the recommended mix independently of mandatory themes.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CIOB",
+          "profession": "CIOB members",
+          "status": "R"
+        }
+      ],
+      "validation": "Display suggested balance separately from mandatory hours.",
+      "choiceSetId": "ciob.format",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "CIOB"
+      ],
+      "reuseAndDeduplication": "Different from formal/structured eligibility and from CIOB topic.",
+      "requiredCapability": "controlled choices",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "activity.niceic_work_scope",
+      "definitionVersion": "research-v1",
+      "label": "Electrical work or training scope",
+      "aliases": [
+        "electrical installation",
+        "safe isolation",
+        "work area",
+        "technical trade",
+        "NICEIC"
+      ],
+      "category": "activity details",
+      "type": "short_text",
+      "purpose": "Describe the relevance of learning to a certified business’s work.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NICEIC",
+          "profession": "NICEIC-certified electrical businesses and sole traders",
+          "status": "R"
+        }
+      ],
+      "validation": "Do not use a CPD entry as confirmation of competence or assessed scope.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "NICEIC"
+      ],
+      "reuseAndDeduplication": "Independent scope context can reuse short text; team competence requires a separate entity.",
+      "requiredCapability": "generic",
+      "delivery": "entry"
+    },
+    {
+      "catalogueId": "activity.gphc_planned",
+      "definitionVersion": "research-v1",
+      "label": "GPhC planned or unplanned learning",
+      "aliases": [
+        "planned CPD",
+        "unplanned CPD",
+        "pharmacy revalidation"
+      ],
+      "category": "activity details",
+      "type": "single_select",
+      "purpose": "Identify which reflective prompts and yearly counters apply.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "GPHC",
+          "profession": "Great Britain pharmacists and pharmacy technicians",
+          "status": "M"
+        }
+      ],
+      "validation": "Select one; count four CPD entries and planned entries separately at cycle level.",
+      "choiceSetId": "gphc.planning",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "GPHC"
+      ],
+      "reuseAndDeduplication": "Specific to the GPhC activity form. Peer discussion and annual account are separate record kinds.",
+      "requiredCapability": "conditional entry and counters",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "standards.gphc",
+      "definitionVersion": "research-v1",
+      "label": "GPhC reflective account standard",
+      "aliases": [
+        "professional standards",
+        "pharmacy reflective account",
+        "GPhC nine standards"
+      ],
+      "category": "professional standards and competencies",
+      "type": "single_select",
+      "purpose": "Select the applicable standard for the separate reflective account.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "GPHC",
+          "profession": "Great Britain pharmacists and pharmacy technicians",
+          "status": "C"
+        }
+      ],
+      "validation": "Current 2026 standard eligibility must be checked against the live form before proposing choices.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": "pending nine-standard vocabulary and form cardinality review",
+      "sourceRefs": [
+        "GPHC",
+        "GPHC2"
+      ],
+      "reuseAndDeduplication": "Portfolio or record-kind scope; do not place it on ordinary CPD activities by default.",
+      "requiredCapability": "scoped record kinds and choices",
+      "delivery": "portfolio"
+    },
+    {
+      "catalogueId": "evidence.redaction_review",
+      "definitionVersion": "research-v1",
+      "label": "Evidence redaction reviewed",
+      "aliases": [
+        "anonymised",
+        "redacted",
+        "patient safety",
+        "private evidence"
+      ],
+      "category": "assessment and verification",
+      "type": "boolean",
+      "purpose": "Record an explicit user review before including sensitive material in a particular export.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "HCPC",
+          "profession": "UK HCPC registrants",
+          "status": "R"
+        },
+        {
+          "schemeId": "SWE",
+          "profession": "England social workers",
+          "status": "C"
+        },
+        {
+          "schemeId": "GPHC",
+          "profession": "Great Britain pharmacists and pharmacy technicians",
+          "status": "R"
+        }
+      ],
+      "validation": "False or blank cannot enable a declaration of anonymity. Export selection is independent of historical retention.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "H2",
+        "W1",
+        "GPHC"
+      ],
+      "reuseAndDeduplication": "Export review state, not a permanent claim about an activity or attachment.",
+      "requiredCapability": "privacy-aware export preview",
+      "delivery": "portfolio"
+    },
+    {
+      "catalogueId": "standards.nsw_aitsl",
+      "definitionVersion": "research-v1",
+      "label": "Australian teaching standards addressed",
+      "aliases": [
+        "AITSL",
+        "NSW NESA",
+        "teacher professional standards"
+      ],
+      "category": "professional standards and competencies",
+      "type": "multi_select",
+      "purpose": "Map activities to the relevant standard-level identifiers.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "NSW",
+          "profession": "NSW Proficient Teachers",
+          "status": "M"
+        }
+      ],
+      "validation": "Verify the exact official list and level before enabling choices.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "NSW"
+      ],
+      "reuseAndDeduplication": "Different to the CNO goals and NZ nursing scope.",
+      "requiredCapability": "scoped choice versions",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "time.verified_minutes",
+      "definitionVersion": "research-v1",
+      "label": "Verifiable CPD time",
+      "aliases": [
+        "verifiable time",
+        "partial evidence",
+        "CPA Ontario verified hours"
+      ],
+      "category": "time and credits",
+      "type": "duration",
+      "purpose": "Record the verified portion of a single activity when an entire activity does not qualify.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CPAO",
+          "profession": "CPA Ontario in-scope members",
+          "status": "C"
+        }
+      ],
+      "validation": "Zero to credited duration. Ethics min/max can use this as the controlling subset.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "CPAO"
+      ],
+      "reuseAndDeduplication": "Distinct from a whole-activity yes/no eligibility tag.",
+      "requiredCapability": "derived subset totals",
+      "delivery": "phase_candidate"
+    },
+    {
+      "catalogueId": "time.verified_ethics_minutes",
+      "definitionVersion": "research-v1",
+      "label": "Verifiable professional ethics time",
+      "aliases": [
+        "verified ethics",
+        "CPA Ontario ethics",
+        "ethics subset"
+      ],
+      "category": "time and credits",
+      "type": "duration",
+      "purpose": "Record the qualifying ethics portion within the verifiable time.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CPAO",
+          "profession": "CPA Ontario in-scope members",
+          "status": "C"
+        }
+      ],
+      "validation": "Zero to verifiable time; retain traceable documentation.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "CPAO"
+      ],
+      "reuseAndDeduplication": "Where verified ethics is a subset of verified time, keep this meaning explicit.",
+      "requiredCapability": "nested subset validation",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "activity.lbp_stream",
+      "definitionVersion": "research-v1",
+      "label": "Skills maintenance stream",
+      "aliases": [
+        "LBP",
+        "elective",
+        "on-the-job",
+        "quiz",
+        "skills maintenance"
+      ],
+      "category": "activity details",
+      "type": "single_select",
+      "purpose": "Classify each entry in its New Zealand LBP stream.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "LBP",
+          "profession": "New Zealand Licensed Building Practitioners",
+          "status": "M"
+        }
+      ],
+      "validation": "Only electives contribute to the elective-hour total. On-the-job entries and quizzes have separate checks.",
+      "choiceSetId": "lbp.stream",
+      "choiceSetVersion": "research-v1",
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "LBP"
+      ],
+      "reuseAndDeduplication": "Do not map an activity-count stream to general learning hours.",
+      "requiredCapability": "stream counters",
+      "delivery": "review"
+    },
+    {
+      "catalogueId": "time.mcle_awarded",
+      "definitionVersion": "research-v1",
+      "label": "California MCLE awarded credit",
+      "aliases": [
+        "legal education",
+        "MCLE credit",
+        "credit awarded",
+        "California attorney"
+      ],
+      "category": "time and credits",
+      "type": "decimal",
+      "purpose": "Retain exact credit for the applicable California attorney activity.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CALBAR",
+          "profession": "California State Bar standard MCLE licensees",
+          "status": "M"
+        }
+      ],
+      "validation": "Nonnegative. Preserve evidence and apply current mode and cap rules.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "CALBAR"
+      ],
+      "reuseAndDeduplication": "Different unit and professional scope from BRN contact hours.",
+      "requiredCapability": "exact quantity and policy totals",
+      "delivery": "review",
+      "unit": "California MCLE credit hour"
+    },
+    {
+      "catalogueId": "time.mcle_subfield_allocations",
+      "definitionVersion": "research-v1",
+      "label": "MCLE subfield credit allocation",
+      "aliases": [
+        "legal ethics",
+        "implicit bias",
+        "technology",
+        "civility",
+        "competency credits"
+      ],
+      "category": "time and credits",
+      "type": "allocation",
+      "purpose": "Represent recognised partial awards by subfield.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "CALBAR",
+          "profession": "California State Bar standard MCLE licensees",
+          "status": "C"
+        }
+      ],
+      "validation": "Avoid counting the same credit twice; enforce parent subset only after current categories are verified.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "CALBAR"
+      ],
+      "reuseAndDeduplication": "Different from toggling category labels and crediting the whole activity.",
+      "requiredCapability": "repeatable category/quantity pairs",
+      "delivery": "review",
+      "unit": "California MCLE credit hour"
+    },
+    {
+      "catalogueId": "time.snb_points_claimed",
+      "definitionVersion": "research-v1",
+      "label": "Singapore CPE points claimed",
+      "aliases": [
+        "SNB points",
+        "provisional points",
+        "CPE claim"
+      ],
+      "category": "time and credits",
+      "type": "decimal",
+      "purpose": "Record the amount requested in a personal claim.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SNB",
+          "profession": "Singapore nursing practising-certificate holders in applicable cohorts",
+          "status": "C"
+        }
+      ],
+      "validation": "Maintain separately from award; user selects original claim scope.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "SNB"
+      ],
+      "reuseAndDeduplication": "A claim cannot be treated as a final award.",
+      "requiredCapability": "exact quantity and reconciliation",
+      "delivery": "review",
+      "unit": "SNB CPE point"
+    },
+    {
+      "catalogueId": "time.snb_points_awarded",
+      "definitionVersion": "research-v1",
+      "label": "Singapore CPE points awarded",
+      "aliases": [
+        "SNB points confirmed",
+        "PRS points",
+        "CPE award"
+      ],
+      "category": "time and credits",
+      "type": "decimal",
+      "purpose": "Record the recognised award after checking PRS.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "SNB",
+          "profession": "Singapore nursing practising-certificate holders in applicable cohorts",
+          "status": "C"
+        }
+      ],
+      "validation": "Nonnegative exact value with source reference. Avoid duplicate provider and own claims.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "SNB"
+      ],
+      "reuseAndDeduplication": "A separate authoritative external status is needed for progress.",
+      "requiredCapability": "exact quantity and reconciliation",
+      "delivery": "review",
+      "unit": "SNB CPE point"
+    },
+    {
+      "catalogueId": "standards.malta_core",
+      "definitionVersion": "research-v1",
+      "label": "Malta accountancy CPE category",
+      "aliases": [
+        "Malta core competency",
+        "warrant CPE",
+        "structured hours"
+      ],
+      "category": "professional standards and competencies",
+      "type": "single_select",
+      "purpose": "Identify structured activity Core or Professional Development category.",
+      "suggestedDefault": null,
+      "usage": [
+        {
+          "schemeId": "MTA",
+          "profession": "In-scope Malta accountancy warrant holders",
+          "status": "C"
+        }
+      ],
+      "validation": "Core applies to eligible structured hours only; match Board form before release.",
+      "choiceSetId": null,
+      "choiceSetVersion": null,
+      "choiceReviewNote": null,
+      "sourceRefs": [
+        "MTA"
+      ],
+      "reuseAndDeduplication": "Scoped category, separate from CII structured and ACCA verifiability.",
+      "requiredCapability": "scheme-specific choice and subtotal",
+      "delivery": "review"
+    }
+  ],
+  "choiceSets": {
+    "hcpc.categories": {
+      "version": "research-v1",
+      "status": "suggested vocabulary supported by source",
+      "sourceRefs": [
+        "X1",
+        "H1"
+      ],
+      "values": [
+        {
+          "id": "work_based",
+          "label": "Work-based learning"
+        },
+        {
+          "id": "professional",
+          "label": "Professional activity"
+        },
+        {
+          "id": "formal",
+          "label": "Formal education"
+        },
+        {
+          "id": "self_directed",
+          "label": "Self-directed learning"
+        },
+        {
+          "id": "other",
+          "label": "Other relevant activity"
+        }
+      ]
+    },
+    "nmc.code_themes": {
+      "version": "research-v1",
+      "status": "Official headings and multi-select CPD log rechecked",
+      "sourceRefs": [
+        "X2",
+        "N1"
+      ],
+      "values": [
+        {
+          "id": "people",
+          "label": "Prioritise people"
+        },
+        {
+          "id": "effective",
+          "label": "Practise effectively"
+        },
+        {
+          "id": "safety",
+          "label": "Preserve safety"
+        },
+        {
+          "id": "trust",
+          "label": "Promote professionalism and trust"
+        }
+      ]
+    },
+    "gdc.outcomes": {
+      "version": "research-v1",
+      "status": "official IDs with brief paraphrases",
+      "sourceRefs": [
+        "D1",
+        "X3",
+        "D3"
+      ],
+      "values": [
+        {
+          "id": "a",
+          "label": "Communication"
+        },
+        {
+          "id": "b",
+          "label": "Management and teamwork"
+        },
+        {
+          "id": "c",
+          "label": "Knowledge and skills"
+        },
+        {
+          "id": "d",
+          "label": "Professional behaviours and patient confidence"
+        }
+      ]
+    },
+    "arb.topics": {
+      "version": "research-v1",
+      "status": "verify effective year before publishing",
+      "sourceRefs": [
+        "B1"
+      ],
+      "values": [
+        {
+          "id": "fire",
+          "label": "Fire and life safety"
+        },
+        {
+          "id": "sustainability",
+          "label": "Environmental sustainability"
+        }
+      ]
+    },
+    "verification.status": {
+      "version": "research-v1",
+      "status": "proposed labels for scoped eligibility",
+      "sourceRefs": [
+        "A1",
+        "Q2"
+      ],
+      "values": [
+        {
+          "id": "verifiable",
+          "label": "Verifiable"
+        },
+        {
+          "id": "non_verifiable",
+          "label": "Non-verifiable"
+        },
+        {
+          "id": "pending",
+          "label": "Pending classification"
+        }
+      ]
+    },
+    "gdc.evidence_status": {
+      "version": "research-v1",
+      "status": "proposed labels",
+      "sourceRefs": [
+        "D2",
+        "D3"
+      ],
+      "values": [
+        {
+          "id": "eligible",
+          "label": "Evidence checked by user"
+        },
+        {
+          "id": "pending",
+          "label": "Awaiting evidence"
+        },
+        {
+          "id": "ineligible",
+          "label": "Does not qualify"
+        }
+      ]
+    },
+    "declaration.progress": {
+      "version": "research-v1",
+      "status": "proposed local tracking only",
+      "sourceRefs": [
+        "D2",
+        "A2",
+        "C1",
+        "Z1"
+      ],
+      "values": [
+        {
+          "id": "draft",
+          "label": "Draft"
+        },
+        {
+          "id": "ready",
+          "label": "Ready for review"
+        },
+        {
+          "id": "submitted",
+          "label": "Submitted separately"
+        }
+      ]
+    },
+    "structured.status": {
+      "version": "research-v1",
+      "status": "scoped classification",
+      "sourceRefs": [
+        "CII"
+      ],
+      "values": [
+        {
+          "id": "structured",
+          "label": "Structured"
+        },
+        {
+          "id": "unstructured",
+          "label": "Unstructured"
+        }
+      ]
+    },
+    "ciob.themes": {
+      "version": "research-v1",
+      "status": "confirmed theme labels; check allocation rule",
+      "sourceRefs": [
+        "CIOB"
+      ],
+      "values": [
+        {
+          "id": "hsw",
+          "label": "Health, Safety and Wellbeing"
+        },
+        {
+          "id": "sustainability",
+          "label": "Sustainability"
+        },
+        {
+          "id": "quality",
+          "label": "Quality"
+        },
+        {
+          "id": "professionalism",
+          "label": "Professionalism"
+        },
+        {
+          "id": "other",
+          "label": "Member-selected learning"
+        }
+      ]
+    },
+    "ciob.format": {
+      "version": "research-v1",
+      "status": "recommendation separate from hours rule",
+      "sourceRefs": [
+        "CIOB"
+      ],
+      "values": [
+        {
+          "id": "formal",
+          "label": "Formal"
+        },
+        {
+          "id": "self_directed",
+          "label": "Self-directed"
+        }
+      ]
+    },
+    "gphc.planning": {
+      "version": "research-v1",
+      "status": "confirmed form distinction",
+      "sourceRefs": [
+        "GPHC"
+      ],
+      "values": [
+        {
+          "id": "planned",
+          "label": "Planned"
+        },
+        {
+          "id": "unplanned",
+          "label": "Unplanned"
+        }
+      ]
+    },
+    "lbp.stream": {
+      "version": "research-v1",
+      "status": "official streams; map current portal label before release",
+      "sourceRefs": [
+        "LBP"
+      ],
+      "values": [
+        {
+          "id": "elective",
+          "label": "Elective learning"
+        },
+        {
+          "id": "on_the_job",
+          "label": "On-the-job learning"
+        },
+        {
+          "id": "compulsory",
+          "label": "Compulsory article and quiz"
+        }
+      ]
+    }
+  },
+  "sources": {
+    "N1": {
+      "organisation": "NMC",
+      "url": "https://www.nmc.org.uk/revalidation/requirements/cpd/",
+      "section": "Requirements",
+      "publicationOrEffectiveDate": "2021-09-08",
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "N2": {
+      "organisation": "NMC",
+      "url": "https://www.nmc.org.uk/revalidation/requirements/written-reflective-accounts/",
+      "section": "Approved reflective accounts",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "N3": {
+      "organisation": "NMC",
+      "url": "https://www.nmc.org.uk/globalassets/sitedocuments/revalidation/how-to-revalidate-booklet.pdf",
+      "section": "Confirmation and CPD",
+      "publicationOrEffectiveDate": "2019-05",
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "H1": {
+      "organisation": "HCPC",
+      "url": "https://www.hcpc-uk.org/standards/standards-of-continuing-professional-development/",
+      "section": "Standards 1–5",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "H2": {
+      "organisation": "HCPC",
+      "url": "https://www.hcpc-uk.org/cpd/completing-a-cpd-profile-for-audit/cpd-evidence/",
+      "section": "Types of evidence",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "D1": {
+      "organisation": "GDC",
+      "url": "https://www.gdc-uk.org/education-cpd/cpd/cpd-scheme",
+      "section": "Hours and development outcomes",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "D2": {
+      "organisation": "GDC",
+      "url": "https://www.gdc-uk.org/education-cpd/cpd/cpd-scheme/recording-and-submitting-cpd",
+      "section": "Record, evidence and rounding",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "W1": {
+      "organisation": "Social Work England",
+      "url": "https://www.socialworkengland.org.uk/cpd/record-cpd/",
+      "section": "Portal recording form",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "W2": {
+      "organisation": "Social Work England",
+      "url": "https://www.socialworkengland.org.uk/9806a60b4c244ba98a311cfeb0386bfc",
+      "section": "CPD and registration",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "L1": {
+      "organisation": "SRA",
+      "url": "https://www.sra.org.uk/solicitors/resources/continuing-competence/record-evaluate/",
+      "section": "Competence record evidence",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "L2": {
+      "organisation": "SRA",
+      "url": "https://www.sra.org.uk/solicitors/resources/continuing-competence/templates/",
+      "section": "Learning and development template",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "E1": {
+      "organisation": "Engineering Council",
+      "url": "https://www.engc.org.uk/resources-and-guidance/professional-development/continuing-professional-development-cpd",
+      "section": "CPD Code",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "E2": {
+      "organisation": "IET",
+      "url": "https://www.theiet.org/career/professional-development/continuing-professional-development",
+      "section": "IET membership CPD",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "A1": {
+      "organisation": "ACCA",
+      "url": "https://www.accaglobal.com/gb/en/member/cpd/your-guide-to-cpd.html",
+      "section": "Standard unit route",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "A2": {
+      "organisation": "ACCA",
+      "url": "https://www.accaglobal.com/gb/en/member/cpd/managing-your-cpd.html",
+      "section": "Evidence and recording",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "Q2": {
+      "organisation": "ICAEW",
+      "url": "https://www.icaew.com/membership/cpd/your-guide-to-cpd/recording-cpd",
+      "section": "Ethics and reporting",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "Q3": {
+      "organisation": "ICAEW",
+      "url": "https://www.icaew.com/membership/cpd/your-guide-to-cpd/cpd-are-you-in-scope",
+      "section": "Role scope and ethics",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "AU1": {
+      "organisation": "CPA Australia",
+      "url": "https://www.cpaaustralia.com.au/professional-development/continuing-professional-development",
+      "section": "Hours and ethics",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "AU2": {
+      "organisation": "CPA Australia",
+      "url": "https://www.cpaaustralia.com.au/professional-development/continuing-professional-development/recording-your-cpd",
+      "section": "Categories and diary",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "C1": {
+      "organisation": "College of Nurses of Ontario",
+      "url": "https://www.cno.org/quality-assurance",
+      "section": "QA requirements",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "C2": {
+      "organisation": "College of Nurses of Ontario",
+      "url": "https://www.cno.org/quality-assurance/self-assessment",
+      "section": "Annual learning plan",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "U1": {
+      "organisation": "California BRN",
+      "url": "https://www.rn.ca.gov/licensees/ce-renewal.shtml",
+      "section": "CE and records",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "Z1": {
+      "organisation": "Nursing Council of New Zealand",
+      "url": "https://www.nursingcouncil.org.nz/Public/NCNZ/nursing-section/Continuing_Competence.aspx",
+      "section": "Requirements and declarations",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "Z2": {
+      "organisation": "Nursing Council of New Zealand",
+      "url": "https://www.nursingcouncil.org.nz/common/Uploaded%20files/Public/Nursing/Recertification%20Audits/Recertification%20Audit%20guidance%20for%20enrolled%20and%20registered%20nurses%202025.pdf",
+      "section": "Audit guidance pp. 3–6",
+      "publicationOrEffectiveDate": "2025-10",
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "I2": {
+      "organisation": "CORU",
+      "url": "https://www.coru.ie/health-and-social-care-professionals/continuing-professional-development/cpd-for-physiotherapists/",
+      "section": "Physiotherapy guidance",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "I3": {
+      "organisation": "CORU",
+      "url": "https://www.coru.ie/health-and-social-care-professionals/continuing-professional-development/cpd-audit/",
+      "section": "Audit and credits",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "B1": {
+      "organisation": "Architects Registration Board",
+      "url": "https://arb.org.uk/architect-information/cpd/",
+      "section": "Mandatory topics",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "X1": {
+      "organisation": "HCPC",
+      "url": "https://www.hcpc-uk.org/cpd/carrying-out-and-recording-cpd/what-activities-count-as-cpd/",
+      "section": "Categories and examples",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "X2": {
+      "organisation": "NMC",
+      "url": "https://www.nmc.org.uk/standards/code/",
+      "section": "Code themes",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "X3": {
+      "organisation": "GDC",
+      "url": "https://www.gdc-uk.org/docs/default-source/enhanced-cpd-scheme-2018/cpd-provider-guidance.pdf?sfvrsn=63766c6a_2",
+      "section": "Outcomes p. 4",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "CII": {
+      "organisation": "Chartered Insurance Institute",
+      "url": "https://www.cii.co.uk/learning/cpd/scheme-rules",
+      "section": "Scheme requirements",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "CII2": {
+      "organisation": "Chartered Insurance Institute",
+      "url": "https://www.cii.co.uk/learning/cpd/planning-and-recording",
+      "section": "Member records and reflection",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "RICS": {
+      "organisation": "RICS",
+      "url": "https://www.rics.org/content/dam/ricsglobal/documents/regulation/CPD-rules_requirements_Jan2026.pdf",
+      "section": "Structured learning and mandatory topics",
+      "publicationOrEffectiveDate": "2026-01",
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "CIOB": {
+      "organisation": "CIOB",
+      "url": "https://www.ciob.org/media/3548/download",
+      "section": "Policy pp. 2–4",
+      "publicationOrEffectiveDate": "2026-02",
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "NICEIC": {
+      "organisation": "NICEIC",
+      "url": "https://niceic.com/for-the-trades-1/develop-your-skills/recording-cpd/",
+      "section": "Recording CPD",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "GPHC": {
+      "organisation": "GPhC",
+      "url": "https://assets.pharmacyregulation.org/files/document/gphc_revalidation_framework_january_2018.pdf",
+      "section": "Public framework and Appendix 1",
+      "publicationOrEffectiveDate": "2018-01",
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "GPHC2": {
+      "organisation": "GPhC",
+      "url": "https://assets.pharmacyregulation.org/files/2026-10/GPhC-annual-report-2025-26a.pdf",
+      "section": "Revalidation update · indexed section",
+      "publicationOrEffectiveDate": "2026-10",
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "indexed section only; confirm live form"
+    },
+    "SRA3": {
+      "organisation": "SRA",
+      "url": "https://www.sra.org.uk/solicitors/resources/continuing-competence/understanding-continuing-competence/",
+      "section": "Mandatory declaration and scope",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "D3": {
+      "organisation": "GDC",
+      "url": "https://www.gdc-uk.org/docs/default-source/education-and-cpd/cpd/cpd-scheme/cpd-activity-log-template-2025_a.pdf",
+      "section": "Activity log and required fields",
+      "publicationOrEffectiveDate": "2025",
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "supports the linked requirement or design rationale; see source register"
+    },
+    "NSW": {
+      "organisation": "NSW Education Standards Authority",
+      "url": "https://www.nsw.gov.au/education-and-training/nesa/teacher-accreditation/maintain-accreditation/professional-development-requirements",
+      "section": "PD recording and audit",
+      "publicationOrEffectiveDate": "2024-08-16",
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "ordinary scope verified; consult the scheme report for implementation gaps"
+    },
+    "CPAO": {
+      "organisation": "CPA Ontario",
+      "url": "https://www.cpaontario.ca/members/regulations-guidance/continuing-professional-development",
+      "section": "Annual and triennial CPD",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "ordinary scope verified; consult the scheme report for implementation gaps"
+    },
+    "LBP": {
+      "organisation": "New Zealand MBIE",
+      "url": "https://www.lbp.govt.nz/for-lbps/skills-maintenance/",
+      "section": "Activity streams and licence classes",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "ordinary scope verified; consult the scheme report for implementation gaps"
+    },
+    "CALBAR": {
+      "organisation": "State Bar of California",
+      "url": "https://www.calbar.ca.gov/legal-professionals/rules/rules-state-bar/title-2-rights-and-responsibilities-licensees",
+      "section": "Rules 2.70–2.73",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "ordinary scope verified; consult the scheme report for implementation gaps"
+    },
+    "SNB": {
+      "organisation": "Singapore Nursing Board",
+      "url": "https://www.snb.gov.sg/for-professionals/for-nurses-and-midwives/continuing-professional-education/for-nurse-midwife/",
+      "section": "Qualifying dates and points",
+      "publicationOrEffectiveDate": "2026-11-06",
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "ordinary scope verified; consult the scheme report for implementation gaps"
+    },
+    "MTA": {
+      "organisation": "Malta Accountancy Board",
+      "url": "https://accountancyboard.gov.mt/FileDownloadPage.aspx?FileID=69",
+      "section": "Warrant CPE categories",
+      "publicationOrEffectiveDate": null,
+      "type": "primary",
+      "checkedInProgramme": "2026-11-20",
+      "confidence": "ordinary scope verified; consult the scheme report for implementation gaps"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+# Open questions and validation plan
+
+**20 November 2026.** Work from the [ranked opportunities](../commercial_priorities.md#international-programme-ranking--20-november-2026). In tests use synthetic or consented and anonymised examples. Screen only the outputs needed for the stated purpose. Capture observed outcomes separately from descriptions, preferences and projected purchase intent.
+
+## First decisions and acceptance evidence
+
+| Question | Method | What would support a decision |
+|---|---|---|
+| Does the NMC or HCPC template save work? | Recruit practitioners with different roles, employer systems, accessibility needs and current tools. Use the same synthetic activity, evidence and reporting task in their usual method and a prototype. | Faster or less error-prone capture and a usable evidence handoff. Note users who prefer employer or free tools, and why. |
+| Is the value distinct at £3.99? | Show the concrete output, separate official submission step and exact price. Compare with a plain paid preset, free template and Custom Fields. Ask users what they would stop paying for or stop using. | Observed preference for a specific workflow across more than one recruitment source. Use observed paid conversions after authorisation for a viability decision. Interviews alone establish neither conversion nor market size. |
+| Does Custom Fields justify £12.99? | Recruit multi-role, employer-specific and specialist users. Compare adapting a blank layout, applying a bought template and searching the Field Library. Test the total £16.98 cost with users who want both. | Users understand separate entitlements and can name a recurring customisation benefit. Record price objections and reuse evidence. |
+| Can the output be used as described? | Map every named field to the latest official sample and walk the real handoff with eligible practitioners. Check date clocks, rounding, evidence, anonymity, language and upload constraints. | A reproducible handoff for the intended use. Document whether an independent file is accepted, or manual transfer is required. Verify import only in a safely authorised test context. |
+| Are the existing tools strong enough? | Compare current iOS/Android versions and official portals for record capture, file organisation, offline editing, category totals, PDF/CSV, evidence export and simulated recovery. Use the same task and record version, region, account tier and test date. | A gap users care about that persists across current versions. For GDC, compare Smartily and the official form. For NMC/HCPC, compare the official forms, CPDme and a free tool. |
+| Are current thresholds maintainable? | Estimate scheme-specific research, review, accessibility QA and support effort after a sample update. Model break-even using actual store proceeds and rates when available. | An assigned maintainer, clear review/change process and a viable product hypothesis under conservative assumptions. |
+| Can users recover their data and purchase access? | Scope an opt-in backup and transfer design using legacy entries, a renamed tile and local evidence. Test store restore separately, and verify legacy proof paths on the intended OS versions. | Dates, names, records, evidence, targets and layout revisions survive a defensible recovery test. Permanent grants recover through the chosen process. |
+| Can the template be named and marketed safely? | Review body terms, marks, choice labels, official form reproduction and attribution for launch countries. Validate user perception with sample store copy. | Approved language stating exact scope and limitations, with documented rights for reused content and no implication of regulator endorsement. |
+
+## Regulatory watch list
+
+| Priority | Research event | What to verify before release |
+|---|---|---|
+| NMC UK | Regulator future standards page states a consultation launch by end of November 2026. | Recheck before locking the first version and separate consultation from effective rules. [UK source notes](uk_ireland_sources.md) |
+| GDC UK | October 2026 papers describe CPD redesign planning for 2027, with a later legislation-dependent new model. | Track the actual transition dates and preserve existing dentist/DCP cycle rules. [UK source notes](uk_ireland_sources.md) |
+| SRA England and Wales | Continuing competence consultation closed in July 2026 and a 2026 assessment was published. | Check decisions, amendments and effective dates. [Competition and official tools](competitor_comparison.md) |
+| Ireland | NMBI final competence scheme publication unresolved. The solicitors' 2024–26 policy is date-bounded. PSI ePortfolio review changes demand a current handoff check. | Locate actual in-force requirements and current portal/forms before setting targets. [UK and Ireland sources](uk_ireland_sources.md) |
+| Australia and NZ | NMBA standards were under consultation. Engineers Australia's policy review was due in December 2026. NZ teacher standards have a transition. | Confirm the adopted versions and preserve prior cohorts. [International sources](international_sources.md) |
+| Canada and US | Ontario PEO announces 2027/28 changes, Texas BON recently changed the renewal reporting flow and California State Bar public tracking statements need reconciliation. | Test live workflows with authorised users and pin rule versions. [International sources](international_sources.md) |
+| Singapore and Hong Kong | Points, certificate and administrator obligations are rolling out by cohort. | Verify eligibility and approved evidence processes in the actual launch cohort. [International sources](international_sources.md) |
+
+Outside the sampled jurisdictions, the next discovery pass should cover NAPIT, UK regional and professional memberships, Ontario-adjacent provincial schemes, US accounting, and selected English-accessible EU and Asian professions. Missing publication dates, inaccessible forms, public marketing claims and non-representative review evidence remain labelled in the source registers.
