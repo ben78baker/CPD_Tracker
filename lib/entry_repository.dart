@@ -1,3 +1,4 @@
+import 'cpd_migration/legacy_write_gate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'cpd_compatibility/cpd_data_store.dart';
 import 'models.dart';
@@ -17,41 +18,43 @@ class EntryRepository extends CpdRecordStore {
   }
 
   @override
-  Future<void> updateEntry(CpdEntry updated) async {
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_kEntries) ?? <String>[];
-    final entries = list.map((s) => CpdEntry.fromJson(s)).toList();
-    final idx = entries.indexWhere((e) => e.id == updated.id);
-    if (idx == -1) {
-      entries.add(updated);
-    } else {
-      entries[idx] = updated;
-    }
-    await _saveAll(entries);
-  }
+  Future<void> updateEntry(CpdEntry updated) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await SharedPreferences.getInstance();
+        final list = prefs.getStringList(_kEntries) ?? <String>[];
+        final entries = list.map((s) => CpdEntry.fromJson(s)).toList();
+        final idx = entries.indexWhere((e) => e.id == updated.id);
+        if (idx == -1) {
+          entries.add(updated);
+        } else {
+          entries[idx] = updated;
+        }
+        await _saveAll(entries);
+      });
 
   @override
-  Future<void> setDeleted(int id, bool deleted) async {
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_kEntries) ?? <String>[];
-    final entries = list.map((s) => CpdEntry.fromJson(s)).toList();
-    final idx = entries.indexWhere((e) => e.id == id);
-    if (idx != -1) {
-      final e = entries[idx];
-      entries[idx] = CpdEntry(
-        id: e.id,
-        profession: e.profession,
-        date: e.date,
-        title: e.title,
-        details: e.details,
-        hours: e.hours,
-        minutes: e.minutes,
-        attachments: e.attachments,
-        deleted: deleted,
-      );
-      await _saveAll(entries);
-    }
-  }
+  Future<void> setDeleted(int id, bool deleted) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await SharedPreferences.getInstance();
+        final list = prefs.getStringList(_kEntries) ?? <String>[];
+        final entries = list.map((s) => CpdEntry.fromJson(s)).toList();
+        final idx = entries.indexWhere((e) => e.id == id);
+        if (idx != -1) {
+          final e = entries[idx];
+          entries[idx] = CpdEntry(
+            id: e.id,
+            profession: e.profession,
+            date: e.date,
+            title: e.title,
+            details: e.details,
+            hours: e.hours,
+            minutes: e.minutes,
+            attachments: e.attachments,
+            deleted: deleted,
+          );
+          await _saveAll(entries);
+        }
+      });
 
   Future<int> _consumeNextId(SharedPreferences prefs) async {
     final next = (prefs.getInt(_kNextId) ?? 1);
@@ -67,12 +70,13 @@ class EntryRepository extends CpdRecordStore {
   }
 
   @override
-  Future<void> saveEntry(CpdEntry entry) async {
-    final prefs = await SharedPreferences.getInstance();
-    final all = prefs.getStringList(_kEntries) ?? <String>[];
-    all.add(entry.toJson());
-    await prefs.setStringList(_kEntries, all);
-  }
+  Future<void> saveEntry(CpdEntry entry) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await SharedPreferences.getInstance();
+        final all = prefs.getStringList(_kEntries) ?? <String>[];
+        all.add(entry.toJson());
+        await prefs.setStringList(_kEntries, all);
+      });
 
   @override
   Future<CpdEntry> createAndSave({
@@ -83,7 +87,7 @@ class EntryRepository extends CpdRecordStore {
     required int hours,
     required int minutes,
     required List<String> attachments,
-  }) async {
+  }) => LegacyWriteGate.instance.write(() async {
     final prefs = await SharedPreferences.getInstance();
     final id = await _consumeNextId(prefs);
     final entry = CpdEntry(
@@ -99,5 +103,5 @@ class EntryRepository extends CpdRecordStore {
     );
     await saveEntry(entry);
     return entry;
-  }
+  });
 }

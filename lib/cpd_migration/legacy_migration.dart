@@ -10,7 +10,7 @@ import '../recording_engine_storage/managed_attachment_files.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
 
 const _uuid = Uuid();
-const _parserVersion = 1;
+const _parserVersion = 2;
 
 String _stableId(Object? identity) =>
     _uuid.v5(Namespace.url.value, jsonEncode(['cpd-legacy', identity]));
@@ -35,11 +35,8 @@ class SyntheticCpdMigration {
       .captureImport(sourceIdentity(values), encodeLegacySnapshot(values));
 
   Future<ImportStatus> stage(Map<String, Object?> legacyValues) async {
-    final raw = encodeLegacySnapshot(legacyValues);
-    final sourceId = _stableId(raw);
-    await destination.captureImport(sourceId, raw);
-    final plan = await _plan(sourceId, raw, originals, previousDocumentsPath);
-    return destination.stageImport(plan);
+    await capture(legacyValues);
+    return destination.stageImport(await plan(legacyValues));
   }
 
   Future<ImportSnapshot?> inspect(Map<String, Object?> legacyValues) =>
@@ -47,21 +44,26 @@ class SyntheticCpdMigration {
         _stableId(encodeLegacySnapshot(legacyValues)),
       );
 
-  Future<void> verify(Map<String, Object?> legacyValues) async {
+  Future<RecordingImportPlan> plan(Map<String, Object?> legacyValues) {
     final raw = encodeLegacySnapshot(legacyValues);
-    final plan = await _plan(
-      _stableId(raw),
-      raw,
-      originals,
-      previousDocumentsPath,
-    );
+    return _plan(_stableId(raw), raw, originals, previousDocumentsPath);
+  }
+
+  Future<void> verify(Map<String, Object?> values) async =>
+      verifyPlan(await plan(values));
+
+  Future<void> verifyPlan(RecordingImportPlan plan) async {
     final fingerprints = (jsonDecode(plan.metadata) as Map)['originals'] as Map;
+    final checked = <String, String>{};
     await destination.verifyImport(
       plan,
       verifyManagedOriginal: (attachment) async {
         final file = await originals.resolveOriginal(attachment);
-        return file != null &&
-            await legacyFileFingerprint(file) == fingerprints[attachment.id];
+        if (file == null) return false;
+        final fingerprint = checked[file.path] ??= await legacyFileFingerprint(
+          file,
+        );
+        return fingerprint == fingerprints[attachment.id];
       },
     );
   }
@@ -187,6 +189,7 @@ class _LegacyPlanner {
   final records = <RecordingRecord>[];
   final attachments = <RecordingAttachment>[];
   final fingerprints = <String, String>{};
+  final _files = <String, String>{};
   final targets = <String, Map<String, Object>>{};
   final recordMapping = <Map<String, Object>>[];
   final issues = <Map<String, Object>>[];
@@ -299,10 +302,17 @@ class _LegacyPlanner {
     final minutes = row['minutes'] ?? 0;
     final deleted = row['deleted'] ?? false;
     final links = row['attachments'] ?? const [];
+    if (day == null) {
+      issue('invalid_or_ambiguous_activity_date', blocks: true, row: ordinal);
+      return;
+    }
+    if (_isFractional(hours) || _isFractional(minutes)) {
+      issue('fractional_duration', blocks: true, row: ordinal);
+      return;
+    }
     if (legacyId is! int ||
         profession is! String ||
         profession.trim().isEmpty ||
-        day == null ||
         title is! String ||
         details is! String ||
         hours is! int ||
@@ -369,7 +379,9 @@ class _LegacyPlanner {
       if (value.kind == AttachmentKind.managed) {
         final file = await originals.resolveOriginal(value);
         if (file != null) {
-          fingerprints[id] = await legacyFileFingerprint(file);
+          fingerprints[id] = _files[file.path] ??= await legacyFileFingerprint(
+            file,
+          );
           return value;
         }
       } else if (value.kind == AttachmentKind.link) {
@@ -378,7 +390,11 @@ class _LegacyPlanner {
     } on FileSystemException {
       issue('unreadable_attachment', row: ordinal, attachment: index);
     }
-    issue('unresolved_attachment', row: ordinal, attachment: index);
+    final uri = Uri.tryParse(reference.trim());
+    final code = uri?.hasScheme == true
+        ? 'unsupported_evidence_reference'
+        : 'unresolved_attachment';
+    issue(code, row: ordinal, attachment: index);
     return _unresolvedAttachment(id, reference);
   }
 }
@@ -476,6 +492,9 @@ bool _hasRepeatedJsonKeys(String json) {
   }
   return false;
 }
+
+bool _isFractional(Object? value) =>
+    value is double && value.isFinite && value != value.truncateToDouble();
 
 String? _legacyDay(Object? value) {
   if (value is! String) return null;

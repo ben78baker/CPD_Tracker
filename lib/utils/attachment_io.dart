@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
+import '../cpd_migration/legacy_write_gate.dart';
 import '../l10n/app_localizations.dart';
 
 bool isImagePath(String p) =>
@@ -172,34 +173,33 @@ String resolveStoredPathForDocumentsDirectory(
 }
 
 /// Ensure and return the app's attachments directory inside Documents.
-Future<Directory> getAppAttachmentsDir() async {
-  final docs = await getApplicationDocumentsDirectory();
-  final dir = Directory(p.join(docs.path, 'attachments'));
-  if (!dir.existsSync()) {
-    dir.createSync(recursive: true);
-  }
-  return dir;
-}
+Future<Directory> getAppAttachmentsDir() =>
+    LegacyWriteGate.instance.write(() async {
+      final docs = await getApplicationDocumentsDirectory();
+      final dir = Directory(p.join(docs.path, 'attachments'));
+      if (!dir.existsSync()) {
+        dir.createSync(recursive: true);
+      }
+      return dir;
+    });
 
 /// Copy a local file into the app's attachments directory and return the new path.
 /// If [preferredName] is supplied it will be used (sanitized) for the filename; otherwise
 /// we derive it from the source path. A timestamp is appended to avoid collisions.
-Future<String> copyLocalToAppDir(
-  String sourcePath, {
-  String? preferredName,
-}) async {
-  final dir = await getAppAttachmentsDir();
-  final baseNoExt = preferredName != null && preferredName.isNotEmpty
-      ? _sanitizeFileName(p.basenameWithoutExtension(preferredName))
-      : _sanitizeFileName(p.basenameWithoutExtension(sourcePath));
-  final ext = p.extension(
-    preferredName?.isNotEmpty == true ? preferredName! : sourcePath,
-  );
-  final ts = DateTime.now().millisecondsSinceEpoch;
-  final destPath = p.join(dir.path, '${baseNoExt}_$ts$ext');
-  await File(sourcePath).copy(destPath);
-  return await toAppRelative(destPath);
-}
+Future<String> copyLocalToAppDir(String sourcePath, {String? preferredName}) =>
+    LegacyWriteGate.instance.write(() async {
+      final dir = await getAppAttachmentsDir();
+      final baseNoExt = preferredName != null && preferredName.isNotEmpty
+          ? _sanitizeFileName(p.basenameWithoutExtension(preferredName))
+          : _sanitizeFileName(p.basenameWithoutExtension(sourcePath));
+      final ext = p.extension(
+        preferredName?.isNotEmpty == true ? preferredName! : sourcePath,
+      );
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final destPath = p.join(dir.path, '${baseNoExt}_$ts$ext');
+      await File(sourcePath).copy(destPath);
+      return await toAppRelative(destPath);
+    });
 
 /// Import an attachment (local path or URL) into the app's attachments directory.
 /// Returns the saved local path, or null on failure. Shows a SnackBar on error.
@@ -266,16 +266,17 @@ Future<String?> downloadToAppDir(BuildContext context, String url) async {
       return null;
     }
 
-    final attachmentsDir = await getAppAttachmentsDir();
-
     var name = _filenameFromUrl(uri);
     if (!name.contains('.')) {
       final ext = _extFromContentType(resp.headers['content-type']);
       if (ext.isNotEmpty) name = '$name$ext';
     }
-    final savePath = p.join(attachmentsDir.path, name);
-    final file = File(savePath);
-    await file.writeAsBytes(resp.bodyBytes);
+    final savePath = await LegacyWriteGate.instance.write(() async {
+      final attachmentsDir = await getAppAttachmentsDir();
+      final path = p.join(attachmentsDir.path, name);
+      await File(path).writeAsBytes(resp.bodyBytes);
+      return path;
+    });
 
     if (!context.mounted) return await toAppRelative(savePath);
     ScaffoldMessenger.of(context).showSnackBar(

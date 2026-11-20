@@ -1,3 +1,4 @@
+import 'cpd_migration/legacy_write_gate.dart';
 import 'cpd_compatibility/cpd_data_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
@@ -58,11 +59,12 @@ class SettingsStore implements CpdProfessionStore {
     return AppAccent.fromStorage(prefs.getString(_kAppAccent));
   }
 
-  Future<void> setAppAccent(AppAccent accent) async {
-    appAccent.value = accent;
-    final prefs = await _prefsWithRetry();
-    await prefs.setString(_kAppAccent, accent.storageValue);
-  }
+  Future<void> setAppAccent(AppAccent accent) =>
+      LegacyWriteGate.instance.write(() async {
+        appAccent.value = accent;
+        final prefs = await _prefsWithRetry();
+        await prefs.setString(_kAppAccent, accent.storageValue);
+      });
 
   Future<void> _loadSavedLocale() async {
     try {
@@ -84,10 +86,11 @@ class SettingsStore implements CpdProfessionStore {
     return prefs.getString(_kDateFormat) ?? 'dd/MM/yyyy';
   }
 
-  Future<void> setDateFormat(String fmt) async {
-    final prefs = await _prefsWithRetry();
-    await prefs.setString(_kDateFormat, fmt);
-  }
+  Future<void> setDateFormat(String fmt) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await _prefsWithRetry();
+        await prefs.setString(_kDateFormat, fmt);
+      });
 
   // -------------------------------
   // Week start preference
@@ -102,17 +105,18 @@ class SettingsStore implements CpdProfessionStore {
   }
 
   /// Persist week start preference
-  Future<void> setWeekStart(String value) async {
-    // Expect one of: 'monday' | 'sunday' | 'saturday' | 'locale'
-    final prefs = await _prefsWithRetry();
-    await prefs.setString(_kWeekStart, value);
-  }
+  Future<void> setWeekStart(String value) =>
+      LegacyWriteGate.instance.write(() async {
+        // Expect one of: 'monday' | 'sunday' | 'saturday' | 'locale'
+        final prefs = await _prefsWithRetry();
+        await prefs.setString(_kWeekStart, value);
+      });
 
   /// Clear week start preference so locale default is used
-  Future<void> clearWeekStart() async {
+  Future<void> clearWeekStart() => LegacyWriteGate.instance.write(() async {
     final prefs = await _prefsWithRetry();
     await prefs.remove(_kWeekStart);
-  }
+  });
 
   static const _kProfessions = 'professions';
   static const _kDeletedProfessions = 'deleted_professions';
@@ -124,55 +128,58 @@ class SettingsStore implements CpdProfessionStore {
   }
 
   @override
-  Future<List<String>> loadDeletedProfessions() async {
-    final prefs = await _prefsWithRetry();
-    final items = prefs.getStringList(_kDeletedProfessions) ?? <String>[];
-    // Normalize, de-duplicate, sort, and persist sanitized list
-    final Map<String, String> canonical = {};
-    for (final raw in items) {
-      final norm = cpdProfessionLabel(raw);
-      if (norm.isEmpty) continue;
-      canonical.putIfAbsent(norm.toLowerCase(), () => norm);
-    }
-    final list = canonical.values.toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    if (!await prefs.setStringList(_kDeletedProfessions, list)) {
-      throw StateError('Could not save deleted professions.');
-    }
-    return list;
-  }
+  Future<List<String>> loadDeletedProfessions() =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await _prefsWithRetry();
+        final items = prefs.getStringList(_kDeletedProfessions) ?? <String>[];
+        // Normalize, de-duplicate, sort, and persist sanitized list
+        final Map<String, String> canonical = {};
+        for (final raw in items) {
+          final norm = cpdProfessionLabel(raw);
+          if (norm.isEmpty) continue;
+          canonical.putIfAbsent(norm.toLowerCase(), () => norm);
+        }
+        final list = canonical.values.toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        if (!await prefs.setStringList(_kDeletedProfessions, list)) {
+          throw StateError('Could not save deleted professions.');
+        }
+        return list;
+      });
 
-  Future<void> saveDeletedProfessions(List<String> items) async {
-    final prefs = await _prefsWithRetry();
-    final Map<String, String> canonical = {};
-    for (final raw in items) {
-      final norm = cpdProfessionLabel(raw);
-      if (norm.isEmpty) continue;
-      canonical.putIfAbsent(norm.toLowerCase(), () => norm);
-    }
-    final list = canonical.values.toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    if (!await prefs.setStringList(_kDeletedProfessions, list)) {
-      throw StateError('Could not save deleted professions.');
-    }
-  }
+  Future<void> saveDeletedProfessions(List<String> items) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await _prefsWithRetry();
+        final Map<String, String> canonical = {};
+        for (final raw in items) {
+          final norm = cpdProfessionLabel(raw);
+          if (norm.isEmpty) continue;
+          canonical.putIfAbsent(norm.toLowerCase(), () => norm);
+        }
+        final list = canonical.values.toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        if (!await prefs.setStringList(_kDeletedProfessions, list)) {
+          throw StateError('Could not save deleted professions.');
+        }
+      });
 
-  Future<void> saveProfessions(List<String> items) async {
-    final prefs = await _prefsWithRetry();
-    // Case-insensitive de-duplication with canonical (normalized) values
-    final Map<String, String> canonical = {};
-    for (final raw in items) {
-      final norm = cpdProfessionLabel(raw);
-      if (norm.isEmpty) continue;
-      final key = norm.toLowerCase();
-      canonical.putIfAbsent(key, () => norm);
-    }
-    final list = canonical.values.toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    if (!await prefs.setStringList(_kProfessions, list)) {
-      throw StateError('Could not save professions.');
-    }
-  }
+  Future<void> saveProfessions(List<String> items) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await _prefsWithRetry();
+        // Case-insensitive de-duplication with canonical (normalized) values
+        final Map<String, String> canonical = {};
+        for (final raw in items) {
+          final norm = cpdProfessionLabel(raw);
+          if (norm.isEmpty) continue;
+          final key = norm.toLowerCase();
+          canonical.putIfAbsent(key, () => norm);
+        }
+        final list = canonical.values.toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        if (!await prefs.setStringList(_kProfessions, list)) {
+          throw StateError('Could not save professions.');
+        }
+      });
 
   /// Check if a profession exists (case-insensitive)
   Future<bool> hasProfession(String value) async {
@@ -183,20 +190,24 @@ class SettingsStore implements CpdProfessionStore {
 
   /// Add a profession with normalization, de-duplication and sorted persistence
   @override
-  Future<void> addProfession(String value) async {
-    final current = await loadProfessions();
-    final norm = cpdProfessionLabel(value);
-    if (norm.isEmpty) return;
-    if (current.any((p) => p.toLowerCase() == norm.toLowerCase())) return;
-    current.add(norm);
-    await saveProfessions(current);
-  }
+  Future<void> addProfession(String value) =>
+      LegacyWriteGate.instance.write(() async {
+        final current = await loadProfessions();
+        final norm = cpdProfessionLabel(value);
+        if (norm.isEmpty) return;
+        if (current.any((p) => p.toLowerCase() == norm.toLowerCase())) return;
+        current.add(norm);
+        await saveProfessions(current);
+      });
 
   /// Rename the profession and its references without merging existing data.
   /// The destination is made visible before references move; the old name is
   /// removed last so an interrupted write cannot hide the moved records.
   @override
-  Future<void> renameProfession(String oldValue, String newValue) async {
+  Future<void> renameProfession(
+    String oldValue,
+    String newValue,
+  ) => LegacyWriteGate.instance.write(() async {
     final oldKey = oldValue.trim().toLowerCase();
     final name = cpdProfessionLabel(newValue);
     if (name.isEmpty) throw StateError('Please enter a profession name.');
@@ -283,66 +294,70 @@ class SettingsStore implements CpdProfessionStore {
       await saveDeletedProfessions(deleted);
       rethrow;
     }
-  }
+  });
 
   /// Mark a profession as deleted (soft delete)
   @override
-  Future<void> softDeleteProfession(String value) async {
-    final name = cpdProfessionLabel(value);
-    if (name.isEmpty) return;
-    // Ensure profession exists in master list
-    final all = await loadProfessions();
-    if (!all.any((p) => p.toLowerCase() == name.toLowerCase())) {
-      all.add(name);
-      await saveProfessions(all);
-    }
-    // Add to deleted set
-    final deleted = await loadDeletedProfessions();
-    if (!deleted.any((p) => p.toLowerCase() == name.toLowerCase())) {
-      deleted.add(name);
-      await saveDeletedProfessions(deleted);
-    }
-  }
+  Future<void> softDeleteProfession(String value) =>
+      LegacyWriteGate.instance.write(() async {
+        final name = cpdProfessionLabel(value);
+        if (name.isEmpty) return;
+        // Ensure profession exists in master list
+        final all = await loadProfessions();
+        if (!all.any((p) => p.toLowerCase() == name.toLowerCase())) {
+          all.add(name);
+          await saveProfessions(all);
+        }
+        // Add to deleted set
+        final deleted = await loadDeletedProfessions();
+        if (!deleted.any((p) => p.toLowerCase() == name.toLowerCase())) {
+          deleted.add(name);
+          await saveDeletedProfessions(deleted);
+        }
+      });
 
   /// Restore (un-delete) a profession
   @override
-  Future<void> restoreProfession(String value) async {
-    final name = cpdProfessionLabel(value);
-    if (name.isEmpty) return;
-    await addProfession(name);
-    final deleted = await loadDeletedProfessions();
-    final next = deleted
-        .where((p) => p.toLowerCase() != name.toLowerCase())
-        .toList();
-    await saveDeletedProfessions(next);
-  }
+  Future<void> restoreProfession(String value) =>
+      LegacyWriteGate.instance.write(() async {
+        final name = cpdProfessionLabel(value);
+        if (name.isEmpty) return;
+        await addProfession(name);
+        final deleted = await loadDeletedProfessions();
+        final next = deleted
+            .where((p) => p.toLowerCase() != name.toLowerCase())
+            .toList();
+        await saveDeletedProfessions(next);
+      });
 
   /// Recovery is explicit: callers must obtain consent before reactivating or
   /// recreating a profession, which may also reveal its other saved records.
   @override
-  Future<void> restoreRecord(int id, {bool recoverProfession = false}) async {
-    final repo = EntryRepository();
-    final records = await repo.loadAll();
-    final matches = records.where((entry) => entry.id == id).toList();
-    if (matches.length != 1) {
-      throw StateError('The saved record could not be identified safely.');
-    }
-    final entry = matches.single;
-    final active = await loadActiveProfessions();
-    final exists = active.any(
-      (p) => p.trim().toLowerCase() == entry.profession.trim().toLowerCase(),
-    );
-    if (!exists) {
-      if (!recoverProfession) {
-        throw StateError('Restore this profession first.');
-      }
-      if (entry.profession.trim().isEmpty) {
-        throw StateError('This record has no profession name.');
-      }
-      await restoreProfession(entry.profession);
-    }
-    await repo.setDeleted(id, false);
-  }
+  Future<void> restoreRecord(int id, {bool recoverProfession = false}) =>
+      LegacyWriteGate.instance.write(() async {
+        final repo = EntryRepository();
+        final records = await repo.loadAll();
+        final matches = records.where((entry) => entry.id == id).toList();
+        if (matches.length != 1) {
+          throw StateError('The saved record could not be identified safely.');
+        }
+        final entry = matches.single;
+        final active = await loadActiveProfessions();
+        final exists = active.any(
+          (p) =>
+              p.trim().toLowerCase() == entry.profession.trim().toLowerCase(),
+        );
+        if (!exists) {
+          if (!recoverProfession) {
+            throw StateError('Restore this profession first.');
+          }
+          if (entry.profession.trim().isEmpty) {
+            throw StateError('This record has no profession name.');
+          }
+          await restoreProfession(entry.profession);
+        }
+        await repo.setDeleted(id, false);
+      });
 
   /// Return only professions not soft-deleted
   @override
@@ -357,30 +372,32 @@ class SettingsStore implements CpdProfessionStore {
   }
 
   /// Remove a profession by name (case-insensitive)
-  Future<void> removeProfession(String value) async {
-    final current = await loadProfessions();
-    final target = value.trim().toLowerCase();
-    final next = current.where((p) => p.toLowerCase() != target).toList();
-    if (next.length != current.length) {
-      await saveProfessions(next);
-    }
-  }
+  Future<void> removeProfession(String value) =>
+      LegacyWriteGate.instance.write(() async {
+        final current = await loadProfessions();
+        final target = value.trim().toLowerCase();
+        final next = current.where((p) => p.toLowerCase() != target).toList();
+        if (next.length != current.length) {
+          await saveProfessions(next);
+        }
+      });
 
   // For testing/debugging
-  Future<void> clearProfessions() async {
+  Future<void> clearProfessions() => LegacyWriteGate.instance.write(() async {
     final prefs = await _prefsWithRetry();
     await prefs.remove(_kProfessions);
-  }
+  });
 
   // -------------------------------
   // Onboarding completion flag
   // -------------------------------
   static const _kOnboardingComplete = 'onboarding_complete';
 
-  Future<void> setOnboardingComplete(bool value) async {
-    final prefs = await _prefsWithRetry();
-    await prefs.setBool(_kOnboardingComplete, value);
-  }
+  Future<void> setOnboardingComplete(bool value) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await _prefsWithRetry();
+        await prefs.setBool(_kOnboardingComplete, value);
+      });
 
   Future<bool> isOnboardingComplete() async {
     final prefs = await _prefsWithRetry();
@@ -399,16 +416,17 @@ class SettingsStore implements CpdProfessionStore {
   }
 
   /// Persist the user's choice for the QR reminder tip
-  Future<void> setQrHintDismissed(bool value) async {
-    final prefs = await _prefsWithRetry();
-    await prefs.setBool(_kQrHintDismissed, value);
-  }
+  Future<void> setQrHintDismissed(bool value) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await _prefsWithRetry();
+        await prefs.setBool(_kQrHintDismissed, value);
+      });
 
   /// Optional helper to re-enable the tip from a settings screen
-  Future<void> resetQrHint() async {
+  Future<void> resetQrHint() => LegacyWriteGate.instance.write(() async {
     final prefs = await _prefsWithRetry();
     await prefs.remove(_kQrHintDismissed);
-  }
+  });
 
   // -------------------------------
   // Basic profile fields (optional)
@@ -423,13 +441,13 @@ class SettingsStore implements CpdProfessionStore {
     String? company,
     String? address,
     String? email,
-  }) async {
+  }) => LegacyWriteGate.instance.write(() async {
     final prefs = await _prefsWithRetry();
     if (name != null) await prefs.setString(_kProfileName, name);
     if (company != null) await prefs.setString(_kProfileCompany, company);
     if (address != null) await prefs.setString(_kProfileAddress, address);
     if (email != null) await prefs.setString(_kProfileEmail, email);
-  }
+  });
 
   Future<Map<String, String>> loadProfile() async {
     final prefs = await _prefsWithRetry();
@@ -479,21 +497,22 @@ class SettingsStore implements CpdProfessionStore {
     String profession, {
     required int minutes,
     required String cycle,
-  }) async {
+  }) => LegacyWriteGate.instance.write(() async {
     final prefs = await SharedPreferences.getInstance();
     final map = await loadTargets();
     map[profession] = {'minutes': minutes, 'cycle': cycle};
     await prefs.setString(_kTargetsKey, json.encode(map));
-  }
+  });
 
   /// Remove target for a profession.
   @override
-  Future<void> clearTarget(String profession) async {
-    final prefs = await SharedPreferences.getInstance();
-    final map = await loadTargets();
-    map.remove(profession);
-    await prefs.setString(_kTargetsKey, json.encode(map));
-  }
+  Future<void> clearTarget(String profession) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await SharedPreferences.getInstance();
+        final map = await loadTargets();
+        map.remove(profession);
+        await prefs.setString(_kTargetsKey, json.encode(map));
+      });
 
   @override
   Future<int> sumMinutesForRange(
@@ -507,17 +526,18 @@ class SettingsStore implements CpdProfessionStore {
 
   /// Persist an in-app language override.
   /// Pass '' or null to follow system language.
-  Future<void> setLocaleCode(String? code) async {
-    final prefs = await _prefsWithRetry();
-    final c = (code ?? '').trim();
-    if (c.isEmpty) {
-      await prefs.remove(_kLocaleCode);
-      locale.value = null;
-    } else {
-      await prefs.setString(_kLocaleCode, c);
-      locale.value = Locale(c);
-    }
-  }
+  Future<void> setLocaleCode(String? code) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await _prefsWithRetry();
+        final c = (code ?? '').trim();
+        if (c.isEmpty) {
+          await prefs.remove(_kLocaleCode);
+          locale.value = null;
+        } else {
+          await prefs.setString(_kLocaleCode, c);
+          locale.value = Locale(c);
+        }
+      });
 
   /// Read the saved override code (null/'' means follow system language).
   Future<String?> getLocaleCode() async {

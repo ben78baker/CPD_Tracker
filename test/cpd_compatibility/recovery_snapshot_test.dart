@@ -109,6 +109,7 @@ void main() {
       final dest = Directory(p.join(scratch.path, 'restore'));
       final copy = File(p.join(backup.path, 'attachments/course.pdf'));
       await copy.writeAsBytes([0, 1, 2, 4]);
+      expect((await snapshot.readVerifiedSource()).values, source);
       await expectLater(snapshot.restoreTo(dest), throwsStateError);
       expect(await dest.exists(), isFalse);
       await copy.writeAsBytes([0, 1, 2, 3]);

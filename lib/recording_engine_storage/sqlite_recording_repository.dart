@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
@@ -29,9 +30,10 @@ class SqliteRecordingRepository {
     final db = await (factory ?? databaseFactory).openDatabase(
       path,
       options: OpenDatabaseOptions(
-        version: 2,
+        version: 3,
         onUpgrade: (db, from, to) async {
-          if (from == 1) await db.execute(_hostStateSchema);
+          if (from < 2) await db.execute(_hostStateSchema);
+          if (from < 3) await db.execute(_importPayloadSchema);
         },
         onConfigure: (db) async {
           await db.execute('PRAGMA foreign_keys = ON');
@@ -437,20 +439,63 @@ class SqliteRecordingRepository {
   Future<List<RecordingRecord>> loadRecords(
     String collectionId, {
     bool includeDeleted = false,
-  }) => _transaction((tx) async {
-    final rows = await tx.query(
-      'records',
-      columns: ['id'],
-      where: includeDeleted
-          ? 'collection_id = ?'
-          : 'collection_id = ? AND deleted = 0',
-      whereArgs: [collectionId],
-      orderBy: 'rowid',
-    );
-    return [
-      for (final row in rows) (await _loadRecord(tx, row['id'] as String))!,
+  }) => _transaction(
+    (tx) => _loadRecordSet(
+      tx,
+      collectionId: collectionId,
+      includeDeleted: includeDeleted,
+    ),
+  );
+
+  Future<List<RecordingRecord>> loadAllRecords() =>
+      _transaction(_loadRecordSet);
+
+  static Future<List<RecordingRecord>> _loadRecordSet(
+    DatabaseExecutor db, {
+    String? collectionId,
+    bool includeDeleted = true,
+  }) async {
+    final filters = [
+      if (collectionId != null) 'r.collection_id = ?',
+      if (!includeDeleted) 'r.deleted = 0',
     ];
-  });
+    final where = filters.isEmpty ? '' : 'WHERE ${filters.join(' AND ')}';
+    final args = [?collectionId];
+    final rows = await db.rawQuery(
+      'SELECT r.* FROM records r $where ORDER BY r.rowid',
+      args,
+    );
+    final values = await db.rawQuery(
+      'SELECT v.* FROM record_values v JOIN records r ON r.id = v.record_id $where',
+      args,
+    );
+    final links = await db.rawQuery(
+      'SELECT l.* FROM attachment_links l JOIN records r ON r.id = l.record_id '
+      '$where ORDER BY l.field_id, l.ordinal',
+      args,
+    );
+    final byRecord = <String, Map<String, Object>>{};
+    for (final value in values) {
+      final fields = byRecord.putIfAbsent(
+        value['record_id'] as String,
+        () => {},
+      );
+      fields[value['field_id'] as String] =
+          jsonDecode(value['payload'] as String) as Object;
+    }
+    for (final link in links) {
+      final fields = byRecord.putIfAbsent(
+        link['record_id'] as String,
+        () => {},
+      );
+      (fields.putIfAbsent(link['field_id'] as String, () => <String>[])
+              as List<String>)
+          .add(link['attachment_id'] as String);
+    }
+    return [
+      for (final row in rows) _decodeRecord(row, byRecord[row['id']] ?? {}),
+    ];
+  }
 
   static Future<int> _activeLayoutVersion(
     DatabaseExecutor db,
@@ -507,15 +552,20 @@ class SqliteRecordingRepository {
         link['attachment_id'] as String,
       );
     }
-    return RecordingRecord(
-      id: id,
-      collectionId: row['collection_id'] as String,
-      layoutVersion: row['layout_version'] as int,
-      version: row['edit_version'] as int,
-      deleted: row['deleted'] == 1,
-      values: result,
-    );
+    return _decodeRecord(row, result);
   }
+
+  static RecordingRecord _decodeRecord(
+    Map<String, Object?> row,
+    Map<String, Object> values,
+  ) => RecordingRecord(
+    id: row['id'] as String,
+    collectionId: row['collection_id'] as String,
+    layoutVersion: row['layout_version'] as int,
+    version: row['edit_version'] as int,
+    deleted: row['deleted'] == 1,
+    values: values,
+  );
 
   static Future<List<LayoutRevision>> _layouts(
     DatabaseExecutor db,
@@ -714,12 +764,22 @@ const _hostStateSchema =
     'namespace TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, '
     'PRIMARY KEY(namespace, key))';
 
+const _importPayloadSchema =
+    '''CREATE TABLE IF NOT EXISTS import_payload_chunks (
+  source_id TEXT NOT NULL REFERENCES import_snapshots(source_id),
+  kind TEXT NOT NULL,
+  ordinal INTEGER NOT NULL,
+  content BLOB NOT NULL,
+  PRIMARY KEY(source_id, kind, ordinal)
+)''';
+
 const _schema = [
   _hostStateSchema,
   '''CREATE TABLE import_snapshots (
     source_id TEXT NOT NULL PRIMARY KEY, raw TEXT NOT NULL,
     status TEXT NOT NULL, metadata TEXT, verified_at TEXT
   )''',
+  _importPayloadSchema,
   '''CREATE TABLE definitions (
     id TEXT NOT NULL, version INTEGER NOT NULL, payload TEXT NOT NULL,
     PRIMARY KEY (id, version)

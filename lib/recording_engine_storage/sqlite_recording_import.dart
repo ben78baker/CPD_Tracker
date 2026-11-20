@@ -6,20 +6,100 @@ Future<ImportSnapshot?> _loadImportSnapshot(
 ) async {
   final rows = await db.query(
     'import_snapshots',
+    columns: ['status', 'verified_at'],
     where: 'source_id = ?',
     whereArgs: [sourceId],
   );
   if (rows.isEmpty) return null;
   final row = rows.single;
   return ImportSnapshot(
-    raw: row['raw'] as String,
+    raw: (await _loadImportPayload(db, sourceId, 'raw'))!,
     status: ImportStatus.values.byName(row['status'] as String),
-    metadata: row['metadata'] as String?,
+    metadata: await _loadImportPayload(db, sourceId, 'metadata'),
     verifiedAt: switch (row['verified_at']) {
       final String timestamp => DateTime.parse(timestamp),
       _ => null,
     },
   );
+}
+
+// Android's CursorWindow limits a single SQLite result row. Keep raw JSON and
+// planner metadata off the marker row and bound each result independently.
+const _importChunkBytes = 64 * 1024;
+
+Future<String?> _loadImportPayload(
+  DatabaseExecutor db,
+  String sourceId,
+  String kind,
+) async {
+  final rows = await db.query(
+    'import_payload_chunks',
+    columns: ['ordinal', 'content'],
+    where: 'source_id = ? AND kind = ?',
+    whereArgs: [sourceId, kind],
+    orderBy: 'ordinal',
+  );
+  if (rows.isNotEmpty) {
+    final bytes = BytesBuilder(copy: false);
+    for (final (index, row) in rows.indexed) {
+      if (row['ordinal'] != index) {
+        throw StateError('A migration payload chunk is missing.');
+      }
+      bytes.add(row['content'] as Uint8List);
+    }
+    return utf8.decode(bytes.takeBytes());
+  }
+  // Phase 1 and 2 databases stored inline text. Read old SQLite TEXT by
+  // characters so even an old oversized row can be recovered safely.
+  final length =
+      (await db.rawQuery(
+            'SELECT length($kind) FROM import_snapshots WHERE source_id = ?',
+            [sourceId],
+          )).single.values.single
+          as int?;
+  if (length == null) return null;
+  final result = StringBuffer();
+  for (var offset = 0; offset < length; offset += _importChunkBytes) {
+    final part = await db.rawQuery(
+      'SELECT substr($kind, ?, ?) FROM import_snapshots WHERE source_id = ?',
+      [offset + 1, _importChunkBytes, sourceId],
+    );
+    result.write(part.single.values.single as String);
+  }
+  return result.toString();
+}
+
+Future<void> _writeImportPayload(
+  DatabaseExecutor db,
+  String sourceId,
+  String kind,
+  String text,
+) async {
+  final bytes = utf8.encode(text);
+  final batch = db.batch();
+  batch.delete(
+    'import_payload_chunks',
+    where: 'source_id = ? AND kind = ?',
+    whereArgs: [sourceId, kind],
+  );
+  for (
+    var start = 0;
+    start < bytes.length || start == 0;
+    start += _importChunkBytes
+  ) {
+    final end = start + _importChunkBytes;
+    batch.insert('import_payload_chunks', {
+      'source_id': sourceId,
+      'kind': kind,
+      'ordinal': start ~/ _importChunkBytes,
+      'content': Uint8List.sublistView(
+        bytes,
+        start,
+        end < bytes.length ? end : bytes.length,
+      ),
+    });
+  }
+  await batch.commit(noResult: true);
 }
 
 Future<void> _captureImport(
@@ -39,9 +119,10 @@ Future<void> _captureImport(
   }
   await tx.insert('import_snapshots', {
     'source_id': sourceId,
-    'raw': raw,
+    'raw': '',
     'status': ImportStatus.captured.name,
   });
+  await _writeImportPayload(tx, sourceId, 'raw', raw);
 }
 
 Future<ImportStatus> _stageImport(
@@ -125,11 +206,12 @@ Future<void> _setImportStatus(
   RecordingImportPlan plan,
   ImportStatus status,
 ) async {
+  await _writeImportPayload(db, plan.sourceId, 'metadata', plan.metadata);
   await db.update(
     'import_snapshots',
     {
       'status': status.name,
-      'metadata': plan.metadata,
+      'metadata': null,
       if (status == ImportStatus.verified)
         'verified_at': DateTime.now().toUtc().toIso8601String(),
     },
@@ -249,6 +331,10 @@ Future<void> _verifyGraph(DatabaseExecutor db, RecordingImportPlan plan) async {
           if (field.definition.kind == FieldKind.attachments) field.id,
       },
   };
+  final storedRecords = {
+    for (final row in await SqliteRecordingRepository._loadRecordSet(db))
+      row.id: row,
+  };
   for (final expected in plan.records) {
     for (final value in expected.values.entries) {
       if (attachmentFields[expected.collectionId]!.contains(value.key)) {
@@ -257,7 +343,7 @@ Future<void> _verifyGraph(DatabaseExecutor db, RecordingImportPlan plan) async {
         expectedValues++;
       }
     }
-    final actual = await SqliteRecordingRepository._loadRecord(db, expected.id);
+    final actual = storedRecords[expected.id];
     if (actual == null ||
         actual.collectionId != expected.collectionId ||
         actual.layoutVersion != expected.layoutVersion ||
@@ -273,16 +359,15 @@ Future<void> _verifyGraph(DatabaseExecutor db, RecordingImportPlan plan) async {
   }
   await _expectCount(db, 'attachment_links', expectedLinks);
   await _expectCount(db, 'record_values', expectedValues);
+  final assetRows = {
+    for (final row in await db.query('attachments')) row['id'] as String: row,
+  };
   for (final expected in plan.attachments) {
-    final rows = await db.query(
-      'attachments',
-      where: 'id = ?',
-      whereArgs: [expected.id],
-    );
-    if (rows.length != 1 ||
-        rows.single['kind'] != expected.kind.name ||
-        rows.single['locator'] != expected.locator ||
-        rows.single['name'] != expected.name) {
+    final row = assetRows[expected.id];
+    if (row == null ||
+        row['kind'] != expected.kind.name ||
+        row['locator'] != expected.locator ||
+        row['name'] != expected.name) {
       throw StateError('A staged attachment differs from the plan.');
     }
   }

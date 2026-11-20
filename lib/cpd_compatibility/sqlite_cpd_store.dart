@@ -30,9 +30,7 @@ class SqliteCpdStore extends CpdDataStore {
     await db.transaction((tx) async {
       final snapshot = await tx.loadImportSnapshot(sourceId);
       if (snapshot?.status != ImportStatus.verified) {
-        {
-          throw StateError('A verified legacy snapshot is required.');
-        }
+        throw StateError('A verified legacy snapshot is required.');
       }
       final settings = await tx.loadHostState(_prefs);
       if (settings.isNotEmpty) {
@@ -48,18 +46,20 @@ class SqliteCpdStore extends CpdDataStore {
       final sourceRows = (raw['entries_json_list'] as List?) ?? const [];
       final mapping = metadata['records'] as List;
       if (mapping.length != sourceRows.length) {
-        {
-          throw StateError('The verified source row mapping is incomplete.');
-        }
+        throw StateError('The verified source row mapping is incomplete.');
       }
+      final records = {
+        for (final record in await tx.loadAllRecords()) record.id: record,
+      };
+      final revisions = <String, List<LayoutRevision>>{};
       var nextId = (raw['next_entry_id'] as int?) ?? 1;
       for (final (index, row) in mapping.indexed) {
         final link = _object(row);
         if (link['row'] != index) throw StateError('Invalid source row order.');
         final entry = CpdEntry.fromJson(sourceRows[index] as String);
         final id = link['id'] as String;
-        final record = (await tx.loadRecord(id))!;
-        final fields = await _fieldsFor(tx, record);
+        final record = records[id]!;
+        final fields = await _fieldsFor(tx, record, revisions: revisions);
         final assets = _assetIds(record, fields);
         if (entry.id != link['legacyId'] ||
             assets.length != entry.attachments.length) {
@@ -98,22 +98,65 @@ class SqliteCpdStore extends CpdDataStore {
     return SqliteCpdStore._(db, ManagedAttachmentFiles(documents));
   }
 
+  /// Check the actual compatibility surface before any authority switch.
+  Future<void> verifyLegacyProjection(Map<String, Object?> raw) async {
+    final expected = ((raw['entries_json_list'] as List?) ?? const [])
+        .cast<String>();
+    final projected = await loadAll();
+    if (projected.length != expected.length) {
+      throw StateError('The CPD projection has a different record count.');
+    }
+    for (final (index, entry) in projected.indexed) {
+      if (entry.toJson() != CpdEntry.fromJson(expected[index]).toJson()) {
+        throw StateError('The CPD projection differs from a source record.');
+      }
+    }
+    final settings = await _db.loadHostState(_prefs);
+    final rawTargets = raw['targets_v1'] as String?;
+    if (settings['targets'] !=
+            (rawTargets?.isNotEmpty == true ? rawTargets : '{}') ||
+        settings['professions'] != jsonEncode(raw['professions'] ?? []) ||
+        settings['deleted'] != jsonEncode(raw['deleted_professions'] ?? [])) {
+      throw StateError(
+        'The CPD profession settings or targets differ from the source.',
+      );
+    }
+  }
+
   @override
   Future<List<CpdEntry>> loadAll() => _db.transaction((tx) async {
     final mappings = await _loadRows(tx);
     final ordered = mappings.entries.toList()
       ..sort((a, b) => a.value.ordinal.compareTo(b.value.ordinal));
-    return [for (final row in ordered) await _project(tx, row.key, row.value)];
+    final records = {
+      for (final record in await tx.loadAllRecords()) record.id: record,
+    };
+    if (records.length != mappings.length) {
+      throw StateError('The recording graph has unmapped records.');
+    }
+    final revisions = <String, List<LayoutRevision>>{};
+    return [
+      for (final row in ordered)
+        await _project(
+          tx,
+          row.key,
+          row.value,
+          record: records[row.key],
+          revisions: revisions,
+        ),
+    ];
   });
 
   static Future<CpdEntry> _project(
     SqliteRecordingRepository tx,
     String id,
-    _LegacyRow row,
-  ) async {
-    final record = await tx.loadRecord(id);
+    _LegacyRow row, {
+    RecordingRecord? record,
+    Map<String, List<LayoutRevision>>? revisions,
+  }) async {
+    record ??= await tx.loadRecord(id);
     if (record == null) throw StateError('A mapped record is missing.');
-    final fields = await _fieldsFor(tx, record);
+    final fields = await _fieldsFor(tx, record, revisions: revisions);
     final total = record.values[fields['cpd.creditedDuration']] as int;
     return CpdEntry(
       id: row.id,
@@ -159,9 +202,7 @@ class SqliteCpdStore extends CpdDataStore {
   @override
   Future<void> saveEntry(CpdEntry entry) => _db.transaction((tx) async {
     if (_findRow(await _loadRows(tx), entry.id) != null) {
-      {
-        throw StateError('This CPD entry ID is already in use.');
-      }
+      throw StateError('This CPD entry ID is already in use.');
     }
     await _insert(tx, entry, await tx.loadHostState(_prefs));
   });
@@ -173,9 +214,7 @@ class SqliteCpdStore extends CpdDataStore {
   ) async {
     final group = await _findProfession(tx, entry.profession);
     if (group == null || group.deleted) {
-      {
-        throw StateError('An active profession is required.');
-      }
+      throw StateError('An active profession is required.');
     }
     final layout = (await tx.loadLayouts(group.id)).last;
     final fields = _bindings(layout.fields);
@@ -418,9 +457,7 @@ class SqliteCpdStore extends CpdDataStore {
     final settings = await tx.loadHostState(_prefs);
     final names = _labels(settings, 'professions');
     if (!names.any((label) => cpdProfessionKey(label) == oldKey)) {
-      {
-        throw StateError('This profession no longer exists.');
-      }
+      throw StateError('This profession no longer exists.');
     }
     final all = await tx.loadCollections();
     final existing = all
@@ -479,9 +516,7 @@ class SqliteCpdStore extends CpdDataStore {
     required String cycle,
   }) => _db.transaction((tx) async {
     if (minutes < 0 || !cpdTargetCycles.contains(cycle)) {
-      {
-        throw ArgumentError('Invalid CPD target.');
-      }
+      throw ArgumentError('Invalid CPD target.');
     }
     final targets = _targets(await tx.loadHostState(_prefs));
     targets[profession] = {'minutes': minutes, 'cycle': cycle};
@@ -509,13 +544,16 @@ class SqliteCpdStore extends CpdDataStore {
 
   static Future<Map<String, String>> _fieldsFor(
     SqliteRecordingRepository tx,
-    RecordingRecord record,
-  ) async => _bindings(
-    resolveFields(
-      record.layoutVersion,
-      await tx.loadLayouts(record.collectionId),
-    ),
-  );
+    RecordingRecord record, {
+    Map<String, List<LayoutRevision>>? revisions,
+  }) async {
+    var layouts = revisions?[record.collectionId];
+    if (layouts == null) {
+      layouts = await tx.loadLayouts(record.collectionId);
+      revisions?[record.collectionId] = layouts;
+    }
+    return _bindings(resolveFields(record.layoutVersion, layouts));
+  }
 
   static Map<String, String> _bindings(Iterable<LayoutField> fields) {
     const canonical = {
