@@ -20,6 +20,7 @@
 - [Field type recommendations](field_type_recommendations.md) and [reporting requirements](reporting_requirements.md).
 - [Phase 1 architectural review](international/architecture_implications.md) · reusable recording engine, CPD boundary, migration and approval decisions.
 - [Phase 1 decisions and feasibility report](international/phase1_decisions_and_feasibility.md) · selected driver, isolated probe results, recovery contract and cutover gates.
+- [Phase 1 foundation and validation](international/phase1_foundation_validation.md) · implemented boundaries, synthetic recovery states and native smoke instructions.
 - [Open questions and validation](international/validation_plan.md).
 - [Custom Fields UI specification](../../docs/custom_fields_ui.md) · the agreed editor and Field Library design.
 
