@@ -22,29 +22,32 @@ Future<ImportSnapshot?> _loadImportSnapshot(
   );
 }
 
-Future<void> _captureImport(Database db, String sourceId, String raw) =>
-    db.transaction((tx) async {
-      if (sourceId.trim().isEmpty) {
-        throw ArgumentError('A source ID is required.');
-      }
-      final snapshot = await _loadImportSnapshot(tx, sourceId);
-      if (snapshot != null) {
-        if (snapshot.raw != raw) {
-          throw StateError('The source ID refers to a different snapshot.');
-        }
-        return;
-      }
-      await tx.insert('import_snapshots', {
-        'source_id': sourceId,
-        'raw': raw,
-        'status': ImportStatus.captured.name,
-      });
-    });
+Future<void> _captureImport(
+  DatabaseExecutor tx,
+  String sourceId,
+  String raw,
+) async {
+  if (sourceId.trim().isEmpty) {
+    throw ArgumentError('A source ID is required.');
+  }
+  final snapshot = await _loadImportSnapshot(tx, sourceId);
+  if (snapshot != null) {
+    if (snapshot.raw != raw) {
+      throw StateError('The source ID refers to a different snapshot.');
+    }
+    return;
+  }
+  await tx.insert('import_snapshots', {
+    'source_id': sourceId,
+    'raw': raw,
+    'status': ImportStatus.captured.name,
+  });
+}
 
 Future<ImportStatus> _stageImport(
-  Database db,
+  DatabaseExecutor tx,
   RecordingImportPlan plan,
-) => db.transaction((tx) async {
+) async {
   final snapshot = await _matchingSnapshot(tx, plan);
   if (snapshot.status == ImportStatus.staged ||
       snapshot.status == ImportStatus.verified) {
@@ -104,7 +107,7 @@ Future<ImportStatus> _stageImport(
   await _verifyGraph(tx, plan);
   await _setImportStatus(tx, plan, ImportStatus.staged);
   return ImportStatus.staged;
-});
+}
 
 Future<ImportSnapshot> _matchingSnapshot(
   DatabaseExecutor db,
@@ -136,11 +139,11 @@ Future<void> _setImportStatus(
 }
 
 Future<void> _verifyImport(
-  Database db,
+  SqliteRecordingRepository repository,
   RecordingImportPlan plan,
   Future<bool> Function(RecordingAttachment) verifyManagedOriginal,
 ) async {
-  final snapshot = await _matchingSnapshot(db, plan);
+  final snapshot = await _matchingSnapshot(repository._connection, plan);
   if (plan.blocked ||
       snapshot.metadata != plan.metadata ||
       (snapshot.status != ImportStatus.staged &&
@@ -155,7 +158,7 @@ Future<void> _verifyImport(
       throw StateError('A managed original failed verification.');
     }
   }
-  await db.transaction((tx) async {
+  await repository._transaction((tx) async {
     final current = await _matchingSnapshot(tx, plan);
     if (current.metadata != plan.metadata ||
         (current.status != ImportStatus.staged &&

@@ -1,3 +1,4 @@
+import 'cpd_compatibility/cpd_data_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -5,7 +6,7 @@ import 'dart:convert';
 import 'entry_repository.dart';
 import 'theme/app_accent.dart';
 
-class SettingsStore {
+class SettingsStore implements CpdProfessionStore {
   SettingsStore._();
   static final SettingsStore instance = SettingsStore._();
 
@@ -116,26 +117,20 @@ class SettingsStore {
   static const _kProfessions = 'professions';
   static const _kDeletedProfessions = 'deleted_professions';
 
-  // Normalise a profession: trim, single-capitalise first letter, lower the rest
-  String _normalize(String s) {
-    final t = s.trim();
-    if (t.isEmpty) return '';
-    if (t.length == 1) return t.toUpperCase();
-    return t[0].toUpperCase() + t.substring(1).toLowerCase();
-  }
-
+  @override
   Future<List<String>> loadProfessions() async {
     final prefs = await _prefsWithRetry();
     return prefs.getStringList(_kProfessions) ?? <String>[];
   }
 
+  @override
   Future<List<String>> loadDeletedProfessions() async {
     final prefs = await _prefsWithRetry();
     final items = prefs.getStringList(_kDeletedProfessions) ?? <String>[];
     // Normalize, de-duplicate, sort, and persist sanitized list
     final Map<String, String> canonical = {};
     for (final raw in items) {
-      final norm = _normalize(raw);
+      final norm = cpdProfessionLabel(raw);
       if (norm.isEmpty) continue;
       canonical.putIfAbsent(norm.toLowerCase(), () => norm);
     }
@@ -151,7 +146,7 @@ class SettingsStore {
     final prefs = await _prefsWithRetry();
     final Map<String, String> canonical = {};
     for (final raw in items) {
-      final norm = _normalize(raw);
+      final norm = cpdProfessionLabel(raw);
       if (norm.isEmpty) continue;
       canonical.putIfAbsent(norm.toLowerCase(), () => norm);
     }
@@ -167,7 +162,7 @@ class SettingsStore {
     // Case-insensitive de-duplication with canonical (normalized) values
     final Map<String, String> canonical = {};
     for (final raw in items) {
-      final norm = _normalize(raw);
+      final norm = cpdProfessionLabel(raw);
       if (norm.isEmpty) continue;
       final key = norm.toLowerCase();
       canonical.putIfAbsent(key, () => norm);
@@ -187,9 +182,10 @@ class SettingsStore {
   }
 
   /// Add a profession with normalization, de-duplication and sorted persistence
+  @override
   Future<void> addProfession(String value) async {
     final current = await loadProfessions();
-    final norm = _normalize(value);
+    final norm = cpdProfessionLabel(value);
     if (norm.isEmpty) return;
     if (current.any((p) => p.toLowerCase() == norm.toLowerCase())) return;
     current.add(norm);
@@ -199,9 +195,10 @@ class SettingsStore {
   /// Rename the profession and its references without merging existing data.
   /// The destination is made visible before references move; the old name is
   /// removed last so an interrupted write cannot hide the moved records.
+  @override
   Future<void> renameProfession(String oldValue, String newValue) async {
     final oldKey = oldValue.trim().toLowerCase();
-    final name = _normalize(newValue);
+    final name = cpdProfessionLabel(newValue);
     if (name.isEmpty) throw StateError('Please enter a profession name.');
     final newKey = name.toLowerCase();
     final prefs = await _prefsWithRetry();
@@ -289,8 +286,9 @@ class SettingsStore {
   }
 
   /// Mark a profession as deleted (soft delete)
+  @override
   Future<void> softDeleteProfession(String value) async {
-    final name = _normalize(value);
+    final name = cpdProfessionLabel(value);
     if (name.isEmpty) return;
     // Ensure profession exists in master list
     final all = await loadProfessions();
@@ -307,8 +305,9 @@ class SettingsStore {
   }
 
   /// Restore (un-delete) a profession
+  @override
   Future<void> restoreProfession(String value) async {
-    final name = _normalize(value);
+    final name = cpdProfessionLabel(value);
     if (name.isEmpty) return;
     await addProfession(name);
     final deleted = await loadDeletedProfessions();
@@ -320,6 +319,7 @@ class SettingsStore {
 
   /// Recovery is explicit: callers must obtain consent before reactivating or
   /// recreating a profession, which may also reveal its other saved records.
+  @override
   Future<void> restoreRecord(int id, {bool recoverProfession = false}) async {
     final repo = EntryRepository();
     final records = await repo.loadAll();
@@ -345,6 +345,7 @@ class SettingsStore {
   }
 
   /// Return only professions not soft-deleted
+  @override
   Future<List<String>> loadActiveProfessions() async {
     final all = await loadProfessions();
     final deleted = await loadDeletedProfessions();
@@ -443,7 +444,7 @@ class SettingsStore {
   static const _kTargetsKey = 'targets_v1';
 
   /// Cycle options
-  static const targetCycles = ['week', 'month', 'year'];
+  static const targetCycles = cpdTargetCycles;
 
   /// Load map: profession -> { minutes: int, cycle: 'week'|'month'|'year' }
   Future<Map<String, Map<String, dynamic>>> loadTargets() async {
@@ -462,6 +463,7 @@ class SettingsStore {
   }
 
   /// Return (minutes, cycle) or null if not set.
+  @override
   Future<(int minutes, String cycle)?> getTarget(String profession) async {
     final map = await loadTargets();
     final item = map[profession];
@@ -472,6 +474,7 @@ class SettingsStore {
   }
 
   /// Save/overwrite target for a profession.
+  @override
   Future<void> setTarget(
     String profession, {
     required int minutes,
@@ -484,6 +487,7 @@ class SettingsStore {
   }
 
   /// Remove target for a profession.
+  @override
   Future<void> clearTarget(String profession) async {
     final prefs = await SharedPreferences.getInstance();
     final map = await loadTargets();
@@ -491,6 +495,7 @@ class SettingsStore {
     await prefs.setString(_kTargetsKey, json.encode(map));
   }
 
+  @override
   Future<int> sumMinutesForRange(
     String profession,
     DateTime start,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'cpd_compatibility/cpd_data_store.dart';
 import 'entry_repository.dart';
 import 'models.dart';
 import 'settings_store.dart';
@@ -26,17 +27,19 @@ class CpdRecordsPage extends StatefulWidget {
     required this.profession,
     this.startInSearchMode = false,
     this.initialSearchQuery = '',
+    this.recordStore,
   });
   final String profession;
   final bool startInSearchMode;
   final String initialSearchQuery;
+  final CpdRecordStore? recordStore;
 
   @override
   State<CpdRecordsPage> createState() => _CpdRecordsPageState();
 }
 
 class _CpdRecordsPageState extends State<CpdRecordsPage> {
-  final _repo = EntryRepository();
+  late final CpdRecordStore _repo = widget.recordStore ?? EntryRepository();
   final _settings = SettingsStore.instance;
   List<CpdEntry> _entries = [];
   String _fmt = 'dd/MM/yyyy';
@@ -73,8 +76,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     if (!mounted) return; // guard before using context
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            AddEntryPage(profession: e.profession, existingEntry: e),
+        builder: (_) => AddEntryPage(
+          profession: e.profession,
+          existingEntry: e,
+          recordStore: _repo,
+        ),
       ),
     );
     if (!mounted) return; // guard after the await

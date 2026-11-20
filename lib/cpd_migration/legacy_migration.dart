@@ -18,39 +18,56 @@ String _stableId(Object? identity) =>
 /// Recovery rehearsal for a supplied synthetic snapshot. There is no live
 /// SharedPreferences reader, database path picker, or activation entry point.
 class SyntheticCpdMigration {
-  SyntheticCpdMigration(this.destination, Directory documents)
-    : originals = ManagedAttachmentFiles(documents);
+  SyntheticCpdMigration(
+    this.destination,
+    Directory documents, {
+    this.previousDocumentsPath,
+  }) : originals = ManagedAttachmentFiles(documents);
 
   final SqliteRecordingRepository destination;
   final ManagedAttachmentFiles originals;
+  final String? previousDocumentsPath;
+
+  static String sourceIdentity(Map<String, Object?> values) =>
+      _stableId(encodeLegacySnapshot(values));
+
+  Future<void> capture(Map<String, Object?> values) => destination
+      .captureImport(sourceIdentity(values), encodeLegacySnapshot(values));
 
   Future<ImportStatus> stage(Map<String, Object?> legacyValues) async {
-    final raw = _encodeSnapshot(legacyValues);
+    final raw = encodeLegacySnapshot(legacyValues);
     final sourceId = _stableId(raw);
     await destination.captureImport(sourceId, raw);
-    final plan = await _plan(sourceId, raw, originals);
+    final plan = await _plan(sourceId, raw, originals, previousDocumentsPath);
     return destination.stageImport(plan);
   }
 
   Future<ImportSnapshot?> inspect(Map<String, Object?> legacyValues) =>
-      destination.loadImportSnapshot(_stableId(_encodeSnapshot(legacyValues)));
+      destination.loadImportSnapshot(
+        _stableId(encodeLegacySnapshot(legacyValues)),
+      );
 
   Future<void> verify(Map<String, Object?> legacyValues) async {
-    final raw = _encodeSnapshot(legacyValues);
-    final plan = await _plan(_stableId(raw), raw, originals);
+    final raw = encodeLegacySnapshot(legacyValues);
+    final plan = await _plan(
+      _stableId(raw),
+      raw,
+      originals,
+      previousDocumentsPath,
+    );
     final fingerprints = (jsonDecode(plan.metadata) as Map)['originals'] as Map;
     await destination.verifyImport(
       plan,
       verifyManagedOriginal: (attachment) async {
         final file = await originals.resolveOriginal(attachment);
         return file != null &&
-            await _fileFingerprint(file) == fingerprints[attachment.id];
+            await legacyFileFingerprint(file) == fingerprints[attachment.id];
       },
     );
   }
 }
 
-String _encodeSnapshot(Map<String, Object?> values) => jsonEncode({
+String encodeLegacySnapshot(Map<String, Object?> values) => jsonEncode({
   for (final key in values.keys.toList()..sort()) key: values[key],
 });
 
@@ -102,13 +119,23 @@ final _standardFields = [
   ),
 ];
 
+List<LayoutField> cpdStandardFields(String collectionSeed) => [
+  for (final definition in _standardFields)
+    LayoutField(
+      id: _stableId([collectionSeed, definition.id]),
+      definition: definition,
+      required: definition.kind == FieldKind.date,
+    ),
+];
+
 Future<RecordingImportPlan> _plan(
   String sourceId,
   String raw,
   ManagedAttachmentFiles originals,
+  String? previousDocumentsPath,
 ) async {
   final source = (jsonDecode(raw) as Map).cast<String, Object?>();
-  final planner = _LegacyPlanner(sourceId, originals);
+  final planner = _LegacyPlanner(sourceId, originals, previousDocumentsPath);
   await planner.read(source);
   return RecordingImportPlan(
     sourceId: sourceId,
@@ -138,14 +165,7 @@ class _Group {
   final String id;
   final String label;
   final bool deleted;
-  late final fields = [
-    for (final definition in _standardFields)
-      LayoutField(
-        id: _stableId([id, definition.id]),
-        definition: definition,
-        required: definition.kind == FieldKind.date,
-      ),
-  ];
+  late final fields = cpdStandardFields(id);
 
   String field(String definitionId) =>
       fields.singleWhere((field) => field.definition.id == definitionId).id;
@@ -158,10 +178,11 @@ class _Group {
 }
 
 class _LegacyPlanner {
-  _LegacyPlanner(this.sourceId, this.originals);
+  _LegacyPlanner(this.sourceId, this.originals, this.previousDocumentsPath);
 
   final String sourceId;
   final ManagedAttachmentFiles originals;
+  final String? previousDocumentsPath;
   final groups = <String, _Group>{};
   final records = <RecordingRecord>[];
   final attachments = <RecordingAttachment>[];
@@ -338,52 +359,85 @@ class _LegacyPlanner {
     int ordinal,
   ) async {
     final id = _stableId([recordId, 'attachment', index]);
-    final uri = Uri.tryParse(reference.trim());
-    if (uri != null &&
-        (const ['http', 'https'].contains(uri.scheme) && uri.host.isNotEmpty ||
-            const ['mailto', 'tel'].contains(uri.scheme) &&
-                uri.path.isNotEmpty)) {
-      return RecordingAttachment(
-        id: id,
-        kind: AttachmentKind.link,
-        locator: reference,
-        name: 'Link',
+    try {
+      final value = await classifyLegacyAttachment(
+        originals,
+        id,
+        reference,
+        previousDocumentsPath: previousDocumentsPath,
       );
-    }
-    final candidate = _relativeDocumentPath(reference, originals.root.path);
-    final name = p.basename(reference).trim();
-    if (candidate != null) {
-      final managed = RecordingAttachment(
-        id: id,
-        kind: AttachmentKind.managed,
-        locator: candidate,
-        name: name.isEmpty ? 'Attachment' : name,
-      );
-      try {
-        final file = await originals.resolveOriginal(managed);
-        if (file != null &&
-            p.isWithin(
-              p.join(
-                await originals.root.resolveSymbolicLinks(),
-                'attachments',
-              ),
-              file.path,
-            )) {
-          fingerprints[id] = await _fileFingerprint(file);
-          return managed;
+      if (value.kind == AttachmentKind.managed) {
+        final file = await originals.resolveOriginal(value);
+        if (file != null) {
+          fingerprints[id] = await legacyFileFingerprint(file);
+          return value;
         }
-      } on FileSystemException {
-        issue('unreadable_attachment', row: ordinal, attachment: index);
+      } else if (value.kind == AttachmentKind.link) {
+        return value;
       }
+    } on FileSystemException {
+      issue('unreadable_attachment', row: ordinal, attachment: index);
     }
     issue('unresolved_attachment', row: ordinal, attachment: index);
+    return _unresolvedAttachment(id, reference);
+  }
+}
+
+/// Describe a legacy reference without opening links or treating external
+/// files as owned. The caller retains the original string separately.
+Future<RecordingAttachment> classifyLegacyAttachment(
+  ManagedAttachmentFiles originals,
+  String id,
+  String reference, {
+  String? previousDocumentsPath,
+}) async {
+  final uri = Uri.tryParse(reference.trim());
+  if (uri != null &&
+      (const ['http', 'https'].contains(uri.scheme) && uri.host.isNotEmpty ||
+          const ['mailto', 'tel'].contains(uri.scheme) &&
+              uri.path.isNotEmpty)) {
     return RecordingAttachment(
+      id: id,
+      kind: AttachmentKind.link,
+      locator: reference,
+      name: 'Link',
+    );
+  }
+  final candidate = _relativeDocumentPath(
+    reference,
+    originals.root.path,
+    previousDocumentsPath,
+  );
+  if (candidate != null) {
+    final managed = RecordingAttachment(
+      id: id,
+      kind: AttachmentKind.managed,
+      locator: candidate,
+      name: _attachmentName(reference),
+    );
+    final file = await originals.resolveOriginal(managed);
+    if (file != null &&
+        p.isWithin(
+          p.join(await originals.root.resolveSymbolicLinks(), 'attachments'),
+          file.path,
+        )) {
+      return managed;
+    }
+  }
+  return _unresolvedAttachment(id, reference);
+}
+
+RecordingAttachment _unresolvedAttachment(String id, String reference) =>
+    RecordingAttachment(
       id: id,
       kind: AttachmentKind.unresolved,
       locator: reference,
-      name: name.isEmpty ? 'Attachment' : name,
+      name: _attachmentName(reference),
     );
-  }
+
+String _attachmentName(String reference) {
+  final name = p.basename(reference).trim();
+  return name.isEmpty ? 'Attachment' : name;
 }
 
 Map<String, Object?>? _decodeMap(Object? raw) {
@@ -433,7 +487,11 @@ String? _legacyDay(Object? value) {
   return isCalendarDay(day) ? day : null;
 }
 
-String? _relativeDocumentPath(String reference, String directory) {
+String? _relativeDocumentPath(
+  String reference,
+  String directory,
+  String? previousDirectory,
+) {
   if (reference.isEmpty ||
       reference.contains(r'\') ||
       reference.contains(':') ||
@@ -445,6 +503,9 @@ String? _relativeDocumentPath(String reference, String directory) {
   if (p.isAbsolute(reference)) {
     if (p.isWithin(directory, reference)) {
       candidate = p.relative(reference, from: directory);
+    } else if (previousDirectory != null &&
+        p.isWithin(previousDirectory, reference)) {
+      candidate = p.relative(reference, from: previousDirectory);
     } else {
       // An old iOS container can be rebased only into the evidence directory.
       const marker = '/Documents/attachments/';
@@ -464,7 +525,7 @@ String? _relativeDocumentPath(String reference, String directory) {
 
 /// A deterministic content fingerprint for recovery verification. UUID v5
 /// digests fixed-size chunks so large evidence files are read with bounded I/O.
-Future<String> _fileFingerprint(File file) async {
+Future<String> legacyFileFingerprint(File file) async {
   final reader = await file.open();
   try {
     const chunkSize = 64 * 1024;

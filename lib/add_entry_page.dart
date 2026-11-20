@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
 // debugPrint
+import 'cpd_compatibility/cpd_data_store.dart';
 import 'entry_repository.dart';
 import 'models.dart';
 import 'settings_store.dart';
@@ -23,6 +24,7 @@ class AddEntryPage extends StatefulWidget {
     this.prefillTitle,
     this.prefillAttachments,
     this.prefillDate,
+    this.recordStore,
   });
 
   final String profession;
@@ -30,6 +32,7 @@ class AddEntryPage extends StatefulWidget {
   final String? prefillTitle;
   final List<String>? prefillAttachments;
   final DateTime? prefillDate;
+  final CpdRecordStore? recordStore;
 
   @override
   State<AddEntryPage> createState() => _AddEntryPageState();
@@ -49,7 +52,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
   String _dateFormat = 'dd/MM/yyyy';
   late final bool _editing;
 
-  final _repo = EntryRepository();
+  late final CpdRecordStore _repo = widget.recordStore ?? EntryRepository();
   final _settings = SettingsStore.instance;
 
   @override

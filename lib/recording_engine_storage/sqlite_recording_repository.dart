@@ -8,10 +8,16 @@ import '../recording_engine/models.dart';
 
 part 'sqlite_recording_import.dart';
 
+/// The native driver closed the handle after SQLite ran out of writable
+/// pages. Reopen the same path after capacity is available.
+class RecordingStorageFull implements Exception {
+  const RecordingStorageFull();
+}
+
 class SqliteRecordingRepository {
   SqliteRecordingRepository._(this._db);
 
-  final Database _db;
+  final DatabaseExecutor _db;
   static const _uuid = Uuid();
 
   /// An explicit database path is required. No application storage is opened
@@ -23,7 +29,10 @@ class SqliteRecordingRepository {
     final db = await (factory ?? databaseFactory).openDatabase(
       path,
       options: OpenDatabaseOptions(
-        version: 1,
+        version: 2,
+        onUpgrade: (db, from, to) async {
+          if (from == 1) await db.execute(_hostStateSchema);
+        },
         onConfigure: (db) async {
           await db.execute('PRAGMA foreign_keys = ON');
           final result = await db.rawQuery('PRAGMA foreign_keys');
@@ -41,24 +50,116 @@ class SqliteRecordingRepository {
     return SqliteRecordingRepository._(db);
   }
 
-  Future<void> close() => _db.close();
+  Database get _connection {
+    final db = _db;
+    if (db is Database) return db;
+    throw StateError('This operation needs the owning repository.');
+  }
+
+  Future<void> close() => _connection.close();
+
+  /// Apply host metadata and recording mutations in one SQL transaction.
+  /// Use the scoped repository only inside the callback and let errors escape.
+  Future<T> transaction<T>(
+    Future<T> Function(SqliteRecordingRepository scoped) run,
+  ) {
+    if (_db is! Database) throw StateError('A transaction is already active.');
+    return _transaction((tx) => run(SqliteRecordingRepository._(tx)));
+  }
+
+  Future<T> _transaction<T>(Future<T> Function(DatabaseExecutor) run) async {
+    final db = _db;
+    if (db is! Database) return run(db);
+    var storageFull = false;
+    try {
+      return await db.transaction((tx) async {
+        try {
+          return await run(tx);
+        } on DatabaseException catch (error) {
+          storageFull = _isStorageFull(error);
+          rethrow;
+        }
+      });
+    } on DatabaseException catch (error) {
+      if (!storageFull && !_isStorageFull(error)) rethrow;
+      // SQLITE_FULL can automatically roll back. The plugin's subsequent
+      // ROLLBACK may fail and leave its transaction ID active, so close the
+      // handle before any attempt to read, write or retry on this connection.
+      await db.close();
+      throw const RecordingStorageFull();
+    }
+  }
+
+  static bool _isStorageFull(DatabaseException error) =>
+      ((error.getResultCode() ?? 0) & 0xff) == 13 ||
+      error.toString().toLowerCase().contains('database or disk is full');
+
+  Future<Map<String, String>> loadHostState(String namespace) async {
+    final rows = await _db.query(
+      'host_state',
+      where: 'namespace = ?',
+      whereArgs: [namespace],
+    );
+    return {
+      for (final row in rows) row['key'] as String: row['value'] as String,
+    };
+  }
+
+  Future<void> saveHostValue(String namespace, String key, String value) async {
+    await _db.insert('host_state', {
+      'namespace': namespace,
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<RecordingCollection>> loadCollections() async {
+    final rows = await _db.query('collections', orderBy: 'rowid');
+    return rows.map(_decodeCollection).toList();
+  }
+
+  Future<void> updateCollection(
+    String id, {
+    String? label,
+    bool? deleted,
+  }) async {
+    if (label != null && label.trim().isEmpty) {
+      throw ArgumentError('A collection needs a label.');
+    }
+    if (label == null && deleted == null) return;
+    final updated = await _db.update(
+      'collections',
+      {'label': ?label, if (deleted != null) 'deleted': deleted ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (updated != 1) throw StateError('Collection does not exist.');
+  }
+
+  static RecordingCollection _decodeCollection(Map<String, Object?> row) =>
+      RecordingCollection(
+        row['id'] as String,
+        row['label'] as String,
+        row['layout_version'] as int,
+        deleted: row['deleted'] == 1,
+      );
 
   Future<ImportSnapshot?> loadImportSnapshot(String sourceId) =>
       _loadImportSnapshot(_db, sourceId);
 
   Future<void> captureImport(String sourceId, String rawSnapshot) =>
-      _captureImport(_db, sourceId, rawSnapshot);
+      _transaction((tx) => _captureImport(tx, sourceId, rawSnapshot));
 
   Future<ImportStatus> stageImport(RecordingImportPlan plan) =>
-      _stageImport(_db, plan);
+      _transaction((tx) => _stageImport(tx, plan));
 
   Future<void> verifyImport(
     RecordingImportPlan plan, {
     required Future<bool> Function(RecordingAttachment) verifyManagedOriginal,
-  }) => _verifyImport(_db, plan, verifyManagedOriginal);
+  }) => _verifyImport(this, plan, verifyManagedOriginal);
 
   Future<void> saveTemplate(TemplateVersion template) =>
-      _db.transaction((tx) async {
+      _transaction((tx) async {
         await _registerDefinitions(tx, template.fields);
         await tx.insert('templates', {
           'id': template.id,
@@ -88,7 +189,7 @@ class SqliteRecordingRepository {
     String label, {
     Iterable<LayoutField> fields = const [],
     int? maxActiveFields,
-  }) => _db.transaction((tx) async {
+  }) => _transaction((tx) async {
     final collection = RecordingCollection(_uuid.v4(), label, 1);
     final layout = LayoutRevision(
       collectionId: collection.id,
@@ -108,13 +209,7 @@ class SqliteRecordingRepository {
       whereArgs: [id],
     );
     if (rows.isEmpty) return null;
-    final row = rows.single;
-    return RecordingCollection(
-      id,
-      row['label'] as String,
-      row['layout_version'] as int,
-      deleted: row['deleted'] == 1,
-    );
+    return _decodeCollection(rows.single);
   }
 
   Future<LayoutRevision> applyTemplate(
@@ -171,7 +266,7 @@ class SqliteRecordingRepository {
     int? maxActiveFields,
     String? templateId,
     int? templateVersion,
-  }) => _db.transaction((tx) async {
+  }) => _transaction((tx) async {
     final current = await _activeLayoutVersion(tx, collectionId);
     if (current != expectedVersion) throw StateError('The layout has changed.');
     final revisions = await _layouts(tx, collectionId);
@@ -216,7 +311,7 @@ class SqliteRecordingRepository {
       _layouts(_db, collectionId);
 
   Future<void> saveAttachment(RecordingAttachment attachment) =>
-      _db.transaction((tx) => _insertAttachment(tx, attachment));
+      _transaction((tx) => _insertAttachment(tx, attachment));
 
   Future<RecordingAttachment?> loadAttachment(String id) async {
     final rows = await _db.query(
@@ -239,7 +334,7 @@ class SqliteRecordingRepository {
     Map<String, Object> values, {
     required int expectedLayoutVersion,
     Iterable<RecordingAttachment> newAttachments = const [],
-  }) => _db.transaction((tx) async {
+  }) => _transaction((tx) async {
     final version = await _activeLayoutVersion(tx, collectionId);
     if (version != expectedLayoutVersion) {
       throw StateError('The layout has changed.');
@@ -277,7 +372,7 @@ class SqliteRecordingRepository {
     Map<String, Object?> changes, {
     required int expectedVersion,
     Iterable<RecordingAttachment> newAttachments = const [],
-  }) => _db.transaction((tx) async {
+  }) => _transaction((tx) async {
     final record = await _requireRecord(tx, id, expectedVersion);
     if (record.deleted) {
       throw StateError('Restore the record before editing it.');
@@ -324,7 +419,7 @@ class SqliteRecordingRepository {
     String id,
     bool deleted, {
     required int expectedVersion,
-  }) => _db.transaction((tx) async {
+  }) => _transaction((tx) async {
     final record = await _requireRecord(tx, id, expectedVersion);
     if (!deleted) await _activeLayoutVersion(tx, record.collectionId);
     if (record.deleted == deleted) return;
@@ -337,12 +432,12 @@ class SqliteRecordingRepository {
   });
 
   Future<RecordingRecord?> loadRecord(String id) =>
-      _db.transaction((tx) => _loadRecord(tx, id));
+      _transaction((tx) => _loadRecord(tx, id));
 
   Future<List<RecordingRecord>> loadRecords(
     String collectionId, {
     bool includeDeleted = false,
-  }) => _db.transaction((tx) async {
+  }) => _transaction((tx) async {
     final rows = await tx.query(
       'records',
       columns: ['id'],
@@ -614,7 +709,13 @@ List<LayoutField> _decodeFields(String payload) => (jsonDecode(payload) as List)
     .map(LayoutField.fromJson)
     .toList();
 
+const _hostStateSchema =
+    'CREATE TABLE host_state ('
+    'namespace TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, '
+    'PRIMARY KEY(namespace, key))';
+
 const _schema = [
+  _hostStateSchema,
   '''CREATE TABLE import_snapshots (
     source_id TEXT NOT NULL PRIMARY KEY, raw TEXT NOT NULL,
     status TEXT NOT NULL, metadata TEXT, verified_at TEXT

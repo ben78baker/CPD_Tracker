@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'cpd_compatibility/cpd_data_store.dart';
+import 'cpd_compatibility/cpd_targets.dart';
 import 'settings_store.dart';
 import 'settings_page.dart';
 import 'add_entry_page.dart';
@@ -14,12 +17,16 @@ import 'widgets/profession_card.dart';
 import 'widgets/tactile_button.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.dataStore});
+
+  final CpdDataStore? dataStore;
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  late final CpdProfessionStore _professionStore =
+      widget.dataStore ?? SettingsStore.instance;
   List<String> _professions = <String>[];
   List<String> _deleted = <String>[];
 
@@ -42,6 +49,7 @@ class _HomePageState extends State<HomePage> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CpdRecordsPage(
+          recordStore: widget.dataStore,
           profession: profession,
           startInSearchMode: startInSearchMode,
         ),
@@ -64,6 +72,7 @@ class _HomePageState extends State<HomePage> {
       final saved = await Navigator.of(context).push<bool>(
         MaterialPageRoute(
           builder: (_) => AddEntryPage(
+            recordStore: widget.dataStore,
             profession: profession,
             prefillDate: DateTime.now(),
             prefillAttachments: [result],
@@ -89,11 +98,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _load() async {
-    final active = await SettingsStore.instance.loadActiveProfessions();
-    final deleted = await SettingsStore.instance.loadDeletedProfessions();
+    final active = await _professionStore.loadActiveProfessions();
+    final deleted = await _professionStore.loadDeletedProfessions();
     final targets = <String, (int, String)?>{};
     for (final p in active) {
-      targets[p] = await SettingsStore.instance.getTarget(p);
+      targets[p] = await _professionStore.getTarget(p);
     }
 
     if (!mounted) return;
@@ -102,34 +111,6 @@ class _HomePageState extends State<HomePage> {
       _deleted = List.of(deleted);
       _targets = targets; // NEW
     });
-  }
-
-  // --- Target helpers -------------------------------------------------------
-  int _scaleMinutes(int minutes, String fromCycle, String toCycle) {
-    if (fromCycle == toCycle) return minutes;
-
-    const wPerY = 52.0;
-    const mPerY = 12.0;
-    const wPerM = wPerY / mPerY; // ~4.3333
-
-    double mins = minutes.toDouble();
-    double factor = 1.0;
-
-    if (fromCycle == 'week' && toCycle == 'year') {
-      factor = wPerY;
-    } else if (fromCycle == 'year' && toCycle == 'week') {
-      factor = 1 / wPerY;
-    } else if (fromCycle == 'month' && toCycle == 'year') {
-      factor = mPerY;
-    } else if (fromCycle == 'year' && toCycle == 'month') {
-      factor = 1 / mPerY;
-    } else if (fromCycle == 'week' && toCycle == 'month') {
-      factor = wPerM;
-    } else if (fromCycle == 'month' && toCycle == 'week') {
-      factor = 1 / wPerM;
-    }
-
-    return (mins * factor).round();
   }
 
   Future<void> _editTarget(String profession) async {
@@ -172,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                   final h = int.tryParse(hoursCtrl.text) ?? 0;
                   final m = int.tryParse(minsCtrl.text) ?? 0;
                   final total = h * 60 + m;
-                  final scaled = _scaleMinutes(total, selected, v);
+                  final scaled = scaleCpdTargetMinutes(total, selected, v);
                   setSt(() {
                     selected = v;
                     hoursCtrl.text = (scaled ~/ 60).toString();
@@ -212,7 +193,7 @@ class _HomePageState extends State<HomePage> {
           actions: [
             TextButton(
               onPressed: () async {
-                await SettingsStore.instance.clearTarget(profession);
+                await _professionStore.clearTarget(profession);
                 if (!mounted) return;
                 setState(() {
                   _targets = Map.of(_targets)..remove(profession);
@@ -239,7 +220,7 @@ class _HomePageState extends State<HomePage> {
       final h = int.tryParse(hoursCtrl.text) ?? 0;
       final m = int.tryParse(minsCtrl.text) ?? 0;
       minutes = h * 60 + m;
-      await SettingsStore.instance.setTarget(
+      await _professionStore.setTarget(
         profession,
         minutes: minutes,
         cycle: selected,
@@ -253,59 +234,28 @@ class _HomePageState extends State<HomePage> {
 
   Future<int> _computeCompletedMinutes(String profession, String cycle) async {
     final now = DateTime.now();
-    DateTime start, end;
-
-    switch (cycle) {
-      case 'week':
-        {
-          // BEFORE the await
-          final todayMidnight = DateTime(now.year, now.month, now.day);
-          final firstDayIndexLocale = MaterialLocalizations.of(
-            context,
-          ).firstDayOfWeekIndex; // 0=Sun..6=Sat
-
-          String pref = 'monday';
-          try {
-            pref = await SettingsStore.instance.getWeekStart();
-          } catch (_) {
-            // ignore and use default/locale
-          }
-
-          int firstWeekday;
-          if (pref == 'sunday') {
-            firstWeekday = DateTime.sunday; // 7
-          } else if (pref == 'saturday') {
-            firstWeekday = DateTime.saturday; // 6
-          } else if (pref == 'monday') {
-            firstWeekday = DateTime.monday; // 1
-          } else {
-            // use the value we hoisted before the await
-            final idx = firstDayIndexLocale; // 0=Sun..6=Sat
-            firstWeekday = (idx == 0) ? DateTime.sunday : idx + 1;
-          }
-
-          int diff = (now.weekday - firstWeekday) % 7;
-          if (diff < 0) diff += 7;
-
-          start = todayMidnight.subtract(Duration(days: diff));
-          end = start.add(const Duration(days: 7));
-          break;
-        }
-      case 'month':
-        start = DateTime(now.year, now.month, 1);
-        end = (now.month == 12)
-            ? DateTime(now.year + 1, 1, 1)
-            : DateTime(now.year, now.month + 1, 1);
-        break;
-      case 'year':
-      default:
-        start = DateTime(now.year, 1, 1);
-        end = DateTime(now.year + 1, 1, 1);
-        break;
+    var firstWeekday = DateTime.monday;
+    if (cycle == 'week') {
+      final localeDay = MaterialLocalizations.of(context).firstDayOfWeekIndex;
+      String pref = 'monday';
+      try {
+        pref = await SettingsStore.instance.getWeekStart();
+      } catch (_) {
+        // Keep the legacy default when preferences cannot be read.
+      }
+      firstWeekday = switch (pref) {
+        'sunday' => DateTime.sunday,
+        'saturday' => DateTime.saturday,
+        'monday' => DateTime.monday,
+        _ => localeDay == 0 ? DateTime.sunday : localeDay + 1,
+      };
     }
-
-    // Delegates to SettingsStore (currently stubbed to 0 until DB wiring)
-    return SettingsStore.instance.sumMinutesForRange(profession, start, end);
+    final (start, end) = cpdTargetPeriod(
+      now,
+      cycle,
+      firstWeekday: firstWeekday,
+    );
+    return _professionStore.sumMinutesForRange(profession, start, end);
   }
 
   Future<void> _addProfessionDialog() async {
@@ -364,10 +314,10 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
     if (result != null && result.isNotEmpty) {
       // Persist using centralized normalize+dedupe+sort
-      await SettingsStore.instance.addProfession(result);
+      await _professionStore.addProfession(result);
       // Reload from store to reflect canonical formatting
-      final refreshed = await SettingsStore.instance.loadActiveProfessions();
-      final deleted = await SettingsStore.instance.loadDeletedProfessions();
+      final refreshed = await _professionStore.loadActiveProfessions();
+      final deleted = await _professionStore.loadDeletedProfessions();
       if (!mounted) return;
       setState(() {
         _professions = List.of(refreshed);
@@ -423,10 +373,7 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
     if (result != null && result.isNotEmpty) {
       try {
-        await SettingsStore.instance.renameProfession(
-          _professions[index],
-          result,
-        );
+        await _professionStore.renameProfession(_professions[index], result);
         await _load();
         if (mounted) setState(() => _progressBump++);
       } catch (error) {
@@ -467,7 +414,7 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
     if (confirmed == true) {
       final name = _professions[index];
-      await SettingsStore.instance.softDeleteProfession(name);
+      await _professionStore.softDeleteProfession(name);
       await _load();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -531,7 +478,9 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.search_rounded),
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const GlobalSearchPage()),
+                MaterialPageRoute(
+                  builder: (_) => GlobalSearchPage(dataStore: widget.dataStore),
+                ),
               );
             },
           ),
@@ -556,14 +505,19 @@ class _HomePageState extends State<HomePage> {
                 if (mounted) setState(() => _progressBump++);
               } else if (value == 'deleted_records') {
                 await nav.push(
-                  MaterialPageRoute(builder: (_) => const DeletedRecordsPage()),
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        DeletedRecordsPage(dataStore: widget.dataStore),
+                  ),
                 );
                 await _load();
                 if (mounted) setState(() => _progressBump++);
               } else if (value == 'view_deleted') {
                 await nav.push(
                   MaterialPageRoute(
-                    builder: (_) => const DeletedProfessionsPage(),
+                    builder: (_) => DeletedProfessionsPage(
+                      professionStore: _professionStore,
+                    ),
                   ),
                 );
                 await _load();
@@ -611,7 +565,10 @@ class _HomePageState extends State<HomePage> {
                   onAdd: () async {
                     final saved = await Navigator.of(context).push<bool>(
                       MaterialPageRoute(
-                        builder: (_) => AddEntryPage(profession: name),
+                        builder: (_) => AddEntryPage(
+                          profession: name,
+                          recordStore: widget.dataStore,
+                        ),
                       ),
                     );
                     if (mounted && saved == true) {
@@ -657,12 +614,16 @@ ButtonStyle _homeHeaderActionStyle(BuildContext context) {
 }
 
 class DeletedProfessionsPage extends StatefulWidget {
-  const DeletedProfessionsPage({super.key});
+  const DeletedProfessionsPage({super.key, this.professionStore});
+
+  final CpdProfessionStore? professionStore;
   @override
   State<DeletedProfessionsPage> createState() => _DeletedProfessionsPageState();
 }
 
 class _DeletedProfessionsPageState extends State<DeletedProfessionsPage> {
+  late final CpdProfessionStore _professionStore =
+      widget.professionStore ?? SettingsStore.instance;
   List<String> _deleted = <String>[];
   bool _loading = true;
 
@@ -673,7 +634,7 @@ class _DeletedProfessionsPageState extends State<DeletedProfessionsPage> {
   }
 
   Future<void> _load() async {
-    final items = await SettingsStore.instance.loadDeletedProfessions();
+    final items = await _professionStore.loadDeletedProfessions();
     if (!mounted) return;
     setState(() {
       _deleted = items;
@@ -682,7 +643,7 @@ class _DeletedProfessionsPageState extends State<DeletedProfessionsPage> {
   }
 
   Future<void> _restore(String name) async {
-    await SettingsStore.instance.restoreProfession(name);
+    await _professionStore.restoreProfession(name);
     await _load();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

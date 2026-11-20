@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'cpd_compatibility/cpd_data_store.dart';
 import 'entry_repository.dart';
 import 'models.dart';
 import 'settings_store.dart';
@@ -8,13 +9,18 @@ import 'widgets/branded_headers.dart';
 import 'widgets/tactile_button.dart';
 
 class DeletedRecordsPage extends StatefulWidget {
-  const DeletedRecordsPage({super.key});
+  const DeletedRecordsPage({super.key, this.dataStore});
+
+  final CpdDataStore? dataStore;
 
   @override
   State<DeletedRecordsPage> createState() => _DeletedRecordsPageState();
 }
 
 class _DeletedRecordsPageState extends State<DeletedRecordsPage> {
+  late final CpdRecordStore _repo = widget.dataStore ?? EntryRepository();
+  late final CpdProfessionStore _professions =
+      widget.dataStore ?? SettingsStore.instance;
   List<CpdEntry> _records = [];
   String _dateFormat = 'dd/MM/yyyy';
   bool _loading = true;
@@ -29,7 +35,7 @@ class _DeletedRecordsPageState extends State<DeletedRecordsPage> {
 
   Future<void> _load() async {
     try {
-      final records = await EntryRepository().loadDeleted();
+      final records = await _repo.loadDeleted();
       final format = await SettingsStore.instance.getDateFormat();
       if (!mounted) return;
       setState(() {
@@ -52,7 +58,7 @@ class _DeletedRecordsPageState extends State<DeletedRecordsPage> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      final active = await SettingsStore.instance.loadActiveProfessions();
+      final active = await _professions.loadActiveProfessions();
       final needsProfession = !active.any(
         (name) =>
             name.trim().toLowerCase() == entry.profession.trim().toLowerCase(),
@@ -82,7 +88,7 @@ class _DeletedRecordsPageState extends State<DeletedRecordsPage> {
         ),
       );
       if (confirmed != true) return;
-      await SettingsStore.instance.restoreRecord(
+      await _professions.restoreRecord(
         entry.id,
         recoverProfession: needsProfession,
       );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'cpd_compatibility/cpd_data_store.dart';
 import '../cpd_records_page.dart';
 import '../entry_repository.dart';
 import '../models.dart';
@@ -9,14 +10,16 @@ import 'widgets/branded_headers.dart';
 import 'widgets/tactile_button.dart';
 
 class GlobalSearchPage extends StatefulWidget {
-  const GlobalSearchPage({super.key});
+  const GlobalSearchPage({super.key, this.dataStore});
+
+  final CpdDataStore? dataStore;
 
   @override
   State<GlobalSearchPage> createState() => _GlobalSearchPageState();
 }
 
 class _GlobalSearchPageState extends State<GlobalSearchPage> {
-  final EntryRepository _repo = EntryRepository();
+  late final CpdRecordStore _repo = widget.dataStore ?? EntryRepository();
   final TextEditingController _searchController = TextEditingController();
 
   bool _loading = true;
@@ -37,7 +40,8 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   }
 
   Future<void> _load() async {
-    final professions = await SettingsStore.instance.loadActiveProfessions();
+    final CpdProfessionStore store = widget.dataStore ?? SettingsStore.instance;
+    final professions = await store.loadActiveProfessions();
     final allEntries = <CpdEntry>[];
 
     for (final profession in professions) {
@@ -110,6 +114,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CpdRecordsPage(
+          recordStore: _repo,
           profession: profession,
           startInSearchMode: recordsPageQuery.isNotEmpty,
           initialSearchQuery: recordsPageQuery,

@@ -1,7 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'cpd_compatibility/cpd_data_store.dart';
 import 'models.dart';
 
-class EntryRepository {
+class EntryRepository extends CpdRecordStore {
   static const _kEntries = 'entries_json_list'; // list<String> (json per entry)
   static const _kNextId = 'next_entry_id';
 
@@ -15,6 +16,7 @@ class EntryRepository {
     }
   }
 
+  @override
   Future<void> updateEntry(CpdEntry updated) async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(_kEntries) ?? <String>[];
@@ -28,6 +30,7 @@ class EntryRepository {
     await _saveAll(entries);
   }
 
+  @override
   Future<void> setDeleted(int id, bool deleted) async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(_kEntries) ?? <String>[];
@@ -56,12 +59,14 @@ class EntryRepository {
     return next;
   }
 
+  @override
   Future<List<CpdEntry>> loadAll() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList(_kEntries) ?? const <String>[];
     return list.map((s) => CpdEntry.fromJson(s)).toList();
   }
 
+  @override
   Future<void> saveEntry(CpdEntry entry) async {
     final prefs = await SharedPreferences.getInstance();
     final all = prefs.getStringList(_kEntries) ?? <String>[];
@@ -69,6 +74,7 @@ class EntryRepository {
     await prefs.setStringList(_kEntries, all);
   }
 
+  @override
   Future<CpdEntry> createAndSave({
     required String profession,
     required DateTime date,
@@ -93,51 +99,5 @@ class EntryRepository {
     );
     await saveEntry(entry);
     return entry;
-  }
-
-  Future<List<CpdEntry>> loadDeleted() async {
-    final entries = (await loadAll()).where((entry) => entry.deleted).toList();
-    entries.sort((a, b) => b.date.compareTo(a.date));
-    return entries;
-  }
-
-  Future<List<CpdEntry>> loadForProfession(String profession) async {
-    final all = await loadAll();
-    return all
-        .where(
-          (e) =>
-              e.profession.trim().toLowerCase() ==
-                  profession.trim().toLowerCase() &&
-              !e.deleted,
-        )
-        .toList();
-  }
-
-  /// Sum of minutes for [profession] where entry date is in [start, end)
-  /// and entry is not deleted.
-  Future<int> sumMinutesForRange(
-    String profession,
-    DateTime start,
-    DateTime end,
-  ) async {
-    final all = await loadAll();
-    final p = profession.trim().toLowerCase();
-
-    int total = 0;
-    for (final e in all) {
-      if (e.deleted) continue;
-      if (e.profession.trim().toLowerCase() != p) continue;
-
-      final d = e.date;
-      final inRange = !d.isBefore(start) && d.isBefore(end); // [start, end)
-      if (!inRange) continue;
-
-      // Coalesce hours/minutes to ints even if null/strings
-      final h = e.hours;
-      final m = e.minutes;
-
-      total += (h * 60) + m;
-    }
-    return total;
   }
 }
