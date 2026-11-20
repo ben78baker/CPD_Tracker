@@ -165,3 +165,12 @@ app.*.symbols
 .gclient_previous_sync_commits
 
 .flutter-plugins-dependencies*
+
+
+# Local credentials and signing exports
+.env
+.env.local
+*.p8
+*.p12
+*.mobileprovision
+*.keystore
