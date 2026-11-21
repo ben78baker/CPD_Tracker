@@ -80,6 +80,8 @@ Model relationships now. Confirm exact SQL names and driver during authorised te
 
 ## 5. Editor, templates and versioning
 
+The [Phase 4 implementation report](phase4_recording_configuration.md) records the current storage and version rules. The internal engine now supports layout drafts, exact decimal values, versioned library prototypes, anchored section headings and bundled or user template metadata. The production entry form and storage authority are still separate. The stage numbers in this review reflect the original planning sequence.
+
 ### Editor compatibility
 
 Reuse the existing form tiles and typed presenters for entry, read-only detail and safe illustrative previews. The editor gives each full tile a dedicated handle and menu, with keyboard and screen-reader reorder paths. Labels, requiredness, help, formatting and choices operate on a draft. Search the Field Library by terms, category and scope. Preview the definition, configure a copy, choose historical applicability, then insert into the draft. Save checks the expected current revision and the resulting active count before committing. CPD centrally enforces **20 active fields**, including standard fields. Retired history and logos sit outside the count. Cancel or a failed commit preserves prior layout and data. [Edit Fields UI specification](../../../docs/custom_fields_ui.md)

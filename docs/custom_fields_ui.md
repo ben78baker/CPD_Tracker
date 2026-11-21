@@ -95,8 +95,8 @@ The first modal has two primary options, **Create Custom Field** and **Field Lib
 | Status | Types and behaviours |
 |---|---|
 | Established planning baseline | Short text, long text, date, duration, photograph and file attachment. Reuse existing date, duration and evidence semantics. This is the minimum design baseline from earlier planning. |
-| Proposed additions for approval | Dropdown or single-select with stable choices, and decimal number or credits with an explicit unit. Avoid using decimal credits as canonical elapsed minutes. Subset durations such as participatory time may need an additional validation rule. |
-| Later research candidates | Multi-select taxonomy for competencies or standards, evidence references and eligibility metadata, optional second dates, and objective links. Keep signatures, declarations and verification at the appropriate portfolio level unless separately specified. |
+| Engine capabilities awaiting UI approval | Single and multiple selection with stable option IDs, exact decimal quantities with units, integers, Booleans and HTTP or HTTPS links. Decimal credits and elapsed minutes have separate meanings. CPD subset durations may need an additional host rule. |
+| Later research candidates | Hierarchical competency vocabularies, evidence eligibility metadata, times and timestamps, structured location and objective links. Keep signatures, declarations and verification at the appropriate portfolio level unless separately specified. |
 
 Publish a library definition only when its type, validation and choices are supported on that build. Use neutral, scheme-specific explanatory copy for available definitions. Exact release sequencing is an approval decision. [Profession research and priorities](../research/cpd_templates/field_type_recommendations.md)
 
@@ -152,9 +152,9 @@ Requiredness must not block an unrelated edit to an older record because a newly
 - Show validation close to the control and surface the first relevant error on Save. Explain duplicate or ambiguous labels if used and preserve disambiguation in exports. Require valid bounds and units for durations and decimals. Validate choice sets so stored selections survive label changes and retired choices. Keep unsupported definitions out of creation flows, but preserve historical data that uses them.
 - Test a full layout, very long labels and options, large text, keyboard-only reorder, screen-reader navigation, cancel during configuration, a failed save, and save after an intervening entitlement or layout change. Use fixture records with historical values and shared evidence when verifying removal and replacement.
 
-## 7. Phase 1 architectural implications
+## 7. Architectural implications
 
-These are data design requirements for consideration when Phase 1 is authorised. They do not prescribe a widget framework or database.
+The [Phase 4 implementation](../research/cpd_templates/international/phase4_recording_configuration.md) supplies the generic model and storage operations. These requirements guide Phase 5 UI work and host integration.
 
 - Keep **library definition IDs**, **field instance IDs**, **choice IDs**, **profession IDs** and **layout revision IDs** independent. A title, category, array position or option label cannot serve as identity. Choice renames and reordering preserve selections. Retired choices remain resolvable in past records and exports.
 - Store field type and effective instance metadata with the relevant revision. Preserve optional library and template version provenance so catalogue changes and template updates do not overwrite local copies. Define compatibility for unknown types and metadata from a newer catalogue.
@@ -167,8 +167,8 @@ These are data design requirements for consideration when Phase 1 is authorised.
 | Phase | Scope |
 |---|---|
 | Design approval | Confirm the positions and names of controls, supported type rollout, library taxonomy and scope, canonical-field presentation and historical workflows. Review sample layouts against the existing free entry form. |
-| Phase 1 · Architecture, when authorised | Plan stable identities, revision resolution, catalogue provenance, choice retirement, atomic validation and historical/export compatibility. Leave an additive path for branding metadata. |
-| Editor and Field Library, when authorised | Build the form-like editor, reorder and accessibility paths, field configuration, historical prompts and a reviewed searchable catalogue. Verify draft, save and failure recovery. |
+| Phase 4 · Engine foundation completed | Stable identities, revision resolution, catalogue provenance, choice retirement, atomic layout validation and historical export projections. The internal preview exercises two synthetic forms. Separate branding metadata remains a host concern. |
+| Phase 5 · Editor and Field Library, when authorised | Build the form-like editor, reorder and accessibility paths, field configuration, historical prompts and a reviewed searchable catalogue. Verify draft, save and failure recovery. |
 | Premium release, separately authorised | Integrate store entitlements, templates and branding on their own schedules. Review each researched template specification before development or publication. Verify restore, offline behaviour and export continuity. |
 
 ### Decisions for approval
