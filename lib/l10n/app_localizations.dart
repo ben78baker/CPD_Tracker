@@ -2499,6 +2499,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review template update'**
   String get p6TemplateUpdate;
+
+  /// No description provided for @p7Period.
+  ///
+  /// In en, this message translates to:
+  /// **'Reporting period'**
+  String get p7Period;
+
+  /// No description provided for @p7Deadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Application deadline'**
+  String get p7Deadline;
+
+  /// No description provided for @p7ChooseDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Set application deadline'**
+  String get p7ChooseDeadline;
+
+  /// No description provided for @p7MissingDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline not set'**
+  String get p7MissingDeadline;
+
+  /// No description provided for @p7ConfigurePeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Set or view reporting period'**
+  String get p7ConfigurePeriod;
+
+  /// No description provided for @p7PeriodHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm dates and deadlines with your professional body.'**
+  String get p7PeriodHint;
+
+  /// No description provided for @p7CustomPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom date range'**
+  String get p7CustomPeriod;
+
+  /// No description provided for @p7FixedPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed cycle from a start date'**
+  String get p7FixedPeriod;
+
+  /// No description provided for @p7RollingPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Rolling cycle ending on a date'**
+  String get p7RollingPeriod;
+
+  /// No description provided for @p7Recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded'**
+  String get p7Recorded;
+
+  /// No description provided for @p7Complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete entries'**
+  String get p7Complete;
+
+  /// No description provided for @p7Eligible.
+  ///
+  /// In en, this message translates to:
+  /// **'Eligible in this log'**
+  String get p7Eligible;
+
+  /// No description provided for @p7Target.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get p7Target;
+
+  /// No description provided for @p7IssueMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing required information'**
+  String get p7IssueMissing;
+
+  /// No description provided for @p7IssueInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid or incompatible values'**
+  String get p7IssueInvalid;
+
+  /// No description provided for @p7IssueEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence unavailable'**
+  String get p7IssueEvidence;
+
+  /// No description provided for @p7IssueSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity spans the period boundary'**
+  String get p7IssueSplit;
+
+  /// No description provided for @p7IssueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date unresolved; outside period totals'**
+  String get p7IssueDate;
+
+  /// No description provided for @p7ReviewLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Activities to review'**
+  String get p7ReviewLog;
+
+  /// No description provided for @p7EvidenceIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence references'**
+  String get p7EvidenceIndex;
+
+  /// No description provided for @p7Summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Period summary'**
+  String get p7Summary;
+
+  /// No description provided for @p7Practitioner.
+  ///
+  /// In en, this message translates to:
+  /// **'Practitioner'**
+  String get p7Practitioner;
+
+  /// No description provided for @p7Reviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Regulatory review'**
+  String get p7Reviewed;
+
+  /// No description provided for @p7ReportScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Independent CPD log. Confirm eligibility and submission requirements with your professional body.'**
+  String get p7ReportScope;
+
+  /// No description provided for @p7LayoutWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Report configuration is missing scheme fields. Review the field selection.'**
+  String get p7LayoutWarning;
+
+  /// No description provided for @p7Synthetic.
+  ///
+  /// In en, this message translates to:
+  /// **'Synthetic example'**
+  String get p7Synthetic;
+
+  /// No description provided for @p7Internal.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal rehearsal'**
+  String get p7Internal;
+
+  /// No description provided for @p7RuleRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'Reporting rules'**
+  String get p7RuleRevision;
 }
 
 class _AppLocalizationsDelegate

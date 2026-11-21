@@ -1328,4 +1328,91 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get p6TemplateUpdate => 'टेम्पलेट अपडेट देखें';
+
+  @override
+  String get p7Period => 'रिपोर्टिंग अवधि';
+
+  @override
+  String get p7Deadline => 'आवेदन की अंतिम तारीख';
+
+  @override
+  String get p7ChooseDeadline => 'आवेदन की अंतिम तारीख तय करें';
+
+  @override
+  String get p7MissingDeadline => 'अंतिम तारीख तय नहीं है';
+
+  @override
+  String get p7ConfigurePeriod => 'रिपोर्टिंग अवधि तय करें या देखें';
+
+  @override
+  String get p7PeriodHint =>
+      'अपने पेशेवर निकाय से तारीखों और समय-सीमाओं की पुष्टि करें।';
+
+  @override
+  String get p7CustomPeriod => 'अपनी तारीख सीमा';
+
+  @override
+  String get p7FixedPeriod => 'शुरुआती तारीख से निश्चित चक्र';
+
+  @override
+  String get p7RollingPeriod => 'अंतिम तारीख तक चल चक्र';
+
+  @override
+  String get p7Recorded => 'दर्ज';
+
+  @override
+  String get p7Complete => 'पूर्ण प्रविष्टियाँ';
+
+  @override
+  String get p7Eligible => 'इस रिकॉर्ड में पात्र';
+
+  @override
+  String get p7Target => 'लक्ष्य';
+
+  @override
+  String get p7IssueMissing => 'आवश्यक जानकारी गुम है';
+
+  @override
+  String get p7IssueInvalid => 'अमान्य या असंगत मान';
+
+  @override
+  String get p7IssueEvidence => 'साक्ष्य उपलब्ध नहीं';
+
+  @override
+  String get p7IssueSplit => 'गतिविधि अवधि की सीमा पार करती है';
+
+  @override
+  String get p7IssueDate => 'तारीख अनिर्धारित; अवधि के योग से बाहर';
+
+  @override
+  String get p7ReviewLog => 'समीक्षा के लिए गतिविधियाँ';
+
+  @override
+  String get p7EvidenceIndex => 'साक्ष्य संदर्भ';
+
+  @override
+  String get p7Summary => 'अवधि का सारांश';
+
+  @override
+  String get p7Practitioner => 'पेशेवर';
+
+  @override
+  String get p7Reviewed => 'नियामक समीक्षा';
+
+  @override
+  String get p7ReportScope =>
+      'स्वतंत्र सीपीडी रिकॉर्ड। अपने पेशेवर निकाय से पात्रता और जमा करने के नियम जाँचें।';
+
+  @override
+  String get p7LayoutWarning =>
+      'रिपोर्ट में योजना के फ़ील्ड गुम हैं। फ़ील्ड चयन जाँचें।';
+
+  @override
+  String get p7Synthetic => 'काल्पनिक उदाहरण';
+
+  @override
+  String get p7Internal => 'आंतरिक परीक्षण';
+
+  @override
+  String get p7RuleRevision => 'रिपोर्ट के नियम';
 }

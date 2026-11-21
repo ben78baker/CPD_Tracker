@@ -20,8 +20,12 @@ class ProfessionCard extends StatelessWidget {
     required this.computeCompleted,
     required this.onSetTarget,
     required this.refreshToken,
+    this.progressContent,
+    this.targetMenuLabel,
   });
 
+  final Widget? progressContent;
+  final String? targetMenuLabel;
   final int refreshToken;
   final String name;
   final VoidCallback onAdd;
@@ -61,7 +65,7 @@ class ProfessionCard extends StatelessWidget {
               itemBuilder: (ctx) => [
                 PopupMenuItem(
                   value: 'set_target',
-                  child: Text(AppLocalizations.of(ctx)!.setEditTarget),
+                  child: Text(targetMenuLabel ?? loc.setEditTarget),
                 ),
                 const PopupMenuItem(
                   value: 'search_records',
@@ -133,13 +137,14 @@ class ProfessionCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _TargetProgress(
-                  key: ValueKey('$name-$refreshToken'),
-                  target: target,
-                  computeCompleted: computeCompleted,
-                  onSetTarget: onSetTarget,
-                  refreshToken: refreshToken,
-                ),
+                progressContent ??
+                    _TargetProgress(
+                      key: ValueKey('$name-$refreshToken'),
+                      target: target,
+                      computeCompleted: computeCompleted,
+                      onSetTarget: onSetTarget,
+                      refreshToken: refreshToken,
+                    ),
               ],
             ),
           ),

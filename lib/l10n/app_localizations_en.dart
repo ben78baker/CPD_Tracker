@@ -1335,4 +1335,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get p6TemplateUpdate => 'Review template update';
+
+  @override
+  String get p7Period => 'Reporting period';
+
+  @override
+  String get p7Deadline => 'Application deadline';
+
+  @override
+  String get p7ChooseDeadline => 'Set application deadline';
+
+  @override
+  String get p7MissingDeadline => 'Deadline not set';
+
+  @override
+  String get p7ConfigurePeriod => 'Set or view reporting period';
+
+  @override
+  String get p7PeriodHint =>
+      'Confirm dates and deadlines with your professional body.';
+
+  @override
+  String get p7CustomPeriod => 'Custom date range';
+
+  @override
+  String get p7FixedPeriod => 'Fixed cycle from a start date';
+
+  @override
+  String get p7RollingPeriod => 'Rolling cycle ending on a date';
+
+  @override
+  String get p7Recorded => 'Recorded';
+
+  @override
+  String get p7Complete => 'Complete entries';
+
+  @override
+  String get p7Eligible => 'Eligible in this log';
+
+  @override
+  String get p7Target => 'Target';
+
+  @override
+  String get p7IssueMissing => 'Missing required information';
+
+  @override
+  String get p7IssueInvalid => 'Invalid or incompatible values';
+
+  @override
+  String get p7IssueEvidence => 'Evidence unavailable';
+
+  @override
+  String get p7IssueSplit => 'Activity spans the period boundary';
+
+  @override
+  String get p7IssueDate => 'Date unresolved; outside period totals';
+
+  @override
+  String get p7ReviewLog => 'Activities to review';
+
+  @override
+  String get p7EvidenceIndex => 'Evidence references';
+
+  @override
+  String get p7Summary => 'Period summary';
+
+  @override
+  String get p7Practitioner => 'Practitioner';
+
+  @override
+  String get p7Reviewed => 'Regulatory review';
+
+  @override
+  String get p7ReportScope =>
+      'Independent CPD log. Confirm eligibility and submission requirements with your professional body.';
+
+  @override
+  String get p7LayoutWarning =>
+      'Report configuration is missing scheme fields. Review the field selection.';
+
+  @override
+  String get p7Synthetic => 'Synthetic example';
+
+  @override
+  String get p7Internal => 'Internal rehearsal';
+
+  @override
+  String get p7RuleRevision => 'Reporting rules';
 }

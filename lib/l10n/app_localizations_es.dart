@@ -1342,4 +1342,91 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get p6TemplateUpdate => 'Revisar actualización';
+
+  @override
+  String get p7Period => 'Periodo del informe';
+
+  @override
+  String get p7Deadline => 'Fecha límite de solicitud';
+
+  @override
+  String get p7ChooseDeadline => 'Fijar fecha límite de solicitud';
+
+  @override
+  String get p7MissingDeadline => 'Sin fecha límite';
+
+  @override
+  String get p7ConfigurePeriod => 'Configurar o ver el periodo';
+
+  @override
+  String get p7PeriodHint =>
+      'Confirma las fechas y los plazos con tu organismo profesional.';
+
+  @override
+  String get p7CustomPeriod => 'Intervalo personalizado';
+
+  @override
+  String get p7FixedPeriod => 'Ciclo fijo desde una fecha';
+
+  @override
+  String get p7RollingPeriod => 'Ciclo móvil hasta una fecha';
+
+  @override
+  String get p7Recorded => 'Registrado';
+
+  @override
+  String get p7Complete => 'Entradas completas';
+
+  @override
+  String get p7Eligible => 'Computable en este registro';
+
+  @override
+  String get p7Target => 'Objetivo';
+
+  @override
+  String get p7IssueMissing => 'Faltan datos obligatorios';
+
+  @override
+  String get p7IssueInvalid => 'Valores inválidos o incompatibles';
+
+  @override
+  String get p7IssueEvidence => 'Evidencia no disponible';
+
+  @override
+  String get p7IssueSplit => 'Actividad fuera de los límites del periodo';
+
+  @override
+  String get p7IssueDate => 'Fecha sin resolver; excluida de los totales';
+
+  @override
+  String get p7ReviewLog => 'Actividades por revisar';
+
+  @override
+  String get p7EvidenceIndex => 'Referencias de evidencia';
+
+  @override
+  String get p7Summary => 'Resumen del periodo';
+
+  @override
+  String get p7Practitioner => 'Profesional';
+
+  @override
+  String get p7Reviewed => 'Revisión normativa';
+
+  @override
+  String get p7ReportScope =>
+      'Registro de formación independiente. Confirma los requisitos con tu organismo profesional.';
+
+  @override
+  String get p7LayoutWarning =>
+      'Faltan campos del esquema en el informe. Revisa la selección.';
+
+  @override
+  String get p7Synthetic => 'Ejemplo sintético';
+
+  @override
+  String get p7Internal => 'Ensayo interno';
+
+  @override
+  String get p7RuleRevision => 'Reglas del informe';
 }

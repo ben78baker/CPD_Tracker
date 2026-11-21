@@ -1348,4 +1348,91 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get p6TemplateUpdate => 'Examiner la mise à jour';
+
+  @override
+  String get p7Period => 'Période du rapport';
+
+  @override
+  String get p7Deadline => 'Date limite de demande';
+
+  @override
+  String get p7ChooseDeadline => 'Définir la date limite';
+
+  @override
+  String get p7MissingDeadline => 'Date limite non définie';
+
+  @override
+  String get p7ConfigurePeriod => 'Définir ou afficher la période';
+
+  @override
+  String get p7PeriodHint =>
+      'Confirmez les dates et les échéances auprès de votre organisme professionnel.';
+
+  @override
+  String get p7CustomPeriod => 'Plage de dates personnalisée';
+
+  @override
+  String get p7FixedPeriod => 'Cycle fixe à partir d’une date';
+
+  @override
+  String get p7RollingPeriod => 'Cycle glissant jusqu’à une date';
+
+  @override
+  String get p7Recorded => 'Consigné';
+
+  @override
+  String get p7Complete => 'Entrées complètes';
+
+  @override
+  String get p7Eligible => 'Admissible dans ce journal';
+
+  @override
+  String get p7Target => 'Objectif';
+
+  @override
+  String get p7IssueMissing => 'Informations obligatoires manquantes';
+
+  @override
+  String get p7IssueInvalid => 'Valeurs invalides ou incompatibles';
+
+  @override
+  String get p7IssueEvidence => 'Justificatif indisponible';
+
+  @override
+  String get p7IssueSplit => 'Activité à cheval sur la limite de période';
+
+  @override
+  String get p7IssueDate => 'Date non résolue; hors des totaux';
+
+  @override
+  String get p7ReviewLog => 'Activités à vérifier';
+
+  @override
+  String get p7EvidenceIndex => 'Références des justificatifs';
+
+  @override
+  String get p7Summary => 'Bilan de la période';
+
+  @override
+  String get p7Practitioner => 'Professionnel';
+
+  @override
+  String get p7Reviewed => 'Vérification réglementaire';
+
+  @override
+  String get p7ReportScope =>
+      'Journal de formation indépendant. Vérifiez l’admissibilité et les modalités de dépôt auprès de votre organisme professionnel.';
+
+  @override
+  String get p7LayoutWarning =>
+      'Des champs du dispositif manquent dans le rapport. Vérifiez la sélection.';
+
+  @override
+  String get p7Synthetic => 'Exemple fictif';
+
+  @override
+  String get p7Internal => 'Essai interne';
+
+  @override
+  String get p7RuleRevision => 'Règles du rapport';
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
 import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_pilot.dart';
+import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
 import 'package:cpd_tracker/recording_editor/edit_fields_page.dart';
 import 'package:cpd_tracker/recording_editor/field_settings.dart';
@@ -15,6 +16,7 @@ import 'package:cpd_tracker/widgets/form_section_tile.dart';
 import 'package:flutter/material.dart';
 
 import 'phase5_fixtures.dart';
+import 'phase7_rehearsal_pages.dart';
 
 class ProfessionCreationPage extends StatefulWidget {
   const ProfessionCreationPage({
@@ -23,10 +25,12 @@ class ProfessionCreationPage extends StatefulWidget {
     required this.onCreated,
     this.first = false,
     this.onBack,
+    this.phase7 = false,
   });
   final ProfessionCreationStore store;
   final ValueChanged<String> onCreated;
   final bool first;
+  final bool phase7;
   final VoidCallback? onBack;
 
   @override
@@ -51,7 +55,9 @@ class _ProfessionCreationPageState extends State<ProfessionCreationPage> {
     try {
       if (kind == ProfessionKind.template) {
         final chosen = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(builder: (_) => const _PilotCatalogue()),
+          MaterialPageRoute(
+            builder: (_) => _PilotCatalogue(phase7: widget.phase7),
+          ),
         );
         if (!mounted || chosen != true) return;
       }
@@ -228,7 +234,8 @@ class DraftChoices extends StatelessWidget {
 }
 
 class _PilotCatalogue extends StatelessWidget {
-  const _PilotCatalogue();
+  const _PilotCatalogue({required this.phase7});
+  final bool phase7;
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +249,13 @@ class _PilotCatalogue extends StatelessWidget {
           FormSectionTile(
             label: recipe.localizedLabel(language),
             icon: Icons.medical_services_outlined,
-            supportingText: recipe.localizedDescription(language),
+            supportingText: phase7
+                ? nursingBundle.label(
+                    "description",
+                    recipe.localizedDescription(language),
+                    language,
+                  )
+                : recipe.localizedDescription(language),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -251,7 +264,8 @@ class _PilotCatalogue extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (_) => nursingPilotPreview(context),
+                      builder: (_) =>
+                          nursingPilotPreview(context, phase7: phase7),
                     ),
                   ),
                   icon: const Icon(Icons.visibility_outlined),
@@ -270,9 +284,25 @@ class _PilotCatalogue extends StatelessWidget {
   }
 }
 
-TemplatePreviewPage nursingPilotPreview(BuildContext context) {
+TemplatePreviewPage nursingPilotPreview(
+  BuildContext context, {
+  bool phase7 = false,
+}) {
   final s = editorStrings(context);
-  final recipe = nursingPilot;
+  final base = nursingPilot;
+  final recipe = !phase7
+      ? base
+      : TemplateVersion(
+          id: base.id,
+          version: base.version,
+          origin: base.origin,
+          label: base.label,
+          translations: base.translations,
+          description: base.description,
+          descriptionTranslations: nursingBundle.labels['description']!,
+          fields: previewFields(nursingBundle),
+          headings: base.headings,
+        );
   final layout = LayoutRevision(
     collectionId: 'sample-arrangement',
     version: 1,
@@ -283,19 +313,27 @@ TemplatePreviewPage nursingPilotPreview(BuildContext context) {
   );
   return TemplatePreviewPage(
     template: recipe,
-    profession: 'Nurses, midwives and nursing associates',
-    country: 'United Kingdom',
-    professionalBody: 'Nursing and Midwifery Council',
-    scheme: 'NMC revalidation activity log',
-    reviewed: nursingReviewDate,
+    profession: nursingBundle.profession,
+    country: nursingBundle.country,
+    professionalBody: nursingBundle.body,
+    scheme: nursingBundle.scheme,
+    reviewed: DateTime.parse(nursingBundle.reviewed),
     featuresAndLimits: [
       s.p6TemplateScope,
-      'Activity totals distinguish participatory minutes. Official reflective accounts and confirmation are separate.',
+      if (phase7)
+        nursingBundle.label('scope', s.p7ReportScope, s.localeName)
+      else
+        'Activity totals distinguish participatory minutes. Official reflective accounts and confirmation are separate.',
     ],
-    examples: nursingExamples(recipe),
+    examples: phase7
+        ? nursingBundle.examples.map(
+            (sample) => TemplatePreviewExample(sample.title, sample.values),
+          )
+        : nursingExamples(recipe),
     sampleAttachmentLabel: 'Synthetic activity evidence',
-    sampleReport: (template, _) =>
-        nursingSampleReport(template, ReportSelection()),
+    sampleReport: (template, _) => phase7
+        ? exampleSchemeReport(context)
+        : nursingSampleReport(template, ReportSelection()),
     arrangementPreview: (_) => EditFieldsPage(
       title: s.p6TryArrangement,
       layout: layout,

@@ -1342,4 +1342,91 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get p6TemplateUpdate => 'Vorlagenupdate prüfen';
+
+  @override
+  String get p7Period => 'Berichtszeitraum';
+
+  @override
+  String get p7Deadline => 'Antragsfrist';
+
+  @override
+  String get p7ChooseDeadline => 'Antragsfrist festlegen';
+
+  @override
+  String get p7MissingDeadline => 'Keine Frist gesetzt';
+
+  @override
+  String get p7ConfigurePeriod => 'Berichtszeitraum einstellen oder ansehen';
+
+  @override
+  String get p7PeriodHint =>
+      'Bestätigen Sie Daten und Fristen bei Ihrer Berufsorganisation.';
+
+  @override
+  String get p7CustomPeriod => 'Benutzerdefinierter Zeitraum';
+
+  @override
+  String get p7FixedPeriod => 'Fester Zyklus ab Startdatum';
+
+  @override
+  String get p7RollingPeriod => 'Gleitender Zyklus bis Enddatum';
+
+  @override
+  String get p7Recorded => 'Erfasst';
+
+  @override
+  String get p7Complete => 'Vollständige Einträge';
+
+  @override
+  String get p7Eligible => 'Im Nachweis anrechenbar';
+
+  @override
+  String get p7Target => 'Ziel';
+
+  @override
+  String get p7IssueMissing => 'Pflichtangaben fehlen';
+
+  @override
+  String get p7IssueInvalid => 'Ungültige oder inkompatible Werte';
+
+  @override
+  String get p7IssueEvidence => 'Nachweis nicht verfügbar';
+
+  @override
+  String get p7IssueSplit => 'Aktivität überschreitet den Berichtszeitraum';
+
+  @override
+  String get p7IssueDate => 'Datum ungeklärt; aus Summen ausgeschlossen';
+
+  @override
+  String get p7ReviewLog => 'Zu prüfende Aktivitäten';
+
+  @override
+  String get p7EvidenceIndex => 'Nachweisverzeichnis';
+
+  @override
+  String get p7Summary => 'Zusammenfassung des Zeitraums';
+
+  @override
+  String get p7Practitioner => 'Fachperson';
+
+  @override
+  String get p7Reviewed => 'Regulatorische Prüfung';
+
+  @override
+  String get p7ReportScope =>
+      'Unabhängiger Fortbildungsnachweis. Klären Sie die Anrechenbarkeit und Einreichung mit Ihrer Berufsorganisation.';
+
+  @override
+  String get p7LayoutWarning =>
+      'In der Berichtskonfiguration fehlen Felder. Prüfen Sie die Feldauswahl.';
+
+  @override
+  String get p7Synthetic => 'Synthetisches Beispiel';
+
+  @override
+  String get p7Internal => 'Interner Testlauf';
+
+  @override
+  String get p7RuleRevision => 'Berichtsregeln';
 }

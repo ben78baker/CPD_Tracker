@@ -1341,4 +1341,91 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get p6TemplateUpdate => 'Rever atualização do modelo';
+
+  @override
+  String get p7Period => 'Período do relatório';
+
+  @override
+  String get p7Deadline => 'Prazo de candidatura';
+
+  @override
+  String get p7ChooseDeadline => 'Definir prazo de candidatura';
+
+  @override
+  String get p7MissingDeadline => 'Prazo por definir';
+
+  @override
+  String get p7ConfigurePeriod => 'Definir ou ver o período';
+
+  @override
+  String get p7PeriodHint =>
+      'Confirme as datas e os prazos com a sua entidade profissional.';
+
+  @override
+  String get p7CustomPeriod => 'Intervalo personalizado';
+
+  @override
+  String get p7FixedPeriod => 'Ciclo fixo a partir de uma data';
+
+  @override
+  String get p7RollingPeriod => 'Ciclo móvel até uma data';
+
+  @override
+  String get p7Recorded => 'Registado';
+
+  @override
+  String get p7Complete => 'Registos completos';
+
+  @override
+  String get p7Eligible => 'Elegível neste registo';
+
+  @override
+  String get p7Target => 'Meta';
+
+  @override
+  String get p7IssueMissing => 'Faltam dados obrigatórios';
+
+  @override
+  String get p7IssueInvalid => 'Valores inválidos ou incompatíveis';
+
+  @override
+  String get p7IssueEvidence => 'Evidência indisponível';
+
+  @override
+  String get p7IssueSplit => 'Atividade atravessa o limite do período';
+
+  @override
+  String get p7IssueDate => 'Data por confirmar; fora dos totais';
+
+  @override
+  String get p7ReviewLog => 'Atividades a rever';
+
+  @override
+  String get p7EvidenceIndex => 'Referências de evidência';
+
+  @override
+  String get p7Summary => 'Resumo do período';
+
+  @override
+  String get p7Practitioner => 'Profissional';
+
+  @override
+  String get p7Reviewed => 'Revisão regulamentar';
+
+  @override
+  String get p7ReportScope =>
+      'Registo de formação independente. Confirme os requisitos com a sua entidade profissional.';
+
+  @override
+  String get p7LayoutWarning =>
+      'Faltam campos do regime no relatório. Reveja a seleção.';
+
+  @override
+  String get p7Synthetic => 'Exemplo fictício';
+
+  @override
+  String get p7Internal => 'Ensaio interno';
+
+  @override
+  String get p7RuleRevision => 'Regras do relatório';
 }

@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
+import 'package:cpd_tracker/cpd_compatibility/cpd_data_store.dart'
+    show cpdProfessionLabel;
+import 'package:cpd_tracker/recording_engine_storage/managed_attachment_files.dart';
 import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_pilot.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
@@ -16,6 +19,7 @@ import 'package:cpd_tracker/recording_engine_storage/sqlite_recording_repository
 import 'package:cpd_tracker/theme/app_accent.dart';
 import 'package:cpd_tracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -23,6 +27,7 @@ import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
 
 import 'phase6_creation_pages.dart';
+import 'phase7_rehearsal_pages.dart';
 
 ProfessionCreationStore phase6Store(SqliteRecordingRepository repository) =>
     ProfessionCreationStore(
@@ -50,7 +55,14 @@ void main() {
 }
 
 class Phase6App extends StatefulWidget {
-  const Phase6App({super.key, required this.open});
+  const Phase6App({
+    super.key,
+    required this.open,
+    this.phase7 = false,
+    this.originals,
+  });
+  final bool phase7;
+  final ManagedAttachmentFiles? originals;
   final Future<ProfessionCreationStore> Function() open;
   @override
   State<Phase6App> createState() => _Phase6AppState();
@@ -62,6 +74,7 @@ class _Phase6AppState extends State<Phase6App> {
   late Future<ProfessionCreationStore> _opening = _open();
 
   Future<ProfessionCreationStore> _open() async {
+    if (widget.phase7) await initializeDateFormatting();
     final store = await widget.open();
     final settings = await store.settings();
     final code = settings['locale'];
@@ -88,7 +101,9 @@ class _Phase6AppState extends State<Phase6App> {
     builder: (_, locale, _) => ValueListenableBuilder(
       valueListenable: _accent,
       builder: (_, accent, _) => MaterialApp(
-        title: 'CPD · Phase 6 rehearsal',
+        title: widget.phase7
+            ? 'CPD · Phase 7 rehearsal'
+            : 'CPD · Phase 6 rehearsal',
         locale: locale,
         theme: AppTheme.forAccent(accent),
         supportedLocales: AppLocalizations.supportedLocales,
@@ -113,6 +128,8 @@ class _Phase6AppState extends State<Phase6App> {
               store: snapshot.requireData,
               locale: _locale,
               accent: _accent,
+              phase7: widget.phase7,
+              originals: widget.originals,
             );
           },
         ),
@@ -126,7 +143,11 @@ class _Launch extends StatefulWidget {
     required this.store,
     required this.locale,
     required this.accent,
+    required this.phase7,
+    this.originals,
   });
+  final bool phase7;
+  final ManagedAttachmentFiles? originals;
   final ProfessionCreationStore store;
   final ValueNotifier<Locale?> locale;
   final ValueNotifier<AppAccent> accent;
@@ -169,11 +190,16 @@ class _LaunchState extends State<_Launch> {
         ),
         CreationStartup.resumeCreation => ProfessionCreationPage(
           first: true,
+          phase7: widget.phase7,
           store: widget.store,
           onBack: () => _show(CreationStartup.welcome),
           onCreated: (_) => _reload(),
         ),
-        CreationStartup.home => _Home(store: widget.store),
+        CreationStartup.home => _Home(
+          store: widget.store,
+          phase7: widget.phase7,
+          originals: widget.originals,
+        ),
       };
     },
   );
@@ -197,7 +223,9 @@ class RetryPage extends StatelessWidget {
 }
 
 class _Home extends StatefulWidget {
-  const _Home({required this.store});
+  const _Home({required this.store, required this.phase7, this.originals});
+  final bool phase7;
+  final ManagedAttachmentFiles? originals;
   final ProfessionCreationStore store;
   @override
   State<_Home> createState() => _HomeState();
@@ -212,6 +240,82 @@ class _HomeState extends State<_Home> {
         _professions = widget.store.repository.loadCollections();
       });
     }
+  }
+
+  Future<void> _open(
+    RecordingCollection profession, {
+    bool add = false,
+    bool search = false,
+  }) async {
+    if (add) {
+      final history = await widget.store.repository.loadLayouts(profession.id);
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => _SampleRecordPage(
+            store: widget.store,
+            collection: profession.id,
+            history: history,
+            phase7: true,
+          ),
+        ),
+      );
+    } else {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => _ProfessionPage(
+            store: widget.store,
+            profession: profession,
+            phase7: true,
+            search: search,
+            originals: widget.originals,
+          ),
+        ),
+      );
+    }
+    _refresh();
+  }
+
+  Future<void> _manage(
+    RecordingCollection profession, {
+    bool delete = false,
+  }) async {
+    final s = editorStrings(context);
+    var draft = profession.label;
+    final answer = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(delete ? s.deleteProfessionTitle : s.renameProfessionTitle),
+        content: delete
+            ? Text(s.removeProfessionConfirm(profession.label))
+            : TextFormField(
+                initialValue: draft,
+                onChanged: (value) => draft = value,
+              ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(s.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(delete ? s.deleteProfession : s.save),
+          ),
+        ],
+      ),
+    );
+    if (answer != true || !mounted) return;
+    if (!delete &&
+        (draft.trim() == profession.label ||
+            await widget.store.checkName(draft) != null)) {
+      return;
+    }
+    await widget.store.repository.updateCollection(
+      profession.id,
+      label: delete ? null : cpdProfessionLabel(draft),
+      deleted: delete ? true : null,
+    );
+    _refresh();
   }
 
   @override
@@ -240,6 +344,7 @@ class _HomeState extends State<_Home> {
                     MaterialPageRoute<String>(
                       builder: (context) => ProfessionCreationPage(
                         store: widget.store,
+                        phase7: widget.phase7,
                         onCreated: (id) => Navigator.pop(context, id),
                       ),
                     ),
@@ -249,20 +354,37 @@ class _HomeState extends State<_Home> {
               ),
               const SizedBox(height: 12),
               for (final profession in active)
-                ListTile(
-                  key: ValueKey(profession.id),
-                  title: Text(profession.label),
-                  leading: const Icon(Icons.work_outline),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => _ProfessionPage(
-                        store: widget.store,
-                        profession: profession,
+                if (widget.phase7)
+                  RehearsalProfessionCard(
+                    key: ValueKey(profession.id),
+                    store: widget.store,
+                    profession: profession,
+                    originals: widget.originals,
+                    onRefresh: _refresh,
+                    onAdd: () => _open(profession, add: true),
+                    onView: () => _open(profession),
+                    onSearch: () => _open(profession, search: true),
+                    onScan: () => ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(s.p7Internal))),
+                    onRename: () => _manage(profession),
+                    onDelete: () => _manage(profession, delete: true),
+                  )
+                else
+                  ListTile(
+                    key: ValueKey(profession.id),
+                    title: Text(profession.label),
+                    leading: const Icon(Icons.work_outline),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => _ProfessionPage(
+                          store: widget.store,
+                          profession: profession,
+                        ),
                       ),
                     ),
                   ),
-                ),
             ],
           );
         },
@@ -272,7 +394,15 @@ class _HomeState extends State<_Home> {
 }
 
 class _ProfessionPage extends StatefulWidget {
-  const _ProfessionPage({required this.store, required this.profession});
+  const _ProfessionPage({
+    required this.store,
+    required this.profession,
+    this.phase7 = false,
+    this.search = false,
+    this.originals,
+  });
+  final bool phase7, search;
+  final ManagedAttachmentFiles? originals;
   final ProfessionCreationStore store;
   final RecordingCollection profession;
   @override
@@ -280,6 +410,7 @@ class _ProfessionPage extends StatefulWidget {
 }
 
 class _ProfessionPageState extends State<_ProfessionPage> {
+  String _query = "";
   late Future<(List<LayoutRevision>, List<RecordingRecord>, CreationAccess)>
   _state = _load();
   Future<(List<LayoutRevision>, List<RecordingRecord>, CreationAccess)>
@@ -321,6 +452,18 @@ class _ProfessionPageState extends State<_ProfessionPage> {
     List<RecordingRecord> records,
     int version,
   ) async {
+    if (widget.phase7) {
+      await openSchemeReport(
+        context,
+        widget.store,
+        widget.profession,
+        history,
+        records,
+        version,
+        originals: widget.originals,
+      );
+      return;
+    }
     final revision = history.singleWhere((layout) => layout.version == version);
     final rules = await widget.store.requireOwnedReport(revision);
     final original = history.firstWhere(
@@ -432,6 +575,7 @@ class _ProfessionPageState extends State<_ProfessionPage> {
           collection: widget.profession.id,
           history: history,
           record: record,
+          phase7: widget.phase7,
         ),
       ),
     );
@@ -472,19 +616,41 @@ class _ProfessionPageState extends State<_ProfessionPage> {
                   onPressed: () => _standardReport(history, records),
                   child: Text(s.editorExport),
                 ),
-              for (final (index, record) in records.indexed)
-                ListTile(
-                  title: Text('${s.editorExample} ${index + 1}'),
-                  onTap: () => _record(history, record),
-                  trailing: !hasTemplate
-                      ? null
-                      : IconButton(
-                          tooltip: s.p6OpenReport,
-                          icon: const Icon(Icons.picture_as_pdf_outlined),
-                          onPressed: () =>
-                              _report(history, [record], record.layoutVersion),
-                        ),
+              if (widget.search)
+                TextField(
+                  decoration: InputDecoration(labelText: s.editorSearch),
+                  onChanged: (value) => setState(() => _query = value),
                 ),
+              for (final (index, record) in records.indexed)
+                if (!widget.search ||
+                    record.matches(
+                      _query,
+                      resolveFields(record.layoutVersion, history),
+                    ))
+                  ListTile(
+                    title: Text(
+                      widget.phase7
+                          ? (record.values[cpdFieldBindings(
+                                      resolveFields(
+                                        record.layoutVersion,
+                                        history,
+                                      ),
+                                    )['cpd.title']]
+                                    as String? ??
+                                '${s.editorExample} ${index + 1}')
+                          : '${s.editorExample} ${index + 1}',
+                    ),
+                    onTap: () => _record(history, record),
+                    trailing: !hasTemplate
+                        ? null
+                        : IconButton(
+                            tooltip: s.p6OpenReport,
+                            icon: const Icon(Icons.picture_as_pdf_outlined),
+                            onPressed: () => _report(history, [
+                              record,
+                            ], record.layoutVersion),
+                          ),
+                  ),
             ],
           );
         },
@@ -499,7 +665,9 @@ class _SampleRecordPage extends StatefulWidget {
     required this.collection,
     required this.history,
     this.record,
+    this.phase7 = false,
   });
+  final bool phase7;
   final ProfessionCreationStore store;
   final String collection;
   final List<LayoutRevision> history;
@@ -512,6 +680,34 @@ class _SampleRecordPageState extends State<_SampleRecordPage> {
   late final _version =
       widget.record?.layoutVersion ?? widget.history.last.version;
   late final _fields = resolveFields(_version, widget.history);
+  late final _display = () {
+    if (!widget.phase7) return _fields;
+    final layout = widget.history.firstWhere(
+      (revision) => revision.version == _version,
+    );
+    final bundle = phase7Bundles[(layout.templateId, layout.templateVersion)];
+    if (bundle == null) return _fields;
+    final base = widget.history.firstWhere(
+      (revision) =>
+          revision.templateId == bundle.recipe.id &&
+          revision.templateVersion == bundle.recipe.version,
+    );
+    final translated = {
+      for (final (index, definition) in previewFields(bundle).indexed)
+        base.fields[index].id: definition.definition,
+    };
+    return [
+      for (final field in _fields)
+        if (translated[field.id] case final definition?
+            when definition.version == field.definition.version)
+          LayoutField.fromJson({
+            ...field.toJson(),
+            'definition': definition.toJson(),
+          })
+        else
+          field,
+    ];
+  }();
   late final _values = Map<String, Object>.of(
     widget.record?.values ?? initialFieldValues(_fields),
   );
@@ -584,7 +780,7 @@ class _SampleRecordPageState extends State<_SampleRecordPage> {
   Widget build(BuildContext context) {
     final s = editorStrings(context);
     final ids = widget.history.last.fields.map((f) => f.id).toSet();
-    final old = _fields.where((field) => !ids.contains(field.id)).toList();
+    final old = _display.where((field) => !ids.contains(field.id)).toList();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -594,7 +790,7 @@ class _SampleRecordPageState extends State<_SampleRecordPage> {
       body: BoundedList(
         children: [
           RecordingForm(
-            fields: _fields.where((field) => ids.contains(field.id)).toList(),
+            fields: _display.where((field) => ids.contains(field.id)).toList(),
             values: _values,
             sampleAttachmentId: _sampleEvidence,
             onChanged: _edit,
