@@ -5,6 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 import '../recording_engine/import_plan.dart';
+import '../recording_engine/layout_draft.dart';
 import '../recording_engine/models.dart';
 
 part 'sqlite_recording_import.dart';
@@ -19,7 +20,7 @@ class SqliteRecordingRepository {
   SqliteRecordingRepository._(this._db);
 
   final DatabaseExecutor _db;
-  static const schemaVersion = 3;
+  static const schemaVersion = 4;
   static const _uuid = Uuid();
 
   /// An explicit database path is required. No application storage is opened
@@ -35,6 +36,16 @@ class SqliteRecordingRepository {
         onUpgrade: (db, from, to) async {
           if (from < 2) await db.execute(_hostStateSchema);
           if (from < 3) await db.execute(_importPayloadSchema);
+          if (from < 4) {
+            for (final table in ['templates', 'layouts']) {
+              final columns = await db.rawQuery('PRAGMA table_info($table)');
+              if (!columns.any((column) => column['name'] == 'settings')) {
+                await db.execute(
+                  "ALTER TABLE $table ADD COLUMN settings TEXT NOT NULL DEFAULT '{}'",
+                );
+              }
+            }
+          }
         },
         onConfigure: (db) async {
           await db.execute('PRAGMA foreign_keys = ON');
@@ -161,14 +172,16 @@ class SqliteRecordingRepository {
     required Future<bool> Function(RecordingAttachment) verifyManagedOriginal,
   }) => _verifyImport(this, plan, verifyManagedOriginal);
 
-  Future<void> saveTemplate(TemplateVersion template) =>
+  Future<void> saveTemplate(TemplateVersion template, {int? maxActiveFields}) =>
       _transaction((tx) async {
+        _validateFieldLimit(template.fields, maxActiveFields);
         await _registerDefinitions(tx, template.fields);
         await tx.insert('templates', {
           'id': template.id,
           'version': template.version,
           'label': template.label,
           'fields': _encodeFields(template.fields),
+          'settings': jsonEncode(template.settingsToJson()),
         });
       });
 
@@ -180,17 +193,29 @@ class SqliteRecordingRepository {
     );
     if (rows.isEmpty) return null;
     final row = rows.single;
+    final settings =
+        jsonDecode(row['settings'] as String) as Map<String, dynamic>;
     return TemplateVersion(
       id: id,
       version: version,
       label: row['label'] as String,
       fields: _decodeFields(row['fields'] as String),
+      headings: readHeadings(settings['headings']),
+      origin: TemplateOrigin.values.byName(
+        settings['origin'] as String? ?? 'user',
+      ),
+      description: settings['description'] as String?,
+      translations: readTranslations(settings['translations']),
+      descriptionTranslations: readTranslations(
+        settings['descriptionTranslations'],
+      ),
     );
   }
 
   Future<RecordingCollection> createCollection(
     String label, {
     Iterable<LayoutField> fields = const [],
+    Iterable<SectionHeading> headings = const [],
     int? maxActiveFields,
   }) => _transaction((tx) async {
     final collection = RecordingCollection(_uuid.v4(), label, 1);
@@ -198,8 +223,9 @@ class SqliteRecordingRepository {
       collectionId: collection.id,
       version: 1,
       fields: fields,
+      headings: headings,
     );
-    _validateFieldLimit(layout, maxActiveFields);
+    _validateFieldLimit(layout.fields, maxActiveFields);
     await _insertCollection(tx, collection);
     await _insertLayout(tx, layout);
     return collection;
@@ -224,20 +250,21 @@ class SqliteRecordingRepository {
     final saved = await loadTemplate(template.id, template.version);
     if (saved == null ||
         saved.label != template.label ||
+        jsonEncode(saved.settingsToJson()) !=
+            jsonEncode(template.settingsToJson()) ||
         _encodeFields(saved.fields) != _encodeFields(template.fields)) {
       throw StateError('Apply a saved, immutable template version.');
     }
+    final ids = {for (final field in saved.fields) field.id: _uuid.v4()};
     return _reviseLayout(
       collectionId,
-      [
-        for (final field in saved.fields)
-          LayoutField(
-            id: _uuid.v4(),
-            definition: field.definition,
-            labelOverride: field.labelOverride,
-            required: field.required,
-            helpText: field.helpText,
-            placeholder: field.placeholder,
+      [for (final field in saved.fields) field.reidentify(ids[field.id]!)],
+      headings: [
+        for (final heading in saved.headings)
+          SectionHeading(
+            _uuid.v4(),
+            heading.label,
+            beforeFieldId: ids[heading.beforeFieldId],
           ),
       ],
       expectedVersion: expectedVersion,
@@ -247,17 +274,28 @@ class SqliteRecordingRepository {
     );
   }
 
+  Future<LayoutRevision> saveLayoutDraft(LayoutDraft draft) => reviseLayout(
+    draft.collectionId,
+    draft.fields,
+    expectedVersion: draft.baseVersion,
+    headings: draft.headings,
+    includeExisting: draft.includeExisting,
+    maxActiveFields: draft.maxActiveFields,
+  );
+
   Future<LayoutRevision> reviseLayout(
     String collectionId,
     Iterable<LayoutField> fields, {
     required int expectedVersion,
     Iterable<String> includeExisting = const [],
+    Iterable<SectionHeading>? headings,
     int? maxActiveFields,
   }) => _reviseLayout(
     collectionId,
     fields,
     expectedVersion: expectedVersion,
     includeExisting: includeExisting,
+    headings: headings,
     maxActiveFields: maxActiveFields,
   );
 
@@ -266,6 +304,7 @@ class SqliteRecordingRepository {
     Iterable<LayoutField> fields, {
     required int expectedVersion,
     Iterable<String> includeExisting = const [],
+    Iterable<SectionHeading>? headings,
     int? maxActiveFields,
     String? templateId,
     int? templateVersion,
@@ -282,19 +321,18 @@ class SqliteRecordingRepository {
       version: current + 1,
       fields: fields,
       includeExisting: includeExisting,
+      headings: headings ?? revisions.last.headings,
       templateId: templateId ?? revisions.last.templateId,
       templateVersion: templateVersion ?? revisions.last.templateVersion,
     );
-    _validateFieldLimit(revision, maxActiveFields);
+    _validateFieldLimit(revision.fields, maxActiveFields);
     final previousIds = revisions.last.fields.map((field) => field.id).toSet();
     for (final field in revision.fields) {
       final previous = historic[field.id];
       if (previous != null &&
           (!previousIds.contains(field.id) ||
               revision.includeExisting.contains(field.id) ||
-              previous.definition.kind != field.definition.kind ||
-              previous.definition.id != field.definition.id ||
-              previous.definition.version > field.definition.version)) {
+              !previous.canReviseAs(field))) {
         throw ArgumentError(
           'Use a new field ID for a replacement or historical addition.',
         );
@@ -589,6 +627,9 @@ class SqliteRecordingRepository {
                   .cast<String>(),
           templateId: row['template_id'] as String?,
           templateVersion: row['template_version'] as int?,
+          headings: readHeadings(
+            (jsonDecode(row['settings'] as String) as Map)['headings'],
+          ),
         ),
     ];
   }
@@ -634,6 +675,7 @@ class SqliteRecordingRepository {
       'include_existing': jsonEncode(revision.includeExisting.toList()),
       'template_id': revision.templateId,
       'template_version': revision.templateVersion,
+      'settings': _encodeLayoutSettings(revision),
     });
   }
 
@@ -664,8 +706,8 @@ class SqliteRecordingRepository {
     }
   }
 
-  static void _validateFieldLimit(LayoutRevision layout, int? maximum) {
-    if (maximum != null && layout.fields.length > maximum) {
+  static void _validateFieldLimit(Iterable<LayoutField> fields, int? maximum) {
+    if (maximum != null && fields.length > maximum) {
       throw ArgumentError('The layout exceeds the active field limit.');
     }
   }
@@ -803,7 +845,8 @@ const _schema = [
   )''',
   '''CREATE TABLE templates (
     id TEXT NOT NULL, version INTEGER NOT NULL, label TEXT NOT NULL,
-    fields TEXT NOT NULL, PRIMARY KEY (id, version)
+    fields TEXT NOT NULL, settings TEXT NOT NULL DEFAULT '{}',
+    PRIMARY KEY (id, version)
   )''',
   '''CREATE TABLE collections (
     id TEXT NOT NULL PRIMARY KEY, label TEXT NOT NULL,
@@ -813,6 +856,7 @@ const _schema = [
     collection_id TEXT NOT NULL REFERENCES collections(id),
     version INTEGER NOT NULL, fields TEXT NOT NULL, include_existing TEXT NOT NULL,
     template_id TEXT, template_version INTEGER,
+    settings TEXT NOT NULL DEFAULT '{}',
     PRIMARY KEY (collection_id, version),
     FOREIGN KEY (template_id, template_version) REFERENCES templates(id, version)
   )''',
@@ -838,3 +882,7 @@ const _schema = [
   )''',
   'CREATE INDEX attachment_links_asset ON attachment_links(attachment_id)',
 ];
+String _encodeLayoutSettings(LayoutRevision layout) => jsonEncode({
+  if (layout.headings.isNotEmpty)
+    'headings': [for (final heading in layout.headings) heading.toJson()],
+});

@@ -47,3 +47,56 @@ LayoutField _field(
     multiline: multiline,
   ),
 );
+
+TemplateVersion measuredEquipmentTemplate(int version) {
+  final base = equipmentTemplate(version);
+  return TemplateVersion(
+    id: 'equipment-maintenance',
+    version: version,
+    label: base.label,
+    description: 'Inspect equipment and document measurements and evidence.',
+    translations: const {'fr': 'Entretien du matériel'},
+    headings: [
+      SectionHeading(
+        'inspection-section',
+        'Inspection',
+        beforeFieldId: 'asset',
+      ),
+      SectionHeading(
+        'evidence-section',
+        'Supporting evidence',
+        beforeFieldId: 'evidence',
+      ),
+    ],
+    fields: [
+      ...base.fields.take(3),
+      _field('work', 'Work performed', FieldKind.text, multiline: true),
+      LayoutField(
+        id: 'pressure',
+        definition: FieldDefinition(
+          id: 'equipment.pressure',
+          version: version,
+          label: 'Test pressure',
+          kind: FieldKind.decimal,
+          unit: version == 1 ? 'bar' : 'kPa',
+          decimalPlaces: version == 1 ? 2 : 1,
+          nonNegative: true,
+        ),
+      ),
+      _field('cycle', 'Cycle count', FieldKind.integer),
+      ...base.fields.skip(3).where((field) => field.id != 'evidence'),
+      LayoutField(
+        id: 'lockout',
+        definition: FieldDefinition(
+          id: 'equipment.lockout',
+          version: 1,
+          label: 'Lockout checked',
+          kind: FieldKind.boolean,
+        ),
+        format: FieldFormat.checkbox,
+      ),
+      _field('manual', 'Manual URL', FieldKind.url),
+      base.fields.last,
+    ],
+  );
+}

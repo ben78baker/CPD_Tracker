@@ -1,93 +1,8 @@
-/// Types supported by the recording foundation. Host-specific meanings are
-/// expressed by bindings to field IDs, outside the recording engine.
-enum FieldKind { text, date, duration, choice, multipleChoices, attachments }
+import 'fields.dart';
+import 'layout_details.dart';
 
-class FieldDefinition {
-  FieldDefinition({
-    required this.id,
-    required this.version,
-    required this.label,
-    required this.kind,
-    Map<String, String> choices = const {},
-    this.multiline = false,
-  }) : choices = Map.unmodifiable(choices) {
-    if (id.trim().isEmpty || version < 1 || label.trim().isEmpty) {
-      throw ArgumentError('A field definition needs an ID, version and label.');
-    }
-    final selectable =
-        kind == FieldKind.choice || kind == FieldKind.multipleChoices;
-    if (selectable != choices.isNotEmpty ||
-        choices.entries.any(
-          (choice) => choice.key.trim().isEmpty || choice.value.trim().isEmpty,
-        ) ||
-        (multiline && kind != FieldKind.text)) {
-      throw ArgumentError('Field configuration does not match its type.');
-    }
-  }
-
-  final String id;
-  final int version;
-  final String label;
-  final FieldKind kind;
-  final bool multiline;
-
-  /// Stable option ID to display label, in presentation order.
-  final Map<String, String> choices;
-
-  void validate(Object value) {
-    final valid = switch (kind) {
-      FieldKind.text => value is String,
-      FieldKind.date => value is String && isCalendarDay(value),
-      FieldKind.duration => value is int && value >= 0,
-      FieldKind.choice => value is String && choices.containsKey(value),
-      FieldKind.multipleChoices =>
-        value is List &&
-            value.isNotEmpty &&
-            value.toSet().length == value.length &&
-            value.every(choices.containsKey),
-      FieldKind.attachments =>
-        value is List &&
-            value.isNotEmpty &&
-            value.every((id) => id is String && id.trim().isNotEmpty),
-    };
-    if (!valid) throw ArgumentError('Invalid value for field definition $id.');
-  }
-
-  Object displayValue(Object value) => switch (kind) {
-    FieldKind.choice => choices[value]!,
-    FieldKind.multipleChoices => List<String>.unmodifiable(
-      (value as List).map((id) => choices[id]!),
-    ),
-    _ => value,
-  };
-
-  Map<String, Object?> toJson() => {
-    'id': id,
-    'version': version,
-    'label': label,
-    'kind': kind.name,
-    'choices': choices,
-    'multiline': multiline,
-  };
-
-  factory FieldDefinition.fromJson(Map<String, dynamic> json) =>
-      FieldDefinition(
-        id: json['id'] as String,
-        version: json['version'] as int,
-        label: json['label'] as String,
-        kind: FieldKind.values.byName(json['kind'] as String),
-        choices: (json['choices'] as Map).cast<String, String>(),
-        multiline: json['multiline'] as bool,
-      );
-}
-
-bool isCalendarDay(String value) {
-  if (!RegExp(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$').hasMatch(value)) return false;
-  final date = DateTime.tryParse(value);
-  return date != null &&
-      date.year > 0 &&
-      date.toIso8601String().startsWith(value);
-}
+export 'fields.dart';
+export 'layout_details.dart';
 
 class LayoutField {
   LayoutField({
@@ -97,9 +12,26 @@ class LayoutField {
     this.labelOverride,
     this.helpText,
     this.placeholder,
-  }) {
+    this.format = FieldFormat.standard,
+    this.source,
+    Object? defaultValue,
+  }) : defaultValue = defaultValue is List
+           ? List<Object?>.unmodifiable(defaultValue)
+           : defaultValue {
     if (id.trim().isEmpty || labelOverride?.trim().isEmpty == true) {
       throw ArgumentError('A field needs an ID and a nonblank label.');
+    }
+    if ((format == FieldFormat.checkbox &&
+            definition.kind != FieldKind.boolean) ||
+        (format == FieldFormat.photograph &&
+            definition.kind != FieldKind.attachments)) {
+      throw ArgumentError('The format does not match the field type.');
+    }
+    if (this.defaultValue case final value?) {
+      if (definition.kind == FieldKind.attachments) {
+        throw ArgumentError('An attachment must be selected for each record.');
+      }
+      definition.validate(value);
     }
   }
 
@@ -109,7 +41,31 @@ class LayoutField {
   final String? labelOverride;
   final String? helpText;
   final String? placeholder;
+  final Object? defaultValue;
+  final FieldFormat format;
+  final LibrarySource? source;
   String get label => labelOverride ?? definition.label;
+  String localizedLabel(String? locale) =>
+      labelOverride ?? definition.localizedLabel(locale);
+
+  bool canReviseAs(LayoutField replacement) =>
+      id == replacement.id &&
+      source?.id == replacement.source?.id &&
+      source?.version == replacement.source?.version &&
+      definition.hasSameValueMeaning(replacement.definition) &&
+      definition.version <= replacement.definition.version;
+
+  LayoutField reidentify(String newId) => LayoutField(
+    id: newId,
+    definition: definition,
+    required: required,
+    labelOverride: labelOverride,
+    helpText: helpText,
+    placeholder: placeholder,
+    format: format,
+    source: source,
+    defaultValue: defaultValue,
+  );
 
   Map<String, Object?> toJson() => {
     'id': id,
@@ -118,6 +74,9 @@ class LayoutField {
     'labelOverride': labelOverride,
     'helpText': helpText,
     'placeholder': placeholder,
+    if (format != FieldFormat.standard) 'format': format.name,
+    if (source case final library?) 'source': library.toJson(),
+    if (defaultValue != null) 'defaultValue': defaultValue,
   };
 
   factory LayoutField.fromJson(Map<String, dynamic> json) => LayoutField(
@@ -129,6 +88,11 @@ class LayoutField {
     labelOverride: json['labelOverride'] as String?,
     helpText: json['helpText'] as String?,
     placeholder: json['placeholder'] as String?,
+    format: FieldFormat.values.byName(json['format'] as String? ?? 'standard'),
+    source: json['source'] == null
+        ? null
+        : LibrarySource.fromJson(json['source'] as Map<String, dynamic>),
+    defaultValue: json['defaultValue'],
   );
 }
 
@@ -139,17 +103,44 @@ class TemplateVersion {
     required this.version,
     required this.label,
     required Iterable<LayoutField> fields,
-  }) : fields = List.unmodifiable(fields) {
+    Iterable<SectionHeading> headings = const [],
+    this.origin = TemplateOrigin.user,
+    this.description,
+    Map<String, String> translations = const {},
+    Map<String, String> descriptionTranslations = const {},
+  }) : fields = List.unmodifiable(fields),
+       headings = List.unmodifiable(headings),
+       translations = Map.unmodifiable(translations),
+       descriptionTranslations = Map.unmodifiable(descriptionTranslations) {
     if (id.trim().isEmpty || version < 1 || label.trim().isEmpty) {
       throw ArgumentError('A template needs an ID, version and label.');
     }
-    _checkFieldIds(this.fields);
+    validateLayout(this.fields, this.headings);
   }
 
   final String id;
   final int version;
   final String label;
   final List<LayoutField> fields;
+  final List<SectionHeading> headings;
+  final TemplateOrigin origin;
+  final String? description;
+  final Map<String, String> translations;
+  final Map<String, String> descriptionTranslations;
+
+  String localizedLabel(String? locale) =>
+      localize(label, translations, locale);
+  String localizedDescription(String? locale) =>
+      localize(description ?? '', descriptionTranslations, locale);
+
+  Map<String, Object?> settingsToJson() => {
+    if (origin != TemplateOrigin.user) 'origin': origin.name,
+    if (description != null) 'description': description,
+    if (translations.isNotEmpty) 'translations': translations,
+    if (descriptionTranslations.isNotEmpty)
+      'descriptionTranslations': descriptionTranslations,
+    if (headings.isNotEmpty) 'headings': [for (final h in headings) h.toJson()],
+  };
 }
 
 class LayoutRevision {
@@ -158,17 +149,21 @@ class LayoutRevision {
     required this.version,
     required Iterable<LayoutField> fields,
     Iterable<String> includeExisting = const [],
+    Iterable<SectionHeading> headings = const [],
     this.templateId,
     this.templateVersion,
   }) : fields = List.unmodifiable(fields),
+       headings = List.unmodifiable(headings),
        includeExisting = Set.unmodifiable(includeExisting) {
-    _checkFieldIds(this.fields);
+    validateLayout(this.fields, this.headings);
     if (collectionId.trim().isEmpty ||
         version < 1 ||
         !this.includeExisting.every(
           this.fields.map((field) => field.id).contains,
         ) ||
-        (templateId == null) != (templateVersion == null)) {
+        (templateId == null) != (templateVersion == null) ||
+        templateId?.trim().isEmpty == true ||
+        (templateVersion != null && templateVersion! < 1)) {
       throw ArgumentError('Invalid layout revision.');
     }
   }
@@ -176,16 +171,33 @@ class LayoutRevision {
   final String collectionId;
   final int version;
   final List<LayoutField> fields;
+  final List<SectionHeading> headings;
   final Set<String> includeExisting;
   final String? templateId;
   final int? templateVersion;
 }
 
-void _checkFieldIds(List<LayoutField> fields) {
-  if (fields.map((field) => field.id).toSet().length != fields.length) {
+void validateLayout(List<LayoutField> fields, List<SectionHeading> headings) {
+  final ids = fields.map((field) => field.id).toSet();
+  if (ids.length != fields.length) {
     throw ArgumentError('Field IDs must be unique within a layout.');
   }
+  for (final heading in headings) {
+    if (!ids.add(heading.id) ||
+        (heading.beforeFieldId != null &&
+            !fields.any((field) => field.id == heading.beforeFieldId))) {
+      throw ArgumentError(
+        'Section headings require unique IDs and valid anchors.',
+      );
+    }
+  }
 }
+
+/// Defaults are an explicit new-record operation. Historical edits resolve
+/// original field definitions and do not call this helper.
+Map<String, Object> initialFieldValues(Iterable<LayoutField> fields) => {
+  for (final field in fields) field.id: ?field.defaultValue,
+};
 
 /// Resolves the original field meanings and applies only explicitly
 /// retrospective additions. Labels and choices are from the applicable snapshot.

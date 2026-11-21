@@ -342,6 +342,8 @@ Future<void> _verifyGraph(DatabaseExecutor db, RecordingImportPlan plan) async {
         layouts.single.templateId != expected.templateId ||
         layouts.single.templateVersion != expected.templateVersion ||
         layouts.single.includeExisting.isNotEmpty ||
+        _encodeLayoutSettings(layouts.single) !=
+            _encodeLayoutSettings(expected) ||
         _encodeFields(layouts.single.fields) !=
             _encodeFields(expected.fields)) {
       throw StateError('A staged layout differs from the plan.');
