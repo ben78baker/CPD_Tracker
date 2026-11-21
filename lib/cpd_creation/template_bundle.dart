@@ -3,7 +3,7 @@ import 'dart:convert';
 import '../cpd_compatibility/cpd_layout_policy.dart';
 import '../recording_engine/models.dart';
 import '../recording_engine/template_review.dart';
-import '../recording_reports/activity_document.dart' show ReportBranding;
+import '../recording_reports/activity_document_data.dart';
 
 enum ActivityInput {
   date(FieldKind.date),
@@ -82,6 +82,7 @@ class ProfessionTemplateBundle {
     profession = json['profession'] as String;
     country = json['country'] as String;
     body = json['body'] as String;
+    sourceLanguage = json['sourceLanguage'] as String? ?? 'en';
     reviewed = json['reviewed'] as String;
     product = json['product'] as String;
     sources = List.unmodifiable((json['sources'] as List).cast<String>());
@@ -145,6 +146,9 @@ class ProfessionTemplateBundle {
         ),
       ),
     );
+    if (!const {'en', 'de', 'es', 'fr', 'hi', 'pt'}.contains(sourceLanguage)) {
+      throw const FormatException('Unsupported template source language.');
+    }
     _validate();
   }
 
@@ -165,6 +169,7 @@ class ProfessionTemplateBundle {
   late final List<SchemeMetric> metrics;
   late final bool showDeadline;
   late final ReportBranding branding;
+  late final String sourceLanguage;
   late final Map<String, String> sampleEvidence;
   late final List<BundleExample> examples;
   late final Map<String, Map<String, String>> labels;
@@ -361,6 +366,7 @@ class ProfessionTemplateBundle {
     'profession': profession,
     'country': country,
     'body': body,
+    'sourceLanguage': sourceLanguage,
     'reviewed': reviewed,
     'product': product,
     'sources': sources,

@@ -43,12 +43,53 @@ Future<Uint8List> buildSchemeReport({
   pw.Font? regular,
   pw.Font? bold,
   List<pw.Font> fallback = const [],
+}) async => buildActivityDocument(
+  await prepareSchemeReport(
+    bundle: bundle,
+    progress: progress,
+    bindings: bindings,
+    evidence: evidence,
+    strings: strings,
+    practitioner: practitioner,
+    reportLocale: reportLocale,
+    excluded: excluded,
+    incompleteLayout: incompleteLayout,
+    example: example,
+  ),
+  brandIcon: brandIcon,
+  regular: regular,
+  bold: bold,
+  fallback: fallback,
+);
+
+List<String> schemeTraceabilityDetails(
+  ProfessionTemplateBundle bundle,
+  SchemePeriod period,
+  AppLocalizations strings,
+) => [
+  '${strings.editorVersion} ${period.templateVersion}',
+  '${strings.p7RuleRevision} ${period.ruleVersion}',
+  '${strings.p7Reviewed} · ${formatSchemeDate(bundle.reviewed, strings)}',
+];
+
+Future<ActivityDocumentData> prepareSchemeReport({
+  required ProfessionTemplateBundle bundle,
+  required SchemeProgress progress,
+  required Map<String, LayoutField> bindings,
+  required Map<String, SchemeEvidence> evidence,
+  required AppLocalizations strings,
+  required String practitioner,
+  ReportLocale? reportLocale,
+  Set<String> excluded = const {},
+  bool incompleteLayout = false,
+  bool example = false,
 }) async {
   await initializeDateFormatting();
   final display = reportLocale ?? ReportLocale(strings);
   final s = display.strings;
   final locale = display.tag;
   String date(String day) => display.date(DateTime.parse('${day}T00:00:00Z'));
+  final foreignSource = s.localeName != bundle.sourceLanguage;
   var sourceLanguageUsed = false;
   String localised(
     String key,
@@ -56,7 +97,7 @@ Future<Uint8List> buildSchemeReport({
     bool fallbackTranslated = false,
   }) {
     final text = bundle.translatedLabel(key, locale);
-    if (text == null && !fallbackTranslated && s.localeName != 'en') {
+    if (text == null && !fallbackTranslated && foreignSource) {
       sourceLanguageUsed = true;
     }
     return text ?? fallback;
@@ -66,21 +107,21 @@ Future<Uint8List> buildSchemeReport({
   final byInstance = {
     for (final entry in bindings.entries) entry.value.id: entry.key,
   };
-  final appendix = <String, DocumentReference>{};
-  String attachmentReference(String id) {
-    final number = appendix.putIfAbsent(id, () {
-      final item = evidence[id];
-      final label =
-          'E${display.integer(appendix.length + 1)} · ${item?.name ?? id}';
-      return (
+  final appendix = <String, ({String number, DocumentReference reference})>{};
+  String attachmentReference(String id) => appendix.putIfAbsent(id, () {
+    final item = evidence[id];
+    final number = 'E${display.integer(appendix.length + 1)}';
+    final label = '$number · ${item?.name ?? id}';
+    return (
+      number: number,
+      reference: (
         label: item?.available == true
             ? label
             : '$label · ${s.p7IssueEvidence}',
-        url: item?.url,
-      );
-    });
-    return number.label.split(' · ').first;
-  }
+        url: item?.available == true ? item?.url : null,
+      ),
+    );
+  }).number;
 
   String valueLabel(LayoutField field, Object value) {
     final def = field.definition;
@@ -89,13 +130,17 @@ Future<Uint8List> buildSchemeReport({
     } on ArgumentError {
       return '${value.toString()} · ${s.p7IssueInvalid}';
     }
-    if (def.choices.isNotEmpty && s.localeName != 'en') {
+    if (def.choices.isNotEmpty && foreignSource) {
       // Controlled labels are retained as authored for each historical version.
       sourceLanguageUsed = true;
     }
     return switch (def.kind) {
       FieldKind.attachments =>
-        (value as List).cast<String>().map(attachmentReference).join(', '),
+        (value as List)
+            .cast<String>()
+            .toSet()
+            .map(attachmentReference)
+            .join(', '),
       FieldKind.duration => display.duration(value as int),
       FieldKind.date => date(value as String),
       FieldKind.integer => display.integer(value as int),
@@ -170,13 +215,12 @@ Future<Uint8List> buildSchemeReport({
         display.duration(progress.metrics[metric.id]!.eligible),
       ],
   ];
-  return buildActivityDocument(
+  return ActivityDocumentData(
     title: title,
     appName: 'CPD Progress Tracker',
     attribution: s.p7aAttribution,
     documentTag: example ? s.p7Synthetic : s.p7Internal,
     branding: bundle.branding,
-    brandIcon: brandIcon,
     summaryTitle: s.p7Summary,
     summaryColumns: [
       s.p7aReportMeasure,
@@ -204,16 +248,9 @@ Future<Uint8List> buildSchemeReport({
     ],
     activities: activities,
     evidenceTitle: s.p7EvidenceIndex,
-    evidence: appendix.values.toList(),
+    evidence: appendix.values.map((item) => item.reference).toList(),
     continued: s.cpdPdfContinuedTitle,
     pageOf: s.pageOf,
-    versionNote:
-        '${s.editorVersion} ${display.integer(bundle.recipe.version)} · '
-        '${s.p7RuleRevision} ${display.integer(bundle.ruleVersion)} · '
-        '${s.p7Reviewed} ${date(bundle.reviewed)}',
-    regular: regular,
-    bold: bold,
-    fallback: fallback,
   );
 }
 

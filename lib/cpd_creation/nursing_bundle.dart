@@ -17,6 +17,7 @@ final nursingBundle = ProfessionTemplateBundle.decode(
     'profession': 'Nurses, midwives and nursing associates',
     'country': 'United Kingdom',
     'body': 'Nursing and Midwifery Council',
+    'sourceLanguage': 'en',
     'reviewed': '2026-11-21',
     'product': 'template.uk.nmc.activity_log',
     'sources': [

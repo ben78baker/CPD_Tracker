@@ -563,5 +563,7 @@
   "p7aReportMeasure": "Indicador",
   "p7aEligible": "Elegível",
   "p7aAttribution": "Gerado com CPD Progress Tracker",
-  "reportHindiRequiresShaping": "Este PDF contém texto em devanágari e precisa de um motor de composição compatível. Os registos e o idioma do relatório foram guardados."
+  "reportHindiRequiresShaping": "Este PDF contém texto em devanágari e precisa de um motor de composição compatível. Os registos e o idioma do relatório foram guardados.",
+  "reportHours": "{count,plural, =1{{count} hora} other{{count} horas}}",
+  "reportMinutes": "{count,plural, =1{{count} minuto} other{{count} minutos}}"
 }

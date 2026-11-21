@@ -2751,6 +2751,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This PDF contains Devanagari text and needs a renderer that can shape the script. Your records and report language setting are saved.'**
   String get reportHindiRequiresShaping;
+
+  /// No description provided for @reportHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count,plural, =1{{count} hour} other{{count} hours}}'**
+  String reportHours(int count);
+
+  /// No description provided for @reportMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count,plural, =1{{count} minute} other{{count} minutes}}'**
+  String reportMinutes(int count);
 }
 
 class _AppLocalizationsDelegate

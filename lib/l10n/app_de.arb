@@ -563,5 +563,7 @@
   "p7aReportMeasure": "Kennzahl",
   "p7aEligible": "Anrechenbar",
   "p7aAttribution": "Erstellt mit CPD Progress Tracker",
-  "reportHindiRequiresShaping": "Dieses PDF enthält Devanagari-Text und benötigt eine geeignete Schriftdarstellung. Ihre Einträge und die Berichtssprache bleiben gespeichert."
+  "reportHindiRequiresShaping": "Dieses PDF enthält Devanagari-Text und benötigt eine geeignete Schriftdarstellung. Ihre Einträge und die Berichtssprache bleiben gespeichert.",
+  "reportHours": "{count,plural, =1{{count} Stunde} other{{count} Stunden}}",
+  "reportMinutes": "{count,plural, =1{{count} Minute} other{{count} Minuten}}"
 }

@@ -659,7 +659,40 @@ Future<void> openSchemeReport(
       context,
       MaterialPageRoute(
         builder: (_) => Scaffold(
-          appBar: AppBar(title: Text(s.p6OpenReport)),
+          appBar: AppBar(
+            title: Text(s.p6OpenReport),
+            actions: [
+              IconButton(
+                tooltip: s.p7aPeriodDetails,
+                icon: const Icon(Icons.info_outline),
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(s.p7aPeriodDetails),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(formatSchemePeriod(period, s)),
+                        for (final line in schemeTraceabilityDetails(
+                          bundle,
+                          period,
+                          s,
+                        ))
+                          Text(line),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(s.cancel),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
           body: PdfPreview(
             initialPageFormat: PdfPageFormat.a4,
             allowSharing: false,
@@ -844,22 +877,24 @@ Future<void> openLayoutReport(
           useActions: false,
           onError: rehearsalReportError,
           build: (_) => buildActivityDocument(
-            title: s.cpdPdfDocumentTitle,
-            appName: 'CPD Progress Tracker',
-            attribution: s.p7aAttribution,
-            documentTag: s.p7Internal,
-            summaryTitle: s.cpdRecordsTitle,
-            metadata: [
-              profession.label,
-              if (request.practitioner.trim().isNotEmpty)
-                request.practitioner.trim(),
-            ],
-            summary: const [],
-            activities: activities,
-            evidenceTitle: s.p7EvidenceIndex,
-            evidence: const [],
-            continued: s.cpdPdfContinuedTitle,
-            pageOf: s.pageOf,
+            ActivityDocumentData(
+              title: s.cpdPdfDocumentTitle,
+              appName: 'CPD Progress Tracker',
+              attribution: s.p7aAttribution,
+              documentTag: s.p7Internal,
+              summaryTitle: s.cpdRecordsTitle,
+              metadata: [
+                profession.label,
+                if (request.practitioner.trim().isNotEmpty)
+                  request.practitioner.trim(),
+              ],
+              summary: const [],
+              activities: activities,
+              evidenceTitle: s.p7EvidenceIndex,
+              evidence: const [],
+              continued: s.cpdPdfContinuedTitle,
+              pageOf: s.pageOf,
+            ),
             regular: outputFonts.regular,
             bold: outputFonts.bold,
           ),

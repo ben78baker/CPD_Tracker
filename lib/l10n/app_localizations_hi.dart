@@ -1459,4 +1459,20 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get reportHindiRequiresShaping =>
       'इस PDF में देवनागरी पाठ है। सही अक्षर-रचना के लिए समर्थित रेंडरर चाहिए। आपके रिकॉर्ड और रिपोर्ट की भाषा सुरक्षित हैं।';
+
+  @override
+  String reportHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count घंटे',
+      one: '$count घंटा',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reportMinutes(int count) {
+    return '$count मिनट';
+  }
 }

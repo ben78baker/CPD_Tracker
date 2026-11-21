@@ -580,5 +580,21 @@
   "p7aReportMeasure": "Measure",
   "p7aEligible": "Eligible",
   "p7aAttribution": "Generated using CPD Progress Tracker",
-  "reportHindiRequiresShaping": "This PDF contains Devanagari text and needs a renderer that can shape the script. Your records and report language setting are saved."
+  "reportHindiRequiresShaping": "This PDF contains Devanagari text and needs a renderer that can shape the script. Your records and report language setting are saved.",
+  "reportHours": "{count,plural, =1{{count} hour} other{{count} hours}}",
+  "reportMinutes": "{count,plural, =1{{count} minute} other{{count} minutes}}",
+  "@reportHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@reportMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -564,5 +564,7 @@
   "p7aReportMeasure": "माप",
   "p7aEligible": "पात्र",
   "p7aAttribution": "CPD Progress Tracker से बनाया गया",
-  "reportHindiRequiresShaping": "इस PDF में देवनागरी पाठ है। सही अक्षर-रचना के लिए समर्थित रेंडरर चाहिए। आपके रिकॉर्ड और रिपोर्ट की भाषा सुरक्षित हैं।"
+  "reportHindiRequiresShaping": "इस PDF में देवनागरी पाठ है। सही अक्षर-रचना के लिए समर्थित रेंडरर चाहिए। आपके रिकॉर्ड और रिपोर्ट की भाषा सुरक्षित हैं।",
+  "reportHours": "{count,plural, =1{{count} घंटा} other{{count} घंटे}}",
+  "reportMinutes": "{count} मिनट"
 }

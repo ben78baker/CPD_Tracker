@@ -1479,4 +1479,26 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get reportHindiRequiresShaping =>
       'Ce PDF contient du texte devanagari et nécessite un moteur de composition compatible. Vos enregistrements et la langue du rapport sont conservés.';
+
+  @override
+  String reportHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count heures',
+      one: '$count heure',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reportMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '$count minute',
+    );
+    return '$_temp0';
+  }
 }

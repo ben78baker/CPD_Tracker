@@ -3,9 +3,10 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import 'activity_document_data.dart';
 import 'continuing_text.dart';
 
-enum ReportBranding { standard, subtle, attribution, none }
+export 'activity_document_data.dart';
 
 /// Detect the script even when the report language differs from user content.
 class DevanagariPdfUnsupported implements Exception {
@@ -23,46 +24,38 @@ class DevanagariPdfUnsupported implements Exception {
   }
 }
 
-typedef DocumentField = ({String label, String value});
-typedef DocumentActivity = ({
-  String title,
-  String status,
-  List<DocumentField> fields,
-});
-typedef DocumentReference = ({String label, String? url});
-
-/// Shared document flow. Its data is already formatted for the recipient.
-Future<Uint8List> buildActivityDocument({
-  required String title,
-  required String appName,
-  required String attribution,
-  required String documentTag,
-  required String summaryTitle,
-  required List<String> metadata,
-  required List<String> summary,
-  required List<DocumentActivity> activities,
-  required String evidenceTitle,
-  required List<DocumentReference> evidence,
-  required String Function(String) continued,
-  required String Function(int, int) pageOf,
-  List<String> summaryColumns = const [],
-  List<List<String>> summaryRows = const [],
-  ReportBranding branding = ReportBranding.subtle,
+/// Shared production-style document flow for the current PDF text backend.
+Future<Uint8List> buildActivityDocument(
+  ActivityDocumentData data, {
   Uint8List? brandIcon,
-  String? versionNote,
   pw.Font? regular,
   pw.Font? bold,
   List<pw.Font> fallback = const [],
 }) {
+  final ActivityDocumentData(
+    :title,
+    :appName,
+    :summaryTitle,
+    :metadata,
+    :summary,
+    :activities,
+    :evidenceTitle,
+    :evidence,
+    :continued,
+    :pageOf,
+    :summaryColumns,
+    :summaryRows,
+    :branding,
+    :footer,
+  ) = data;
   DevanagariPdfUnsupported.check([
     title,
-    documentTag,
+    footer,
     summaryTitle,
     ...metadata,
     ...summary,
     ...summaryColumns,
     ...summaryRows.expand((row) => row),
-    ?versionNote,
     evidenceTitle,
     for (final item in evidence) item.label,
     for (final activity in activities) ...[
@@ -127,12 +120,6 @@ Future<Uint8List> buildActivityDocument({
     );
   }
 
-  final footerBrand = switch (branding) {
-    ReportBranding.standard || ReportBranding.subtle => appName,
-    ReportBranding.attribution => attribution,
-    ReportBranding.none => '',
-  };
-
   document.addPage(
     pw.MultiPage(
       maxPages: 1000,
@@ -149,15 +136,7 @@ Future<Uint8List> buildActivityDocument({
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Expanded(
-                child: pw.Text(
-                  [
-                    footerBrand,
-                    documentTag,
-                  ].where((value) => value.isNotEmpty).join(' · '),
-                  style: small,
-                ),
-              ),
+              pw.Expanded(child: pw.Text(footer, style: small)),
               pw.Text(
                 pageOf(context.pageNumber, context.pagesCount),
                 style: small,
@@ -202,10 +181,6 @@ Future<Uint8List> buildActivityDocument({
           pw.SizedBox(height: 6),
         ],
         for (final line in summary) text(line, style: small),
-        if (versionNote != null) ...[
-          pw.SizedBox(height: 5),
-          text(versionNote, style: small),
-        ],
         for (final activity in activities) ...[
           pw.NewPage(freeSpace: 65),
           pw.SizedBox(height: 8),

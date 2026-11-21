@@ -13,7 +13,7 @@ enum ReportLanguage {
   spanish('es', 'Español'),
   french('fr', 'Français'),
   hindi('hi', 'हिन्दी'),
-  portuguese('pt', 'Português');
+  portuguese('pt', 'Português (Brasil)');
 
   const ReportLanguage(this.tag, this.nativeName);
   final String tag, nativeName;
@@ -26,7 +26,13 @@ enum ReportLanguage {
 
 class ReportLocale {
   ReportLocale(this.strings, {String? tag})
-    : tag = tag ?? (strings.localeName == 'en' ? 'en_GB' : strings.localeName);
+    : tag =
+          tag ??
+          switch (strings.localeName) {
+            'en' => 'en_GB',
+            'pt' => 'pt_BR',
+            _ => strings.localeName,
+          };
 
   static Future<ReportLocale> resolve(
     ReportLanguage choice,
@@ -36,7 +42,12 @@ class ReportLocale {
     if (choice == ReportLanguage.app) return ReportLocale(app);
     final parts = choice.tag.split('-');
     final strings = await AppLocalizations.delegate.load(Locale(parts.first));
-    return ReportLocale(strings, tag: choice.tag.replaceAll('-', '_'));
+    return ReportLocale(
+      strings,
+      tag: choice == ReportLanguage.portuguese
+          ? 'pt_BR'
+          : choice.tag.replaceAll('-', '_'),
+    );
   }
 
   final AppLocalizations strings;
@@ -54,9 +65,9 @@ class ReportLocale {
         .replaceFirst('-', symbols.MINUS_SIGN);
   }
 
-  String hours(int count) => _formatCount(strings.hoursPlural(count), count);
+  String hours(int count) => _formatCount(strings.reportHours(count), count);
   String minutes(int count) =>
-      _formatCount(strings.minutesPlural(count), count);
+      _formatCount(strings.reportMinutes(count), count);
 
   String _formatCount(String translated, int count) =>
       translated.replaceFirst(RegExp(r'[0-9]+'), integer(count));
