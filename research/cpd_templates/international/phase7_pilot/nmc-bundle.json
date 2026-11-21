@@ -1,0 +1,469 @@
+{
+  "body": "Nursing and Midwifery Council",
+  "country": "United Kingdom",
+  "format": 1,
+  "labels": {
+    "0e11a6f1-3726-593e-90d8-2377edde3458": {
+      "de": "Nachweise",
+      "es": "Evidencia",
+      "fr": "Justificatifs",
+      "hi": "साक्ष्य",
+      "pt": "Evidência"
+    },
+    "272521b4-4c07-5b49-8141-f6e1dbe35516": {
+      "de": "Details",
+      "es": "Detalles",
+      "fr": "Détails",
+      "hi": "विवरण",
+      "pt": "Detalhes"
+    },
+    "3c577138-5779-5fd5-9d68-00ed511aa468": {
+      "de": "Aktivitätsdatum",
+      "es": "Fecha de la actividad",
+      "fr": "Date de l’activité",
+      "hi": "गतिविधि की तारीख",
+      "pt": "Data da atividade"
+    },
+    "description": {
+      "de": "Lernaktivitäten für die NMC-Revalidierung erfassen.",
+      "en": "Record learning for an NMC revalidation activity log.",
+      "es": "Registra actividades para la revalidación del NMC.",
+      "fr": "Consignez les activités pour la revalidation du NMC.",
+      "hi": "एनएमसी पुनर्सत्यापन के लिए प्रशिक्षण गतिविधियाँ दर्ज करें।",
+      "pt": "Registe atividades para a revalidação do NMC."
+    },
+    "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8": {
+      "de": "Titel",
+      "es": "Título",
+      "fr": "Titre",
+      "hi": "शीर्षक",
+      "pt": "Título"
+    },
+    "f6340617-6dac-5556-8608-a0cacecf90e4": {
+      "de": "Fortbildungsdauer",
+      "es": "Duración de la formación",
+      "fr": "Durée de formation",
+      "hi": "सीपीडी अवधि",
+      "pt": "Duração da formação"
+    },
+    "nmc.code": {
+      "de": "Relevante Teile des Kodex",
+      "es": "Apartados pertinentes del código",
+      "fr": "Parties pertinentes du code",
+      "hi": "आचार संहिता के प्रासंगिक भाग",
+      "pt": "Partes relevantes do código"
+    },
+    "nmc.method": {
+      "de": "Lernmethode",
+      "es": "Método de aprendizaje",
+      "fr": "Méthode d’apprentissage",
+      "hi": "सीखने की विधि",
+      "pt": "Método de aprendizagem"
+    },
+    "nmc.participatory": {
+      "de": "Minuten interaktiven Lernens",
+      "es": "Minutos de aprendizaje participativo",
+      "fr": "Minutes d’apprentissage participatif",
+      "hi": "सहभागी प्रशिक्षण के मिनट",
+      "pt": "Minutos de aprendizagem participativa"
+    },
+    "nmc.practice": {
+      "de": "Anwendung in der Praxis",
+      "es": "Aplicación en la práctica",
+      "fr": "Mise en pratique",
+      "hi": "अभ्यास में सीख का उपयोग",
+      "pt": "Aplicação na prática"
+    },
+    "nmc.standards": {
+      "de": "Relevante Kompetenzstandards",
+      "es": "Estándares de competencia pertinentes",
+      "fr": "Normes de compétence pertinentes",
+      "hi": "प्रासंगिक दक्षता मानक",
+      "pt": "Normas de competência relevantes"
+    },
+    "nmc.start": {
+      "de": "Erster Tag einer mehrtägigen Aktivität",
+      "es": "Primer día de una actividad de varios días",
+      "fr": "Premier jour d’une activité sur plusieurs jours",
+      "hi": "कई दिनों की गतिविधि का पहला दिन",
+      "pt": "Primeiro dia de uma atividade com vários dias"
+    },
+    "participatory": {
+      "de": "Interaktives Lernen",
+      "en": "Participatory learning",
+      "es": "Aprendizaje participativo",
+      "fr": "Apprentissage participatif",
+      "hi": "सहभागी प्रशिक्षण",
+      "pt": "Aprendizagem participativa"
+    },
+    "periodHint": {
+      "de": "Verwenden Sie Ihre Registrierungsdaten und prüfen Sie die Antragsfrist in MyNMC.",
+      "en": "Use your registration dates and confirm the application deadline in MyNMC.",
+      "es": "Utiliza tus fechas de registro y comprueba el plazo en MyNMC.",
+      "fr": "Utilisez vos dates d’inscription et vérifiez la date limite dans MyNMC.",
+      "hi": "अपने पंजीकरण की तारीखें डालें और MyNMC में आवेदन की अंतिम तारीख जाँचें।",
+      "pt": "Use as suas datas de registo e confirme o prazo no MyNMC."
+    },
+    "report": {
+      "de": "Fortbildungsnachweis für Pflege und Geburtshilfe",
+      "en": "UK nursing and midwifery CPD activity log",
+      "es": "Registro de formación de enfermería y partería",
+      "fr": "Journal de formation infirmière et sage-femme",
+      "hi": "नर्सिंग और दाई सेवा का प्रशिक्षण रिकॉर्ड",
+      "pt": "Registo de formação em enfermagem e obstetrícia"
+    },
+    "scope": {
+      "de": "Unabhängiger Fortbildungsnachweis. Prüfen Sie die Anrechenbarkeit und beantragen Sie die Revalidierung separat in MyNMC.",
+      "en": "Independent CPD log. Confirm eligibility and submit revalidation separately through MyNMC.",
+      "es": "Registro de formación independiente. Confirma qué horas se aceptan y tramita la revalidación por separado en MyNMC.",
+      "fr": "Journal de formation indépendant. Vérifiez l’admissibilité et faites la demande de revalidation séparément dans MyNMC.",
+      "hi": "स्वतंत्र सीपीडी रिकॉर्ड। पात्रता जाँचें और पुनर्सत्यापन के लिए MyNMC में अलग से आवेदन करें।",
+      "pt": "Registo de formação independente. Confirme a elegibilidade e submeta a revalidação separadamente no MyNMC."
+    },
+    "total": {
+      "de": "Fortbildung gesamt",
+      "en": "Total CPD",
+      "es": "Formación total",
+      "fr": "Formation totale",
+      "hi": "कुल सीपीडी",
+      "pt": "Formação total"
+    }
+  },
+  "minimumReader": 1,
+  "preview": {
+    "evidence": {
+      "preview.sample": "Synthetic evidence reference"
+    },
+    "examples": [
+      {
+        "title": "Clinical handover workshop",
+        "values": {
+          "0e11a6f1-3726-593e-90d8-2377edde3458": [
+            "preview.sample"
+          ],
+          "272521b4-4c07-5b49-8141-f6e1dbe35516": "Practised a structured handover and escalation with colleagues to improve continuity of care.",
+          "3c577138-5779-5fd5-9d68-00ed511aa468": "2026-10-14",
+          "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8": "Clinical handover workshop",
+          "f6340617-6dac-5556-8608-a0cacecf90e4": 120,
+          "nmc.code": [
+            "effective",
+            "safety"
+          ],
+          "nmc.method": "workshop",
+          "nmc.participatory": 90,
+          "nmc.practice": "Used the handover checklist during the next simulated shift.",
+          "nmc.standards": "Communication and coordination of care"
+        }
+      },
+      {
+        "title": "Infection prevention guidance review",
+        "values": {
+          "0e11a6f1-3726-593e-90d8-2377edde3458": [
+            "preview.sample"
+          ],
+          "272521b4-4c07-5b49-8141-f6e1dbe35516": "Reviewed local guidance and considered how to improve equipment cleaning on the ward.",
+          "3c577138-5779-5fd5-9d68-00ed511aa468": "2026-09-29",
+          "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8": "Infection prevention guidance review",
+          "f6340617-6dac-5556-8608-a0cacecf90e4": 45,
+          "nmc.code": [
+            "safety"
+          ],
+          "nmc.method": "study",
+          "nmc.participatory": 0,
+          "nmc.practice": "Updated the reminder at the equipment station."
+        }
+      },
+      {
+        "title": "Peer learning on medication reconciliation",
+        "values": {
+          "0e11a6f1-3726-593e-90d8-2377edde3458": [
+            "preview.sample"
+          ],
+          "272521b4-4c07-5b49-8141-f6e1dbe35516": "Compared reconciliation scenarios with the pharmacy team to identify handoff gaps.",
+          "3c577138-5779-5fd5-9d68-00ed511aa468": "2026-08-20",
+          "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8": "Peer learning on medication reconciliation",
+          "f6340617-6dac-5556-8608-a0cacecf90e4": 75,
+          "nmc.code": [
+            "people",
+            "effective"
+          ],
+          "nmc.method": "peer",
+          "nmc.participatory": 75,
+          "nmc.practice": "Agreed a consistent question for checking discrepant medicines."
+        }
+      }
+    ]
+  },
+  "product": "template.uk.nmc.activity_log",
+  "profession": "Nurses, midwives and nursing associates",
+  "recipe": {
+    "fields": [
+      {
+        "definition": {
+          "choices": {},
+          "id": "cpd.activityDate",
+          "kind": "date",
+          "label": "Activity date",
+          "multiline": false,
+          "version": 1
+        },
+        "helpText": null,
+        "id": "3c577138-5779-5fd5-9d68-00ed511aa468",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": true
+      },
+      {
+        "definition": {
+          "choices": {},
+          "id": "cpd.title",
+          "kind": "text",
+          "label": "Title",
+          "multiline": false,
+          "version": 1
+        },
+        "helpText": null,
+        "id": "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": false
+      },
+      {
+        "definition": {
+          "choices": {},
+          "id": "cpd.details",
+          "kind": "text",
+          "label": "Details",
+          "multiline": true,
+          "version": 1
+        },
+        "helpText": null,
+        "id": "272521b4-4c07-5b49-8141-f6e1dbe35516",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": false
+      },
+      {
+        "definition": {
+          "choices": {},
+          "id": "cpd.creditedDuration",
+          "kind": "duration",
+          "label": "CPD duration",
+          "multiline": false,
+          "version": 1
+        },
+        "helpText": null,
+        "id": "f6340617-6dac-5556-8608-a0cacecf90e4",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": false
+      },
+      {
+        "definition": {
+          "choices": {},
+          "id": "cpd.evidence",
+          "kind": "attachments",
+          "label": "Evidence",
+          "multiline": false,
+          "version": 1
+        },
+        "helpText": null,
+        "id": "0e11a6f1-3726-593e-90d8-2377edde3458",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": false
+      },
+      {
+        "definition": {
+          "choices": {
+            "workshop": "Workshop or facilitated session",
+            "study": "Independent study",
+            "online": "Online learning",
+            "peer": "Peer learning",
+            "other": "Other learning"
+          },
+          "id": "nmc.method",
+          "kind": "choice",
+          "label": "Learning method",
+          "multiline": false,
+          "version": 1
+        },
+        "helpText": null,
+        "id": "nmc.method",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": true
+      },
+      {
+        "definition": {
+          "choices": {},
+          "id": "nmc.start",
+          "kind": "date",
+          "label": "First day if the activity spans dates",
+          "multiline": false,
+          "version": 1
+        },
+        "helpText": null,
+        "id": "nmc.start",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": false
+      },
+      {
+        "definition": {
+          "choices": {},
+          "id": "nmc.participatory",
+          "kind": "duration",
+          "label": "Participatory minutes",
+          "multiline": false,
+          "version": 1
+        },
+        "helpText": "Include only learning that involved interaction with others. Enter 0 if none.",
+        "id": "nmc.participatory",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": true
+      },
+      {
+        "definition": {
+          "choices": {
+            "people": "Prioritise people",
+            "effective": "Practise effectively",
+            "safety": "Preserve safety",
+            "trust": "Promote professionalism and trust"
+          },
+          "id": "nmc.code",
+          "kind": "multipleChoices",
+          "label": "Relevant part or parts of the Code",
+          "multiline": false,
+          "version": 1
+        },
+        "helpText": null,
+        "id": "nmc.code",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": true
+      },
+      {
+        "definition": {
+          "choices": {},
+          "id": "nmc.practice",
+          "kind": "text",
+          "label": "Learning applied to practice",
+          "multiline": true,
+          "version": 1
+        },
+        "helpText": "Summarise what changed in your practice. Keep this note free of identifiable information.",
+        "id": "nmc.practice",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": false
+      },
+      {
+        "definition": {
+          "choices": {},
+          "id": "nmc.standards",
+          "kind": "text",
+          "label": "Relevant standards of proficiency",
+          "multiline": false,
+          "version": 1
+        },
+        "helpText": null,
+        "id": "nmc.standards",
+        "labelOverride": null,
+        "placeholder": null,
+        "required": false
+      }
+    ],
+    "formatVersion": 1,
+    "id": "uk.nmc.activity-log",
+    "label": "UK nursing and midwifery activity log",
+    "settings": {
+      "description": "Record learning for an NMC revalidation activity log.",
+      "origin": "bundled",
+      "translations": {
+        "de": "Fortbildungsnachweis für Pflege und Geburtshilfe",
+        "es": "Registro de formación de enfermería y partería",
+        "fr": "Journal de formation infirmière et sage-femme",
+        "hi": "नर्सिंग और दाई सेवा का प्रशिक्षण रिकॉर्ड",
+        "pt": "Registo de formação em enfermagem e obstetrícia"
+      }
+    },
+    "version": 1
+  },
+  "report": {
+    "fields": [
+      "3c577138-5779-5fd5-9d68-00ed511aa468",
+      "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8",
+      "272521b4-4c07-5b49-8141-f6e1dbe35516",
+      "f6340617-6dac-5556-8608-a0cacecf90e4",
+      "0e11a6f1-3726-593e-90d8-2377edde3458",
+      "nmc.method",
+      "nmc.start",
+      "nmc.participatory",
+      "nmc.code",
+      "nmc.practice",
+      "nmc.standards"
+    ],
+    "kind": "activity_log_v1",
+    "version": 1
+  },
+  "reviewed": "2026-11-21",
+  "rules": {
+    "calculator": "log_minutes_v1",
+    "cycleMonths": 36,
+    "inputs": {
+      "code": "nmc.code",
+      "date": "3c577138-5779-5fd5-9d68-00ed511aa468",
+      "details": "272521b4-4c07-5b49-8141-f6e1dbe35516",
+      "evidence": "0e11a6f1-3726-593e-90d8-2377edde3458",
+      "firstDay": "nmc.start",
+      "method": "nmc.method",
+      "minutes": "f6340617-6dac-5556-8608-a0cacecf90e4",
+      "participatory": "nmc.participatory",
+      "title": "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8"
+    },
+    "metrics": [
+      {
+        "id": "total",
+        "input": "minutes",
+        "methods": [],
+        "targetMinutes": 2100
+      },
+      {
+        "id": "participatory",
+        "input": "participatory",
+        "methods": [],
+        "targetMinutes": 1200
+      }
+    ],
+    "periods": [
+      "custom",
+      "fixed",
+      "rolling"
+    ],
+    "required": [
+      "code",
+      "date",
+      "details",
+      "evidence",
+      "method",
+      "minutes",
+      "participatory",
+      "title"
+    ],
+    "version": 1
+  },
+  "scheme": "NMC revalidation activity log",
+  "sources": [
+    "https://www.nmc.org.uk/revalidation/requirements/cpd/",
+    "https://www.nmc.org.uk/revalidation/online-application/revalidation-date/"
+  ],
+  "tile": {
+    "deadline": true,
+    "metrics": [
+      "total",
+      "participatory"
+    ]
+  }
+}
