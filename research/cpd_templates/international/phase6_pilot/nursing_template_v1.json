@@ -1,0 +1,195 @@
+{
+  "formatVersion": 1,
+  "id": "uk.nmc.activity-log",
+  "version": 1,
+  "label": "UK nursing and midwifery activity log",
+  "settings": {
+    "description": "Record learning for an NMC revalidation activity log.",
+    "origin": "bundled",
+    "translations": {
+      "de": "Fortbildungsnachweis für Pflege und Geburtshilfe",
+      "es": "Registro de formación de enfermería y partería",
+      "fr": "Journal de formation infirmière et sage-femme",
+      "hi": "नर्सिंग और दाई सेवा का प्रशिक्षण रिकॉर्ड",
+      "pt": "Registo de formação em enfermagem e obstetrícia"
+    }
+  },
+  "fields": [
+    {
+      "definition": {
+        "choices": {},
+        "id": "cpd.activityDate",
+        "kind": "date",
+        "label": "Activity date",
+        "multiline": false,
+        "version": 1
+      },
+      "helpText": null,
+      "id": "3c577138-5779-5fd5-9d68-00ed511aa468",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": true
+    },
+    {
+      "definition": {
+        "choices": {},
+        "id": "cpd.title",
+        "kind": "text",
+        "label": "Title",
+        "multiline": false,
+        "version": 1
+      },
+      "helpText": null,
+      "id": "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": false
+    },
+    {
+      "definition": {
+        "choices": {},
+        "id": "cpd.details",
+        "kind": "text",
+        "label": "Details",
+        "multiline": true,
+        "version": 1
+      },
+      "helpText": null,
+      "id": "272521b4-4c07-5b49-8141-f6e1dbe35516",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": false
+    },
+    {
+      "definition": {
+        "choices": {},
+        "id": "cpd.creditedDuration",
+        "kind": "duration",
+        "label": "CPD duration",
+        "multiline": false,
+        "version": 1
+      },
+      "helpText": null,
+      "id": "f6340617-6dac-5556-8608-a0cacecf90e4",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": false
+    },
+    {
+      "definition": {
+        "choices": {},
+        "id": "cpd.evidence",
+        "kind": "attachments",
+        "label": "Evidence",
+        "multiline": false,
+        "version": 1
+      },
+      "helpText": null,
+      "id": "0e11a6f1-3726-593e-90d8-2377edde3458",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": false
+    },
+    {
+      "definition": {
+        "choices": {
+          "workshop": "Workshop or facilitated session",
+          "study": "Independent study",
+          "online": "Online learning",
+          "peer": "Peer learning",
+          "other": "Other learning"
+        },
+        "id": "nmc.method",
+        "kind": "choice",
+        "label": "Learning method",
+        "multiline": false,
+        "version": 1
+      },
+      "helpText": null,
+      "id": "nmc.method",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": true
+    },
+    {
+      "definition": {
+        "choices": {},
+        "id": "nmc.start",
+        "kind": "date",
+        "label": "First day if the activity spans dates",
+        "multiline": false,
+        "version": 1
+      },
+      "helpText": null,
+      "id": "nmc.start",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": false
+    },
+    {
+      "definition": {
+        "choices": {},
+        "id": "nmc.participatory",
+        "kind": "duration",
+        "label": "Participatory minutes",
+        "multiline": false,
+        "version": 1
+      },
+      "helpText": "Include only learning that involved interaction with others. Enter 0 if none.",
+      "id": "nmc.participatory",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": true
+    },
+    {
+      "definition": {
+        "choices": {
+          "people": "Prioritise people",
+          "effective": "Practise effectively",
+          "safety": "Preserve safety",
+          "trust": "Promote professionalism and trust"
+        },
+        "id": "nmc.code",
+        "kind": "multipleChoices",
+        "label": "Relevant part or parts of the Code",
+        "multiline": false,
+        "version": 1
+      },
+      "helpText": null,
+      "id": "nmc.code",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": true
+    },
+    {
+      "definition": {
+        "choices": {},
+        "id": "nmc.practice",
+        "kind": "text",
+        "label": "Learning applied to practice",
+        "multiline": true,
+        "version": 1
+      },
+      "helpText": "Summarise what changed in your practice. Keep this note free of identifiable information.",
+      "id": "nmc.practice",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": false
+    },
+    {
+      "definition": {
+        "choices": {},
+        "id": "nmc.standards",
+        "kind": "text",
+        "label": "Relevant standards of proficiency",
+        "multiline": false,
+        "version": 1
+      },
+      "helpText": null,
+      "id": "nmc.standards",
+      "labelOverride": null,
+      "placeholder": null,
+      "required": false
+    }
+  ]
+}

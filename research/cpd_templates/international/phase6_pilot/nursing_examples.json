@@ -1,0 +1,59 @@
+[
+  {
+    "label": "Clinical handover workshop",
+    "values": {
+      "3c577138-5779-5fd5-9d68-00ed511aa468": "2026-10-14",
+      "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8": "Clinical handover workshop",
+      "272521b4-4c07-5b49-8141-f6e1dbe35516": "Practised a structured handover and escalation with colleagues to improve continuity of care.",
+      "f6340617-6dac-5556-8608-a0cacecf90e4": 120,
+      "nmc.participatory": 90,
+      "nmc.method": "workshop",
+      "nmc.code": [
+        "effective",
+        "safety"
+      ],
+      "0e11a6f1-3726-593e-90d8-2377edde3458": [
+        "preview.sample"
+      ],
+      "nmc.practice": "Used the handover checklist during the next simulated shift.",
+      "nmc.standards": "Communication and coordination of care"
+    }
+  },
+  {
+    "label": "Infection prevention guidance review",
+    "values": {
+      "3c577138-5779-5fd5-9d68-00ed511aa468": "2026-09-29",
+      "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8": "Infection prevention guidance review",
+      "272521b4-4c07-5b49-8141-f6e1dbe35516": "Reviewed local guidance and considered how to improve equipment cleaning on the ward.",
+      "f6340617-6dac-5556-8608-a0cacecf90e4": 45,
+      "nmc.participatory": 0,
+      "nmc.method": "study",
+      "nmc.code": [
+        "safety"
+      ],
+      "0e11a6f1-3726-593e-90d8-2377edde3458": [
+        "preview.sample"
+      ],
+      "nmc.practice": "Updated the reminder at the equipment station."
+    }
+  },
+  {
+    "label": "Peer learning on medication reconciliation",
+    "values": {
+      "3c577138-5779-5fd5-9d68-00ed511aa468": "2026-08-20",
+      "e1d5e05e-35cb-5603-b42a-9c6cf8f95db8": "Peer learning on medication reconciliation",
+      "272521b4-4c07-5b49-8141-f6e1dbe35516": "Compared reconciliation scenarios with the pharmacy team to identify handoff gaps.",
+      "f6340617-6dac-5556-8608-a0cacecf90e4": 75,
+      "nmc.participatory": 75,
+      "nmc.method": "peer",
+      "nmc.code": [
+        "people",
+        "effective"
+      ],
+      "0e11a6f1-3726-593e-90d8-2377edde3458": [
+        "preview.sample"
+      ],
+      "nmc.practice": "Agreed a consistent question for checking discrepant medicines."
+    }
+  }
+]

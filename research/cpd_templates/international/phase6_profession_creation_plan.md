@@ -1,6 +1,6 @@
 # Phase 6 plan · onboarding and profession creation
 
-**21 November 2026 · Planning update.** Phase 5 is approved. This plan adds shared profession creation, onboarding recovery and scoped template customisation to the next internal rehearsal. The [UI specification](../../../docs/custom_fields_ui.md#9-onboarding-and-shared-profession-creation) defines screen behaviour. The [architecture](architecture_implications.md#10-shared-profession-creation-and-onboarding) defines access, commit and recovery boundaries.
+**21 November 2026 · Approved internal rehearsal.** Phase 6 adds shared profession creation, onboarding recovery and scoped template customisation. The [UI specification](../../../docs/custom_fields_ui.md#9-onboarding-and-shared-profession-creation) defines screen behaviour. The [architecture](architecture_implications.md#10-shared-profession-creation-and-onboarding) defines access, commit and recovery boundaries. The [implementation report](phase6_implementation_report.md) records the verified results.
 
 ## Review of the existing flow and components
 
@@ -12,7 +12,7 @@
 | Templates and previews | The Phase 5 host can render a sample template and compare a revised recipe to an installed layout. Phase 6 adds a browsable catalogue and selection flow around the reusable preview. Supply localised metadata, synthetic examples and an example report tied to one approved recipe and reporting version. Verify the preview against the layout actually adopted. [Template preview](../../../lib/recording_editor/template_preview.dart) · [Phase 5 authoring and comparison](phase5_visual_field_editor.md#template-updates-and-authoring) |
 | Data and store access | The rehearsal has a transactional SQLite repository with saved recipes, layout revisions and host metadata. Add a CPD host creation service for atomic commits and resume receipts in the isolated store. Route purchases and restore through a CPD host boundary. Use controlled entitlement fixtures for Phase 6, with verified accounts and actual store integration subject to separate authorisation. [Repository](../../../lib/recording_engine_storage/sqlite_recording_repository.dart) · [Storage authority](phase3b_migration_readiness.md) |
 
-## Implementation sequence after authorisation
+## Implementation sequence
 
 1. **Shared shell and free default.** Move profession naming to shared creation. Wire a synthetic first launch and Home Add Profession to the same three tiles. Reuse the existing theme, preference controls and localisations. Implement Standard CPD before the paid paths and verify it under offline and store-failure fixtures.
 2. **Drafts and access.** Connect Custom CPD to the Phase 5 editor, show the relevant access terms before editing, and rehearse app-wide and verified legacy grants. Connect the versioned template catalogue and preview. Rehearse verified template ownership, restore, purchase transitions and optional editing of the adopted template. Test each path from each entry point.
@@ -37,7 +37,7 @@ Pending or restored purchase → Verify and record entitlement → Update the cr
                                                                   └─ Wait for explicit creation
 ```
 
-A creation request may survive a restart without retaining every draft edit. Keep the minimum durable checkpoint needed to resume or abandon the request and honour any verified purchase. Decide separately whether full layout drafts should survive a restart. A recovered purchase after abandonment still grants access and leaves the choice of profession creation with the user.
+Automatically persist creation and field-edit drafts locally. Preserve the base revision, pending field layout and report choices. Offer Resume and Discard; an outdated edit must be reviewed before it can replace the active revision. A recovered purchase after abandonment still grants access and leaves the choice of profession creation with the user.
 
 ## Rehearsal acceptance criteria
 
@@ -52,11 +52,10 @@ A creation request may survive a restart without retaining every draft edit. Kee
 | Localisation and accessibility | Rehearse English, German, Spanish, French, Hindi and Portuguese across all eight app colours using automated checks, including narrow screens and large text. Check translated and user-entered names, text wrapping, touch targets, focus and error announcements, keyboard and system Back, VoiceOver and TalkBack, scrolling, drag and accessible reorder actions. Run representative native cases on both platforms and track minimum-version and physical-device gaps explicitly. |
 | Regression and isolation | Run the existing Flutter suite, static analysis, CPD parity and migration/recovery suites. Verify no production activation, no changes to signing or release settings, no preview access to production data and no user data conversion. Exercise realistic recovery checkpoints and preserve the established release gates. |
 
-## Decisions to review before implementation or release
+## Definitive Phase 6 approval conditions
 
-- Approve final tile names, entitlement copy and success landing details within Home after testing the shared flow with new and existing users.
-- Confirm which Field Library definitions are offered during scoped template editing. Agree what the editor should show when a changed field affects a specialised report.
-- Approve the first template and sample content, how optional configuration is presented after ownership, and what must survive a restart beyond the purchase and creation checkpoints.
-- Before real store work, approve product mappings, account and legacy verification, pending/restore messaging, cache refresh and revocation policy. Agree when to show unavailable template editing and keep existing records, standard exports and the Standard CPD route available.
-
-This update is documentation only. The revised Phase 6 rehearsal, production navigation, purchasing and storage cutover have separate approval and verification boundaries.
+- Rehearse the approved tile names and retain free Standard CPD. Use simulated store access without prices.
+- Apply the [entitlement decision matrix](../../../docs/custom_fields_ui.md#10-phase-6-entitlement-decision-matrix) to both UI commands and CPD commits. Verify optional field removal and reinstatement, report exclusion independently of form availability, default reset, immutable template payloads and independent placements.
+- Exercise automatic local creation and edit drafts through relaunch, discard and stale saves. Rehearse purchase recovery independently of the draft, including previously verified offline grants.
+- Select and verify one pilot from authoritative sources. Demonstrate current, optional-content and incomplete reporting states. Keep the historical report configuration and template version available after edits or an offered update.
+- Review signed minimum-version, physical device and full recovery coverage before release. Live store mappings, verification, pricing and distribution are separate decisions.
