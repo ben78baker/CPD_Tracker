@@ -3,9 +3,11 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:uuid/uuid.dart';
 
 import '../cpd_compatibility/sqlite_cpd_store.dart';
 import '../recording_engine/import_plan.dart';
+import '../recording_engine/storage_authority.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
 import 'device_storage_capacity.dart';
 import 'legacy_migration.dart';
@@ -13,6 +15,7 @@ import 'legacy_recovery_snapshot.dart';
 import 'legacy_write_gate.dart';
 import 'migration_report.dart';
 import 'recovery_retention.dart';
+import 'startup_migration_authority.dart';
 
 enum _Purpose { verifyOnly, rehearsalActivation, productionActivation }
 
@@ -28,6 +31,7 @@ final class CpdMigrationCoordinator {
     LegacyWriteGate? gate,
     DateTime Function()? clock,
     this.onCheckpoint,
+    this.authorityFence,
   }) : _available = availableStorage ?? availableDeviceStorage,
        _gate = gate ?? LegacyWriteGate.instance,
        _clock = clock ?? DateTime.now;
@@ -39,10 +43,11 @@ final class CpdMigrationCoordinator {
   final LegacyWriteGate _gate;
   final DateTime Function() _clock;
   final Future<void> Function(MigrationReport)? onCheckpoint;
+  final File? authorityFence;
 
   static final _openAttempts = <String>{};
-  static const _authorityNamespace = 'cpd.migration';
-  static const _authorityKey = 'authority';
+  CpdStartupAuthority get startup =>
+      CpdStartupAuthority(workspace, fence: authorityFence);
 
   /// Enabling this requires a separately reviewed code change. There is no
   /// environment flag, preference, remote toggle or migration-on-launch path.
@@ -62,6 +67,40 @@ final class CpdMigrationCoordinator {
 
   Future<MigrationReport> activateProduction() =>
       _run(_Purpose.productionActivation);
+
+  /// Keep the staged database and recovery copy. Abandonment makes this
+  /// attempt read-only and requires a fresh directory for a future rehearsal.
+  Future<MigrationReport> abandonStaging() => _withAttempt(() async {
+    final result = await startup.inspect(
+      scope: AuthorityScope.rehearsal,
+      hasLegacyRecords: true,
+    );
+    if (!recoveryActions(
+      result,
+    ).contains(StartupRecoveryAction.abandonStaging)) {
+      throw StateError('Only an unactivated attempt can be abandoned.');
+    }
+    final saved = await _readJournal();
+    return _publish(
+      MigrationReport(
+        MigrationPhase.abandoned,
+        sourceId: saved?.sourceId,
+        review: saved?.review ?? const [],
+      ),
+    );
+  });
+
+  /// Materialise a verified legacy snapshot for examination in a separate
+  /// directory. This operation cannot change either live store or authority.
+  Future<RestoredLegacySource> restoreForReview(Directory separateCopy) async {
+    final target = p.join(
+      await separateCopy.parent.resolveSymbolicLinks(),
+      p.basename(separateCopy.path),
+    );
+    _assertSeparate(await documents.resolveSymbolicLinks(), target);
+    _assertSeparate(p.normalize(workspace.absolute.path), target);
+    return snapshot.restoreTo(separateCopy);
+  }
 
   Future<MigrationReport?> lastReport() async {
     final saved = await _readJournal();
@@ -98,7 +137,7 @@ final class CpdMigrationCoordinator {
       final rows = await db.query(
         'host_state',
         where: 'namespace = ? AND key = ?',
-        whereArgs: [_authorityNamespace, _authorityKey],
+        whereArgs: [migrationAuthorityNamespace, migrationAuthorityKey],
       );
       if (rows.isEmpty) return null;
       return MigrationReceipt.decode(rows.single['value'] as String);
@@ -122,8 +161,20 @@ final class CpdMigrationCoordinator {
     try {
       final receipt = await readReceipt();
       final report = await lastReport();
+      if (receipt == null && await startup.fence.exists()) {
+        return RecoveryRetention.keepUntilIntegrityConfirmed;
+      }
+      final authority = receipt == null
+          ? null
+          : await startup.inspect(
+              scope: receipt.rehearsal
+                  ? AuthorityScope.rehearsal
+                  : AuthorityScope.production,
+              hasLegacyRecords: true,
+            );
       final snapshotMatches =
           receipt != null &&
+          authority?.store == StoreAuthority.recording &&
           await snapshot.verify() == receipt.snapshotFingerprint;
       return recoveryRetention(
         receipt: receipt,
@@ -147,6 +198,10 @@ final class CpdMigrationCoordinator {
         !productionActivationEnabled) {
       return const MigrationReport(MigrationPhase.disabled);
     }
+    return _withAttempt(() => _prepare(purpose));
+  }
+
+  Future<T> _withAttempt<T>(Future<T> Function() run) async {
     final source = await documents.resolveSymbolicLinks();
     final requested = p.normalize(workspace.absolute.path);
     // Resolve the existing parent before creating any migration paths.
@@ -163,6 +218,12 @@ final class CpdMigrationCoordinator {
     await workspace.create();
     final root = await workspace.resolveSymbolicLinks();
     _assertSeparate(source, root);
+    final pointedFence = p.join(
+      await startup.fence.parent.resolveSymbolicLinks(),
+      p.basename(startup.fence.path),
+    );
+    _assertSeparate(source, pointedFence);
+    _assertSeparate(root, pointedFence);
     if (!_openAttempts.add(root)) {
       throw StateError('A migration attempt is already running.');
     }
@@ -175,7 +236,7 @@ final class CpdMigrationCoordinator {
       }
       lock = await file.open(mode: FileMode.append);
       await lock.lock(FileLock.exclusive);
-      return await _gate.freeze(() => _prepare(purpose));
+      return await _gate.freeze(run);
     } finally {
       try {
         await lock?.close();
@@ -191,17 +252,49 @@ final class CpdMigrationCoordinator {
     SqliteRecordingRepository? db;
     try {
       final prior = await _readJournal();
+      final scope = purpose == _Purpose.productionActivation
+          ? AuthorityScope.production
+          : AuthorityScope.rehearsal;
+      if (prior?.phase == MigrationPhase.abandoned) {
+        return prior!;
+      }
+      final fenceType = await FileSystemEntity.type(
+        startup.fence.path,
+        followLinks: false,
+      );
+      if (fenceType != FileSystemEntityType.notFound) {
+        if (scope == AuthorityScope.production) _gate.seal();
+        if (fenceType != FileSystemEntityType.file ||
+            purpose == _Purpose.verifyOnly) {
+          throw StateError('A handoff is already reserved.');
+        }
+      }
       final receipt = await readReceipt();
+      if (receipt == null &&
+          (fenceType != FileSystemEntityType.notFound ||
+              prior?.phase == MigrationPhase.handoffReserved ||
+              prior?.phase == MigrationPhase.productionActivated ||
+              prior?.phase == MigrationPhase.rehearsalActivated)) {
+        // The destination may have accepted writes before its receipt was lost.
+        // Even explicit retry cannot rebuild it from the legacy source.
+        return MigrationReport(
+          MigrationPhase.failed,
+          sourceId: prior?.sourceId,
+          failure: 'handoff_requires_recovery',
+          review: prior?.review ?? const [],
+        );
+      }
+
       if (receipt != null) {
-        final expectsRehearsal = purpose != _Purpose.productionActivation;
-        if (prior?.sourceId != receipt.sourceId ||
-            receipt.rehearsal != expectsRehearsal ||
-            await snapshot.verify() != receipt.snapshotFingerprint) {
+        final authority = await startup.inspect(
+          scope: scope,
+          hasLegacyRecords: true,
+        );
+        if (authority.store != StoreAuthority.recording) {
           throw StateError(
             'The existing authority cannot be reopened in this attempt.',
           );
         }
-        if (!receipt.rehearsal) _gate.seal();
         return (await lastReport())!;
       }
       final values = await readLegacy();
@@ -240,6 +333,9 @@ final class CpdMigrationCoordinator {
       );
       if (free < total) throw InsufficientRecoveryStorage(total, free);
       if (!hasSnapshot) {
+        await _publish(
+          MigrationReport(MigrationPhase.copyingRecovery, sourceId: sourceId),
+        );
         await LegacyRecoverySnapshot.capture(
           legacyValues: values,
           documents: documents,
@@ -312,13 +408,15 @@ final class CpdMigrationCoordinator {
         ),
       );
       if (purpose == _Purpose.verifyOnly) return ready;
-      final activated = await _recordActivation(
-        db,
-        sourceId,
-        fingerprint,
-        purpose,
+      final binding = await _reserveHandoff(sourceId, fingerprint, scope);
+      await _publish(
+        MigrationReport(
+          MigrationPhase.handoffReserved,
+          sourceId: sourceId,
+          review: review,
+        ),
       );
-      if (!activated.rehearsal) _gate.seal();
+      final activated = await _recordActivation(db, binding);
       // SQLite's receipt is authoritative if the process stops here. The
       // ready journal already contains matching source and review information.
       return MigrationReport(
@@ -346,7 +444,13 @@ final class CpdMigrationCoordinator {
       );
       // Capacity or filesystem failures may also prevent a progress update.
       // The preceding journal and all independent recovery artifacts remain.
-      if (sourceId != null) {
+      final fenceReserved =
+          await FileSystemEntity.type(startup.fence.path, followLinks: false) !=
+          FileSystemEntityType.notFound;
+      if (fenceReserved && purpose == _Purpose.productionActivation) {
+        _gate.seal();
+      }
+      if (sourceId != null && !fenceReserved) {
         try {
           await _writeJournal(failure);
         } on FileSystemException {
@@ -359,33 +463,52 @@ final class CpdMigrationCoordinator {
     }
   }
 
-  Future<MigrationReceipt> _recordActivation(
-    SqliteRecordingRepository db,
+  Future<AuthorityBinding> _reserveHandoff(
     String sourceId,
     String fingerprint,
-    _Purpose purpose,
+    AuthorityScope scope,
+  ) async {
+    final fence = startup.fence;
+    final binding = AuthorityBinding(
+      id: const Uuid().v4(),
+      sourceId: sourceId,
+      snapshotFingerprint: fingerprint,
+      scope: scope,
+    );
+    // Exclusive creation is intentional. Even a partial fence left by a
+    // terminated writer makes startup fail closed.
+    await fence.create(exclusive: true);
+    if (scope == AuthorityScope.production) _gate.seal();
+    await fence.writeAsString(binding.encode(), flush: true);
+    return binding;
+  }
+
+  Future<MigrationReceipt> _recordActivation(
+    SqliteRecordingRepository db,
+    AuthorityBinding binding,
   ) => db.transaction((tx) async {
-    final snap = await tx.loadImportSnapshot(sourceId);
+    final snap = await tx.loadImportSnapshot(binding.sourceId);
     final verifiedAt = snap?.verifiedAt;
     final now = _clock().toUtc();
     if (snap?.status != ImportStatus.verified ||
         verifiedAt == null ||
         now.isBefore(verifiedAt) ||
-        (await tx.loadHostState(_authorityNamespace)).isNotEmpty) {
+        (await tx.loadHostState(migrationAuthorityNamespace)).isNotEmpty) {
       throw StateError(
         'An independently verified import is required for activation.',
       );
     }
     final receipt = MigrationReceipt(
-      sourceId: sourceId,
-      snapshotFingerprint: fingerprint,
+      sourceId: binding.sourceId,
+      snapshotFingerprint: binding.snapshotFingerprint,
       verifiedAt: verifiedAt,
       activatedAt: now,
-      rehearsal: purpose != _Purpose.productionActivation,
+      rehearsal: binding.scope == AuthorityScope.rehearsal,
+      bindingId: binding.id,
     );
     await tx.saveHostValue(
-      _authorityNamespace,
-      _authorityKey,
+      migrationAuthorityNamespace,
+      migrationAuthorityKey,
       receipt.encode(),
     );
     return receipt;

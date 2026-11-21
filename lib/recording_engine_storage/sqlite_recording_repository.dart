@@ -19,6 +19,7 @@ class SqliteRecordingRepository {
   SqliteRecordingRepository._(this._db);
 
   final DatabaseExecutor _db;
+  static const schemaVersion = 3;
   static const _uuid = Uuid();
 
   /// An explicit database path is required. No application storage is opened
@@ -30,7 +31,7 @@ class SqliteRecordingRepository {
     final db = await (factory ?? databaseFactory).openDatabase(
       path,
       options: OpenDatabaseOptions(
-        version: 3,
+        version: schemaVersion,
         onUpgrade: (db, from, to) async {
           if (from < 2) await db.execute(_hostStateSchema);
           if (from < 3) await db.execute(_importPayloadSchema);
@@ -692,26 +693,30 @@ class SqliteRecordingRepository {
     DatabaseExecutor db,
     RecordingAttachment attachment,
   ) async {
-    await db.insert('attachments', {
-      'id': attachment.id,
-      'kind': attachment.kind.name,
-      'locator': attachment.locator,
-      'name': attachment.name,
-    });
+    await db.insert('attachments', _attachmentRow(attachment));
   }
+
+  static Map<String, Object> _attachmentRow(RecordingAttachment attachment) => {
+    'id': attachment.id,
+    'kind': attachment.kind.name,
+    'locator': attachment.locator,
+    'name': attachment.name,
+  };
+
+  static Map<String, Object> _recordRow(RecordingRecord record) => {
+    'id': record.id,
+    'collection_id': record.collectionId,
+    'layout_version': record.layoutVersion,
+    'edit_version': record.version,
+    'deleted': record.deleted ? 1 : 0,
+  };
 
   static Future<void> _insertRecord(
     DatabaseExecutor db,
     RecordingRecord record,
     List<LayoutField> fields,
   ) async {
-    await db.insert('records', {
-      'id': record.id,
-      'collection_id': record.collectionId,
-      'layout_version': record.layoutVersion,
-      'edit_version': record.version,
-      'deleted': record.deleted ? 1 : 0,
-    });
+    await db.insert('records', _recordRow(record));
     for (final field in fields) {
       if (record.values[field.id] case final value?) {
         await _writeValue(db, record.id, field, value);
@@ -732,21 +737,33 @@ class SqliteRecordingRepository {
       whereArgs: [id, field.id],
     );
     if (value == null) return;
-    if (isAttachment) {
+    for (final (table, row) in _valueRows(id, field, value)) {
+      await db.insert(table, row);
+    }
+  }
+
+  static Iterable<(String, Map<String, Object>)> _valueRows(
+    String id,
+    LayoutField field,
+    Object value,
+  ) sync* {
+    if (field.definition.kind == FieldKind.attachments) {
       for (final (ordinal, asset) in (value as List).indexed) {
-        await db.insert('attachment_links', {
-          'record_id': id,
-          'field_id': field.id,
-          'ordinal': ordinal,
-          'attachment_id': asset as String,
-        });
+        yield (
+          'attachment_links',
+          {
+            'record_id': id,
+            'field_id': field.id,
+            'ordinal': ordinal,
+            'attachment_id': asset as String,
+          },
+        );
       }
     } else {
-      await db.insert('record_values', {
-        'record_id': id,
-        'field_id': field.id,
-        'payload': jsonEncode(value),
-      });
+      yield (
+        'record_values',
+        {'record_id': id, 'field_id': field.id, 'payload': jsonEncode(value)},
+      );
     }
   }
 }

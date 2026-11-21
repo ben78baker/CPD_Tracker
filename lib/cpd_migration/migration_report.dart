@@ -3,14 +3,17 @@ import 'dart:convert';
 enum MigrationPhase {
   disabled,
   checkingStorage,
+  copyingRecovery,
   snapshotReady,
   staging,
   verifying,
   reviewRequired,
   ready,
+  handoffReserved,
   rehearsalActivated,
   productionActivated,
   failed,
+  abandoned,
 }
 
 enum RecoveryDisposition { preserved, requiresResolution }

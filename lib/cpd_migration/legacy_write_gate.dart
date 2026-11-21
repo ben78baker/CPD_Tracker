@@ -44,7 +44,7 @@ final class LegacyWriteGate {
     }
   }
 
-  /// Called only after the durable production authority marker commits.
+  /// Seal when an independent handoff marker exists or boot requires recovery.
   void seal() {
     if (!_frozen || _writers != 0) {
       throw StateError('Only a quiescent legacy store can be sealed.');

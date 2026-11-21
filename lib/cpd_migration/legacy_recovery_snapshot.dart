@@ -133,6 +133,12 @@ class LegacyRecoverySnapshot {
     return _manifestFingerprint.readAsString();
   }
 
+  /// Cheap startup probe. Full evidence verification remains a recovery step.
+  Future<String> verifyManifest() async {
+    await _readVerified(checkOriginals: false);
+    return _manifestFingerprint.readAsString();
+  }
+
   Future<String> verify() async {
     await _readVerified();
     return _manifestFingerprint.readAsString();
@@ -173,7 +179,7 @@ class LegacyRecoverySnapshot {
   }
 
   Future<List<String>> excludedPaths() async =>
-      (await _readVerified()).excluded;
+      (await _readVerified(checkOriginals: false)).excluded;
 
   File get _manifest => File(p.join(directory.path, 'manifest.json'));
   File get _manifestFingerprint =>

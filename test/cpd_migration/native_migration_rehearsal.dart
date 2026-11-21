@@ -9,6 +9,7 @@ import 'package:cpd_tracker/cpd_migration/legacy_preferences_inventory.dart';
 import 'package:cpd_tracker/cpd_migration/migration_coordinator.dart';
 import 'package:cpd_tracker/cpd_migration/migration_report.dart';
 import 'package:cpd_tracker/cpd_migration/recovery_retention.dart';
+import 'package:cpd_tracker/recording_engine/storage_authority.dart';
 import 'package:cpd_tracker/entry_repository.dart';
 import 'package:cpd_tracker/l10n/app_localizations_en.dart';
 import 'package:cpd_tracker/models.dart';
@@ -468,6 +469,21 @@ Future<void> _restartProbe() async {
     'Interrupted staging has no authority',
   );
   await coordinator.snapshot.verify();
+  if (checkpoint == MigrationPhase.handoffReserved) {
+    final authority = await coordinator.startup.inspect(
+      scope: AuthorityScope.rehearsal,
+      hasLegacyRecords: true,
+    );
+    requireRehearsal(
+      authority.store == StoreAuthority.recovery &&
+          authority.reason == AuthorityReason.interruptedHandoff &&
+          (await coordinator.rehearseActivation()).failure ==
+              'handoff_requires_recovery',
+      'A stopped handoff must not reopen or rebuild legacy.',
+    );
+    debugPrintSynchronously('CPD_PHASE3B_HANDOFF_RESTART_PASS');
+    return;
+  }
   final restarted = await coordinator.rehearseActivation();
   requireRehearsal(
     restarted.phase == MigrationPhase.rehearsalActivated,

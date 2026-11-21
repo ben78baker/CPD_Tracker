@@ -16,6 +16,7 @@ class MigrationReceipt {
     required this.verifiedAt,
     required this.activatedAt,
     required this.rehearsal,
+    this.bindingId,
   });
 
   final String sourceId;
@@ -23,6 +24,7 @@ class MigrationReceipt {
   final DateTime verifiedAt;
   final DateTime activatedAt;
   final bool rehearsal;
+  final String? bindingId;
 
   static const minimumRetention = Duration(days: 30);
   DateTime get retainUntil => activatedAt.toUtc().add(minimumRetention);
@@ -35,6 +37,7 @@ class MigrationReceipt {
       verifiedAt: DateTime.parse(value['verifiedAt'] as String),
       activatedAt: DateTime.parse(value['activatedAt'] as String),
       rehearsal: value['rehearsal'] as bool,
+      bindingId: value['bindingId'] as String?,
     );
   }
 
@@ -44,6 +47,7 @@ class MigrationReceipt {
     'verifiedAt': verifiedAt.toUtc().toIso8601String(),
     'activatedAt': activatedAt.toUtc().toIso8601String(),
     'rehearsal': rehearsal,
+    'bindingId': ?bindingId,
   });
 }
 

@@ -173,17 +173,40 @@ Future<ImportStatus> _stageImport(
     await SqliteRecordingRepository._insertCollection(tx, collection);
     await SqliteRecordingRepository._insertLayout(tx, layout);
   }
-  for (final attachment in plan.attachments) {
-    await SqliteRecordingRepository._insertAttachment(tx, attachment);
-  }
-  for (final record in plan.records) {
-    final layout = layouts[record.collectionId];
-    if (layout == null || record.layoutVersion != 1 || record.version != 1) {
-      throw ArgumentError('Invalid initial import record.');
+  const batchSize = 128;
+  for (var start = 0; start < plan.attachments.length; start += batchSize) {
+    final batch = tx.batch();
+    for (final attachment in plan.attachments.skip(start).take(batchSize)) {
+      batch.insert(
+        'attachments',
+        SqliteRecordingRepository._attachmentRow(attachment),
+      );
     }
-    SqliteRecordingRepository._validateChanges(layout.fields, record.values);
-    // Legacy blanks can be imported even if a field is required for new input.
-    await SqliteRecordingRepository._insertRecord(tx, record, layout.fields);
+    await batch.commit(noResult: true);
+  }
+  for (var start = 0; start < plan.records.length; start += batchSize) {
+    final batch = tx.batch();
+    for (final record in plan.records.skip(start).take(batchSize)) {
+      final layout = layouts[record.collectionId];
+      if (layout == null || record.layoutVersion != 1 || record.version != 1) {
+        throw ArgumentError('Invalid initial import record.');
+      }
+      SqliteRecordingRepository._validateChanges(layout.fields, record.values);
+      batch.insert('records', SqliteRecordingRepository._recordRow(record));
+      for (final field in layout.fields) {
+        final value = record.values[field.id];
+        if (value == null) continue;
+        for (final (table, row) in SqliteRecordingRepository._valueRows(
+          record.id,
+          field,
+          value,
+        )) {
+          batch.insert(table, row);
+        }
+      }
+    }
+    // All batches still participate in the same outer SQLite transaction.
+    await batch.commit(noResult: true);
   }
   await _verifyGraph(tx, plan);
   await _setImportStatus(tx, plan, ImportStatus.staged);
@@ -206,12 +229,14 @@ Future<void> _setImportStatus(
   RecordingImportPlan plan,
   ImportStatus status,
 ) async {
-  await _writeImportPayload(db, plan.sourceId, 'metadata', plan.metadata);
+  if (status != ImportStatus.verified) {
+    await _writeImportPayload(db, plan.sourceId, 'metadata', plan.metadata);
+  }
   await db.update(
     'import_snapshots',
     {
       'status': status.name,
-      'metadata': null,
+      if (status != ImportStatus.verified) 'metadata': null,
       if (status == ImportStatus.verified)
         'verified_at': DateTime.now().toUtc().toIso8601String(),
     },
