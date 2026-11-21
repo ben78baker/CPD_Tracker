@@ -61,3 +61,13 @@ Before claims of audit readiness, compare generated examples against dated offic
 | [UK GMC](uk/gmc.md), [Scotland teachers](uk/gtcs.md) and [NZ teachers](new_zealand/teaching_growth_cycle.md) | Appraisal or employer-led learning confirmation and authentic planning evidence | Treat hours as personal data unless a separate body requires them. Individual activity PDF cannot replace appraisal or sign-off. |
 
 The [international scheme index](profession_index.md) links every checked scheme and its local handoff and retention notes.
+
+## Presentation requirements for shared and profession-specific reports
+
+Keep the optional report language independent of the app, device and scheme. Apply it to document headings, available template labels and regulatory terminology, dates, durations and numeric displays. Preserve practitioner-entered text and values. Indicate source-language fallback when a translation is missing. Preserve the existing date preference on the inherited Standard CPD path and preserve the machine-readable CSV format. Explain recipient language expectations separately from the user preference.
+
+The report configuration sets branding according to recipient needs. Support a branded header, subtle identity, discreet attribution and omission of app identity. Keep each option professional and economical to print. When a regulator prescribes a format or forbids branding, its requirements take priority. Maintain the existing professional-body attribution and independent-log wording without suggesting endorsement.
+
+Use readable tables for scheme metrics and full-width activity sections. Identify the activity on continuation pages and retain long text and reference links. Original attachment bytes remain independent. Keep standard PDF, evidence PDF, CSV and conditional ZIP. For specialised release, qualify native sharing, printing and equivalent access to originals. Portable backup and restore cover source records and report configuration. Generated PDFs reside with the user when exported.
+
+Qualify cold offline generation at the supported OS versions. For complex scripts, verify glyph shaping as well as embedded font coverage, extraction, mixed-script wrapping and pagination. [Phase 7A presentation, field-limit and Hindi evidence](international/phase7a_implementation_report.md)
