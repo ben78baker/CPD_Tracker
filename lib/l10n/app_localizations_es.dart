@@ -845,4 +845,107 @@ class AppLocalizationsEs extends AppLocalizations {
   String restoreRecordProfessionConfirm(String profession) {
     return 'Al restaurar este registro también se añadirá o restaurará la profesión \"$profession\". Sus otros registros guardados y no eliminados también serán visibles. ¿Continuar?';
   }
+
+  @override
+  String get migrationTitle => 'Prueba de almacenamiento';
+
+  @override
+  String get migrationIntro =>
+      'Prueba a trasladar registros de ejemplo. Tus propios registros se mantienen aparte.';
+
+  @override
+  String get migrationScenario => 'Datos de ejemplo';
+
+  @override
+  String get migrationStandardSample => 'Registros con justificantes';
+
+  @override
+  String get migrationReviewSample => 'Registros por revisar';
+
+  @override
+  String get migrationLowSpaceSample => 'Poco espacio';
+
+  @override
+  String get migrationStart => 'Iniciar prueba';
+
+  @override
+  String get migrationRetry => 'Volver a intentar';
+
+  @override
+  String get migrationStay =>
+      'Mantén esta pantalla abierta durante la comprobación.';
+
+  @override
+  String get migrationCheckSpace => 'Comprobando espacio disponible';
+
+  @override
+  String get migrationCopy => 'Creando copia de recuperación';
+
+  @override
+  String get migrationMove => 'Preparando registros de ejemplo';
+
+  @override
+  String get migrationVerify => 'Comprobando registros y justificantes';
+
+  @override
+  String get migrationReady => 'Registros de ejemplo verificados';
+
+  @override
+  String get migrationReadyDetail =>
+      'La copia de ejemplo está lista. Se sigue usando el almacenamiento habitual.';
+
+  @override
+  String get migrationReview => 'Algunos registros necesitan revisión';
+
+  @override
+  String get migrationReviewDetail =>
+      'Se han conservado los valores originales. Revisa estos problemas antes del traslado.';
+
+  @override
+  String get migrationSpaceDetail =>
+      'Libera espacio e inténtalo otra vez. Los registros originales siguen disponibles.';
+
+  @override
+  String get migrationProblem => 'La prueba está en pausa';
+
+  @override
+  String get migrationProblemDetail =>
+      'Los registros originales siguen disponibles. Puedes reintentar o guardar este intento para revisión.';
+
+  @override
+  String get migrationDuplicate => 'Dos registros comparten un identificador';
+
+  @override
+  String get migrationDate => 'Hay que confirmar la fecha original';
+
+  @override
+  String get migrationDuration => 'Hay que confirmar la duración original';
+
+  @override
+  String get migrationUnsupportedEvidence =>
+      'Hay que revisar una referencia a un justificante';
+
+  @override
+  String get migrationMissingEvidence =>
+      'Ya faltaba un justificante. Se conservó su referencia.';
+
+  @override
+  String get migrationOtherIssue =>
+      'La información original se conservó para revisión';
+
+  @override
+  String get migrationOriginal => 'Ver registro original';
+
+  @override
+  String get migrationOriginalUnavailable =>
+      'No se pudo abrir el registro original.';
+
+  @override
+  String get migrationKeepAttempt => 'Guardar este intento y parar';
+
+  @override
+  String get migrationStopped => 'Intento guardado para revisión';
+
+  @override
+  String get migrationNew => 'Iniciar otra prueba';
 }

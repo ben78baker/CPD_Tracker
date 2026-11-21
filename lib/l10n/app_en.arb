@@ -378,5 +378,36 @@
         "type": "String"
       }
     }
-  }
+  },
+  "migrationTitle": "Storage rehearsal",
+  "migrationIntro": "Try moving sample records to the new store. Your own records are separate.",
+  "migrationScenario": "Sample data",
+  "migrationStandardSample": "Records with evidence",
+  "migrationReviewSample": "Records needing review",
+  "migrationLowSpaceSample": "Low storage",
+  "migrationStart": "Run rehearsal",
+  "migrationRetry": "Try again",
+  "migrationStay": "Keep this screen open while the check runs.",
+  "migrationCheckSpace": "Checking available space",
+  "migrationCopy": "Making a recovery copy",
+  "migrationMove": "Preparing sample records",
+  "migrationVerify": "Checking records and evidence",
+  "migrationReady": "Sample records verified",
+  "migrationReadyDetail": "The sample copy is ready. Your usual storage is still in use.",
+  "migrationReview": "Some records need review",
+  "migrationReviewDetail": "The original values are saved. Review these issues before moving the affected records.",
+  "migrationSpaceDetail": "Free up device space and try again. The original records are still available.",
+  "migrationProblem": "The rehearsal paused",
+  "migrationProblemDetail": "Your source records are still available. You can retry or keep this attempt for review.",
+  "migrationDuplicate": "Two records share an identifier",
+  "migrationDate": "The original date needs confirmation",
+  "migrationDuration": "The original duration needs confirmation",
+  "migrationUnsupportedEvidence": "An evidence reference needs review",
+  "migrationMissingEvidence": "Evidence was already missing. Its reference was kept.",
+  "migrationOtherIssue": "Original information was kept for review",
+  "migrationOriginal": "View original record",
+  "migrationOriginalUnavailable": "The original record could not be opened.",
+  "migrationKeepAttempt": "Keep this attempt and stop",
+  "migrationStopped": "Attempt kept for review",
+  "migrationNew": "Start a new rehearsal"
 }

@@ -839,4 +839,105 @@ class AppLocalizationsEn extends AppLocalizations {
   String restoreRecordProfessionConfirm(String profession) {
     return 'Restoring this record will also add or restore the profession \"$profession\". Its other saved, non-deleted records will become visible too. Continue?';
   }
+
+  @override
+  String get migrationTitle => 'Storage rehearsal';
+
+  @override
+  String get migrationIntro =>
+      'Try moving sample records to the new store. Your own records are separate.';
+
+  @override
+  String get migrationScenario => 'Sample data';
+
+  @override
+  String get migrationStandardSample => 'Records with evidence';
+
+  @override
+  String get migrationReviewSample => 'Records needing review';
+
+  @override
+  String get migrationLowSpaceSample => 'Low storage';
+
+  @override
+  String get migrationStart => 'Run rehearsal';
+
+  @override
+  String get migrationRetry => 'Try again';
+
+  @override
+  String get migrationStay => 'Keep this screen open while the check runs.';
+
+  @override
+  String get migrationCheckSpace => 'Checking available space';
+
+  @override
+  String get migrationCopy => 'Making a recovery copy';
+
+  @override
+  String get migrationMove => 'Preparing sample records';
+
+  @override
+  String get migrationVerify => 'Checking records and evidence';
+
+  @override
+  String get migrationReady => 'Sample records verified';
+
+  @override
+  String get migrationReadyDetail =>
+      'The sample copy is ready. Your usual storage is still in use.';
+
+  @override
+  String get migrationReview => 'Some records need review';
+
+  @override
+  String get migrationReviewDetail =>
+      'The original values are saved. Review these issues before moving the affected records.';
+
+  @override
+  String get migrationSpaceDetail =>
+      'Free up device space and try again. The original records are still available.';
+
+  @override
+  String get migrationProblem => 'The rehearsal paused';
+
+  @override
+  String get migrationProblemDetail =>
+      'Your source records are still available. You can retry or keep this attempt for review.';
+
+  @override
+  String get migrationDuplicate => 'Two records share an identifier';
+
+  @override
+  String get migrationDate => 'The original date needs confirmation';
+
+  @override
+  String get migrationDuration => 'The original duration needs confirmation';
+
+  @override
+  String get migrationUnsupportedEvidence =>
+      'An evidence reference needs review';
+
+  @override
+  String get migrationMissingEvidence =>
+      'Evidence was already missing. Its reference was kept.';
+
+  @override
+  String get migrationOtherIssue => 'Original information was kept for review';
+
+  @override
+  String get migrationOriginal => 'View original record';
+
+  @override
+  String get migrationOriginalUnavailable =>
+      'The original record could not be opened.';
+
+  @override
+  String get migrationKeepAttempt => 'Keep this attempt and stop';
+
+  @override
+  String get migrationStopped => 'Attempt kept for review';
+
+  @override
+  String get migrationNew => 'Start a new rehearsal';
 }

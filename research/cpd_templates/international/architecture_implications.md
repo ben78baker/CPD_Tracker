@@ -102,6 +102,8 @@ Start with existing text matching and a small offline search over labels, aliase
 
 ## 6. Safe migration and data recovery
 
+[Phase 3B](phase3b_migration_readiness.md) implements the startup decision and its recovery rules. A write-once marker outside the attempt directory precedes the bound SQLite receipt. A pending or ambiguous handoff stops both writers. The generic engine owns the authority decision and cold preservation. CPD owns inventory, validation and interpretation. Normal production startup remains on the existing store until separately approved.
+
 **Use one authority at a time.** Run migration behind a single guarded startup/recovery path. Preserve original preferences and attachments through a validated cutover. After cutover, all record, profession, target and evidence association writes use the destination. Earlier binaries read stale preferences, so recovery after new writes must use the destination snapshot or a validated forward repair. Copying the legacy snapshot back would discard new work.
 
 1. **Inventory and snapshot.** Read the raw legacy preferences without invoking helpers that rewrite or sanitise data on read. Inventory active and deleted professions, targets, all JSON entries, counter, and attachments. Record recoverable originals or plain diagnostics without logging sensitive text or paths. Capture a recoverable snapshot before enabling destination writes. Use synthetic or separately authorised fixtures.

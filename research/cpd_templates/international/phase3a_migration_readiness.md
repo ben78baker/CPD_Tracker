@@ -21,6 +21,8 @@ The receipt records verification and activation timestamps separately. The minim
 
 ## Activation and rollback plan
 
+[Phase 3B](phase3b_migration_readiness.md#startup-authority) refines the handoff rules below. The independent marker is written before the receipt. From that point, legacy writes stay sealed even if receipt publication is interrupted.
+
 - A separately approved release must explicitly authorise the cutover code change and wire one startup authority resolver before any writer or screen is constructed. Production uses an app-private destination, production-scoped receipt and coordinator health checks. Rehearsal receipts never select production storage.
 - Before committing the receipt, confirm the independent recovery manifest, frozen source, SQLite constraints, projected records and targets, evidence integrity, review state, minimum supported platforms and established parity gates. Persist the authority marker before handing off to SQLite. Reopen and verify that marker during startup to recover a process terminated at the handoff.
 - Before the marker, legacy retains authority. On failure, keep the independent copy, destination and safe diagnostic report. Resume against an unchanged source or start a separate attempt following review. User-facing recovery and correction policy require separate approval.

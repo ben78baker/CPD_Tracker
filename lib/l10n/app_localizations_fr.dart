@@ -851,4 +851,108 @@ class AppLocalizationsFr extends AppLocalizations {
   String restoreRecordProfessionConfirm(String profession) {
     return 'La restauration de cet enregistrement ajoutera ou restaurera également la profession « $profession ». Ses autres enregistrements conservés et non supprimés redeviendront également visibles. Continuer ?';
   }
+
+  @override
+  String get migrationTitle => 'Essai de stockage';
+
+  @override
+  String get migrationIntro =>
+      'Essayez de transférer des exemples vers le nouvel espace. Vos propres données restent séparées.';
+
+  @override
+  String get migrationScenario => 'Données d’exemple';
+
+  @override
+  String get migrationStandardSample => 'Dossiers avec justificatifs';
+
+  @override
+  String get migrationReviewSample => 'Dossiers à vérifier';
+
+  @override
+  String get migrationLowSpaceSample => 'Espace de stockage faible';
+
+  @override
+  String get migrationStart => 'Lancer l’essai';
+
+  @override
+  String get migrationRetry => 'Réessayer';
+
+  @override
+  String get migrationStay =>
+      'Gardez cet écran ouvert pendant la vérification.';
+
+  @override
+  String get migrationCheckSpace => 'Vérification de l’espace disponible';
+
+  @override
+  String get migrationCopy => 'Création d’une copie de récupération';
+
+  @override
+  String get migrationMove => 'Préparation des dossiers d’exemple';
+
+  @override
+  String get migrationVerify =>
+      'Vérification des dossiers et des justificatifs';
+
+  @override
+  String get migrationReady => 'Dossiers d’exemple vérifiés';
+
+  @override
+  String get migrationReadyDetail =>
+      'La copie d’exemple est prête. Votre stockage habituel reste actif.';
+
+  @override
+  String get migrationReview => 'Certains dossiers sont à vérifier';
+
+  @override
+  String get migrationReviewDetail =>
+      'Les valeurs d’origine sont conservées. Vérifiez ces points avant le transfert.';
+
+  @override
+  String get migrationSpaceDetail =>
+      'Libérez de l’espace puis réessayez. Les dossiers d’origine restent disponibles.';
+
+  @override
+  String get migrationProblem => 'L’essai est en pause';
+
+  @override
+  String get migrationProblemDetail =>
+      'Les dossiers d’origine restent disponibles. Réessayez ou gardez cet essai pour vérification.';
+
+  @override
+  String get migrationDuplicate => 'Deux dossiers partagent un identifiant';
+
+  @override
+  String get migrationDate => 'La date d’origine doit être confirmée';
+
+  @override
+  String get migrationDuration => 'La durée d’origine doit être confirmée';
+
+  @override
+  String get migrationUnsupportedEvidence =>
+      'Un lien vers un justificatif est à vérifier';
+
+  @override
+  String get migrationMissingEvidence =>
+      'Un justificatif était déjà manquant. Sa référence est conservée.';
+
+  @override
+  String get migrationOtherIssue =>
+      'Les informations d’origine sont conservées pour vérification';
+
+  @override
+  String get migrationOriginal => 'Voir le dossier d’origine';
+
+  @override
+  String get migrationOriginalUnavailable =>
+      'Impossible d’ouvrir le dossier d’origine.';
+
+  @override
+  String get migrationKeepAttempt => 'Conserver cet essai et arrêter';
+
+  @override
+  String get migrationStopped => 'Essai conservé pour vérification';
+
+  @override
+  String get migrationNew => 'Démarrer un nouvel essai';
 }

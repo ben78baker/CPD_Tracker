@@ -842,4 +842,108 @@ class AppLocalizationsDe extends AppLocalizations {
   String restoreRecordProfessionConfirm(String profession) {
     return 'Beim Wiederherstellen dieses Eintrags wird auch der Beruf \"$profession\" hinzugefügt oder wiederhergestellt. Seine anderen gespeicherten, nicht gelöschten Einträge werden ebenfalls sichtbar. Fortfahren?';
   }
+
+  @override
+  String get migrationTitle => 'Speicher-Probelauf';
+
+  @override
+  String get migrationIntro =>
+      'Übertragen Sie Beispieldatensätze probeweise. Ihre eigenen Daten bleiben getrennt.';
+
+  @override
+  String get migrationScenario => 'Beispieldaten';
+
+  @override
+  String get migrationStandardSample => 'Einträge mit Nachweisen';
+
+  @override
+  String get migrationReviewSample => 'Einträge zur Prüfung';
+
+  @override
+  String get migrationLowSpaceSample => 'Wenig Speicherplatz';
+
+  @override
+  String get migrationStart => 'Probelauf starten';
+
+  @override
+  String get migrationRetry => 'Erneut versuchen';
+
+  @override
+  String get migrationStay =>
+      'Lassen Sie diesen Bildschirm während der Prüfung geöffnet.';
+
+  @override
+  String get migrationCheckSpace => 'Speicherplatz wird geprüft';
+
+  @override
+  String get migrationCopy => 'Sicherungskopie wird erstellt';
+
+  @override
+  String get migrationMove => 'Beispiele werden vorbereitet';
+
+  @override
+  String get migrationVerify => 'Einträge und Nachweise werden geprüft';
+
+  @override
+  String get migrationReady => 'Beispiele erfolgreich geprüft';
+
+  @override
+  String get migrationReadyDetail =>
+      'Die Beispielkopie ist bereit. Der bisherige Speicher bleibt in Gebrauch.';
+
+  @override
+  String get migrationReview => 'Einige Einträge müssen geprüft werden';
+
+  @override
+  String get migrationReviewDetail =>
+      'Die Originalwerte wurden gesichert. Prüfen Sie diese Punkte vor der Übertragung.';
+
+  @override
+  String get migrationSpaceDetail =>
+      'Geben Sie Speicherplatz frei und versuchen Sie es erneut. Die Originaleinträge sind weiterhin verfügbar.';
+
+  @override
+  String get migrationProblem => 'Der Probelauf wurde angehalten';
+
+  @override
+  String get migrationProblemDetail =>
+      'Die Quelldaten sind weiterhin verfügbar. Sie können erneut versuchen oder diesen Versuch zur Prüfung behalten.';
+
+  @override
+  String get migrationDuplicate => 'Zwei Einträge haben dieselbe Kennung';
+
+  @override
+  String get migrationDate => 'Das ursprüngliche Datum muss bestätigt werden';
+
+  @override
+  String get migrationDuration =>
+      'Die ursprüngliche Dauer muss bestätigt werden';
+
+  @override
+  String get migrationUnsupportedEvidence =>
+      'Ein Nachweisverweis muss geprüft werden';
+
+  @override
+  String get migrationMissingEvidence =>
+      'Ein Nachweis fehlte bereits. Der Verweis wurde behalten.';
+
+  @override
+  String get migrationOtherIssue =>
+      'Originalinformationen wurden zur Prüfung behalten';
+
+  @override
+  String get migrationOriginal => 'Originaleintrag anzeigen';
+
+  @override
+  String get migrationOriginalUnavailable =>
+      'Der Originaleintrag konnte nicht geöffnet werden.';
+
+  @override
+  String get migrationKeepAttempt => 'Diesen Versuch behalten und beenden';
+
+  @override
+  String get migrationStopped => 'Versuch zur Prüfung behalten';
+
+  @override
+  String get migrationNew => 'Neuen Probelauf starten';
 }

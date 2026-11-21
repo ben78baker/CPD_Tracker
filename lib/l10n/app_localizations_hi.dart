@@ -838,4 +838,104 @@ class AppLocalizationsHi extends AppLocalizations {
   String restoreRecordProfessionConfirm(String profession) {
     return 'इस रिकॉर्ड को बहाल करने पर \"$profession\" पेशा भी जोड़ा या बहाल किया जाएगा। इसके अन्य सहेजे गए रिकॉर्ड, जो हटाए नहीं गए हैं, भी दिखाई देंगे। जारी रखें?';
   }
+
+  @override
+  String get migrationTitle => 'स्टोरेज का अभ्यास';
+
+  @override
+  String get migrationIntro =>
+      'नए स्टोरेज में नमूना रिकॉर्ड ले जाकर देखें। आपके अपने रिकॉर्ड अलग हैं।';
+
+  @override
+  String get migrationScenario => 'नमूना डेटा';
+
+  @override
+  String get migrationStandardSample => 'सबूत वाले रिकॉर्ड';
+
+  @override
+  String get migrationReviewSample => 'समीक्षा वाले रिकॉर्ड';
+
+  @override
+  String get migrationLowSpaceSample => 'कम स्टोरेज';
+
+  @override
+  String get migrationStart => 'अभ्यास शुरू करें';
+
+  @override
+  String get migrationRetry => 'फिर कोशिश करें';
+
+  @override
+  String get migrationStay => 'जाँच के दौरान यह स्क्रीन खुली रखें।';
+
+  @override
+  String get migrationCheckSpace => 'खाली जगह की जाँच';
+
+  @override
+  String get migrationCopy => 'रिकवरी कॉपी बनाई जा रही है';
+
+  @override
+  String get migrationMove => 'नमूना रिकॉर्ड तैयार हो रहे हैं';
+
+  @override
+  String get migrationVerify => 'रिकॉर्ड और सबूत की जाँच';
+
+  @override
+  String get migrationReady => 'नमूना रिकॉर्ड सत्यापित';
+
+  @override
+  String get migrationReadyDetail =>
+      'नमूना कॉपी तैयार है। आपका सामान्य स्टोरेज अभी भी इस्तेमाल हो रहा है।';
+
+  @override
+  String get migrationReview => 'कुछ रिकॉर्ड की समीक्षा चाहिए';
+
+  @override
+  String get migrationReviewDetail =>
+      'मूल मान सुरक्षित हैं। इन रिकॉर्ड को ले जाने से पहले समस्याओं की समीक्षा करें।';
+
+  @override
+  String get migrationSpaceDetail =>
+      'डिवाइस में जगह खाली करके फिर कोशिश करें। मूल रिकॉर्ड अभी भी उपलब्ध हैं।';
+
+  @override
+  String get migrationProblem => 'अभ्यास रुक गया';
+
+  @override
+  String get migrationProblemDetail =>
+      'मूल रिकॉर्ड अभी भी उपलब्ध हैं। फिर कोशिश करें या यह प्रयास समीक्षा के लिए रखें।';
+
+  @override
+  String get migrationDuplicate => 'दो रिकॉर्ड की पहचान एक जैसी है';
+
+  @override
+  String get migrationDate => 'मूल तारीख की पुष्टि चाहिए';
+
+  @override
+  String get migrationDuration => 'मूल अवधि की पुष्टि चाहिए';
+
+  @override
+  String get migrationUnsupportedEvidence =>
+      'सबूत के एक संदर्भ की समीक्षा चाहिए';
+
+  @override
+  String get migrationMissingEvidence =>
+      'सबूत पहले से गायब था। उसका संदर्भ रखा गया है।';
+
+  @override
+  String get migrationOtherIssue => 'मूल जानकारी समीक्षा के लिए रखी गई है';
+
+  @override
+  String get migrationOriginal => 'मूल रिकॉर्ड देखें';
+
+  @override
+  String get migrationOriginalUnavailable => 'मूल रिकॉर्ड नहीं खुल सका।';
+
+  @override
+  String get migrationKeepAttempt => 'यह प्रयास रखें और रोकें';
+
+  @override
+  String get migrationStopped => 'प्रयास समीक्षा के लिए रखा गया';
+
+  @override
+  String get migrationNew => 'नया अभ्यास शुरू करें';
 }

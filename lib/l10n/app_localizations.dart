@@ -1569,6 +1569,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restoring this record will also add or restore the profession \"{profession}\". Its other saved, non-deleted records will become visible too. Continue?'**
   String restoreRecordProfessionConfirm(String profession);
+
+  /// No description provided for @migrationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage rehearsal'**
+  String get migrationTitle;
+
+  /// No description provided for @migrationIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Try moving sample records to the new store. Your own records are separate.'**
+  String get migrationIntro;
+
+  /// No description provided for @migrationScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample data'**
+  String get migrationScenario;
+
+  /// No description provided for @migrationStandardSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Records with evidence'**
+  String get migrationStandardSample;
+
+  /// No description provided for @migrationReviewSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Records needing review'**
+  String get migrationReviewSample;
+
+  /// No description provided for @migrationLowSpaceSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Low storage'**
+  String get migrationLowSpaceSample;
+
+  /// No description provided for @migrationStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Run rehearsal'**
+  String get migrationStart;
+
+  /// No description provided for @migrationRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get migrationRetry;
+
+  /// No description provided for @migrationStay.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this screen open while the check runs.'**
+  String get migrationStay;
+
+  /// No description provided for @migrationCheckSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking available space'**
+  String get migrationCheckSpace;
+
+  /// No description provided for @migrationCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Making a recovery copy'**
+  String get migrationCopy;
+
+  /// No description provided for @migrationMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing sample records'**
+  String get migrationMove;
+
+  /// No description provided for @migrationVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking records and evidence'**
+  String get migrationVerify;
+
+  /// No description provided for @migrationReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample records verified'**
+  String get migrationReady;
+
+  /// No description provided for @migrationReadyDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'The sample copy is ready. Your usual storage is still in use.'**
+  String get migrationReadyDetail;
+
+  /// No description provided for @migrationReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Some records need review'**
+  String get migrationReview;
+
+  /// No description provided for @migrationReviewDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'The original values are saved. Review these issues before moving the affected records.'**
+  String get migrationReviewDetail;
+
+  /// No description provided for @migrationSpaceDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Free up device space and try again. The original records are still available.'**
+  String get migrationSpaceDetail;
+
+  /// No description provided for @migrationProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'The rehearsal paused'**
+  String get migrationProblem;
+
+  /// No description provided for @migrationProblemDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your source records are still available. You can retry or keep this attempt for review.'**
+  String get migrationProblemDetail;
+
+  /// No description provided for @migrationDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Two records share an identifier'**
+  String get migrationDuplicate;
+
+  /// No description provided for @migrationDate.
+  ///
+  /// In en, this message translates to:
+  /// **'The original date needs confirmation'**
+  String get migrationDate;
+
+  /// No description provided for @migrationDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'The original duration needs confirmation'**
+  String get migrationDuration;
+
+  /// No description provided for @migrationUnsupportedEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'An evidence reference needs review'**
+  String get migrationUnsupportedEvidence;
+
+  /// No description provided for @migrationMissingEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence was already missing. Its reference was kept.'**
+  String get migrationMissingEvidence;
+
+  /// No description provided for @migrationOtherIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Original information was kept for review'**
+  String get migrationOtherIssue;
+
+  /// No description provided for @migrationOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'View original record'**
+  String get migrationOriginal;
+
+  /// No description provided for @migrationOriginalUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The original record could not be opened.'**
+  String get migrationOriginalUnavailable;
+
+  /// No description provided for @migrationKeepAttempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this attempt and stop'**
+  String get migrationKeepAttempt;
+
+  /// No description provided for @migrationStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempt kept for review'**
+  String get migrationStopped;
+
+  /// No description provided for @migrationNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new rehearsal'**
+  String get migrationNew;
 }
 
 class _AppLocalizationsDelegate
