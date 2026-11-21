@@ -55,10 +55,10 @@ class LayoutField {
       definition.hasSameValueMeaning(replacement.definition) &&
       definition.version <= replacement.definition.version;
 
-  LayoutField reidentify(String newId) => LayoutField(
+  LayoutField reidentify(String newId, {bool? required}) => LayoutField(
     id: newId,
     definition: definition,
-    required: required,
+    required: required ?? this.required,
     labelOverride: labelOverride,
     helpText: helpText,
     placeholder: placeholder,
@@ -216,7 +216,12 @@ List<LayoutField> resolveFields(
     } else if (revision.version > creationVersion) {
       for (final field in revision.fields) {
         if (revision.includeExisting.contains(field.id)) {
-          fields.putIfAbsent(field.id, () => field);
+          fields.putIfAbsent(
+            field.id,
+            () => field.required
+                ? field.reidentify(field.id, required: false)
+                : field,
+          );
         }
       }
     }

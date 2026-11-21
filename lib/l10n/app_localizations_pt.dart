@@ -947,4 +947,268 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get migrationNew => 'Iniciar um novo ensaio';
+
+  @override
+  String get editFields => 'Editar campos';
+
+  @override
+  String get addField => 'Adicionar campo';
+
+  @override
+  String get customField => 'Campo personalizado';
+
+  @override
+  String get fieldLibrary => 'Biblioteca de campos';
+
+  @override
+  String get chooseField => 'Escolher um tipo de campo';
+
+  @override
+  String get editorSearch => 'Pesquisar campos';
+
+  @override
+  String get editorAll => 'Todas as categorias';
+
+  @override
+  String get editorNoResults =>
+      'Nenhum campo encontrado. Tente outra palavra ou categoria.';
+
+  @override
+  String get editorPreview => 'Pré-visualizar';
+
+  @override
+  String get editorSettings => 'Definições do campo';
+
+  @override
+  String get editorName => 'Nome do campo';
+
+  @override
+  String get editorHelp => 'Texto de ajuda';
+
+  @override
+  String get editorPlaceholder => 'Texto indicativo';
+
+  @override
+  String get editorRequired => 'Obrigatório';
+
+  @override
+  String get editorProtected => 'Campo protegido';
+
+  @override
+  String get editorProtectedReason =>
+      'Este campo é usado no formulário e nos relatórios de CPD. Pode mudar o nome ou a posição.';
+
+  @override
+  String get editorAdvanced => 'Mais definições';
+
+  @override
+  String get editorDefault => 'Valor predefinido';
+
+  @override
+  String get editorUnit => 'Unidade';
+
+  @override
+  String get editorPrecision => 'Casas decimais';
+
+  @override
+  String get editorNonNegative => 'Zero ou mais';
+
+  @override
+  String get editorChoice => 'Opção';
+
+  @override
+  String get editorAddChoice => 'Adicionar opção';
+
+  @override
+  String get editorFormatting => 'Formato de apresentação';
+
+  @override
+  String get editorFuture => 'Apenas registos futuros';
+
+  @override
+  String get editorBoth => 'Registos existentes e futuros';
+
+  @override
+  String get editorHistoryHint =>
+      'Os registos existentes mantêm os valores e requisitos originais.';
+
+  @override
+  String get editorInvalid => 'Verifique o nome, as opções e os valores.';
+
+  @override
+  String get editorBadRecord =>
+      'Preencha os campos obrigatórios e verifique os valores introduzidos.';
+
+  @override
+  String get editorDrag => 'Arraste para reordenar';
+
+  @override
+  String get editorMoveUp => 'Mover para cima';
+
+  @override
+  String get editorMoveDown => 'Mover para baixo';
+
+  @override
+  String get editorDuplicate => 'Duplicar campo';
+
+  @override
+  String get editorRemove => 'Remover campo';
+
+  @override
+  String get editorRemoveHint =>
+      'O campo sai do formulário. Os valores e comprovativos mantêm-se nos registos antigos.';
+
+  @override
+  String get editorReplace => 'Substituir campo';
+
+  @override
+  String get editorReplaceHint =>
+      'Alterar os ajustes numéricos cria um novo campo. Os valores antigos mantêm a sua unidade e precisão.';
+
+  @override
+  String get editorDiscard => 'Descartar alterações?';
+
+  @override
+  String get editorDiscardAction => 'Descartar';
+
+  @override
+  String get editorUnsaved => 'As alterações ainda não foram guardadas.';
+
+  @override
+  String get editorLimit => 'Remova um campo para adicionar outro.';
+
+  @override
+  String get editorSaveError =>
+      'Não foi possível guardar a disposição. O rascunho continua aberto.';
+
+  @override
+  String get editorAlreadyAdded => 'Nesta disposição';
+
+  @override
+  String get editorCreateCopy => 'Adicionar outra cópia';
+
+  @override
+  String get editorShort => 'Texto curto';
+
+  @override
+  String get editorLong => 'Texto longo';
+
+  @override
+  String get editorInteger => 'Número inteiro';
+
+  @override
+  String get editorDecimal => 'Número decimal';
+
+  @override
+  String get editorDate => 'Data';
+
+  @override
+  String get editorDuration => 'Duração';
+
+  @override
+  String get editorSingle => 'Escolha única';
+
+  @override
+  String get editorMultiple => 'Escolha múltipla';
+
+  @override
+  String get editorYesNo => 'Sim/não';
+
+  @override
+  String get editorCheckbox => 'Caixa de seleção';
+
+  @override
+  String get editorLink => 'Ligação web';
+
+  @override
+  String get editorFile => 'Anexo';
+
+  @override
+  String get editorPhoto => 'Fotografia';
+
+  @override
+  String get editorHeading => 'Título de secção';
+
+  @override
+  String get editorSample => 'Valores de exemplo';
+
+  @override
+  String get editorExample => 'Registo de exemplo';
+
+  @override
+  String get editorSampleFile => 'Comprovativo de exemplo';
+
+  @override
+  String get editorTry => 'Experimente o formulário';
+
+  @override
+  String get editorPreviewNotice =>
+      'Experimente valores aqui. São descartados ao sair.';
+
+  @override
+  String get editorTemplateDetails => 'Sobre este modelo';
+
+  @override
+  String get editorExamplePdf => 'Exemplo de relatório PDF';
+
+  @override
+  String get editorHistorical => 'Campos históricos';
+
+  @override
+  String get editorNewRecord => 'Novo registo de exemplo';
+
+  @override
+  String get editorRecords => 'Registos de exemplo';
+
+  @override
+  String get editorExport => 'Ver exportação';
+
+  @override
+  String get editorVersion => 'Versão do modelo';
+
+  @override
+  String get editorReviewed => 'Requisitos revistos';
+
+  @override
+  String get editorProfession => 'Profissão';
+
+  @override
+  String get editorCountry => 'País';
+
+  @override
+  String get editorBody => 'Organismo profissional';
+
+  @override
+  String get editorScheme => 'Regime de CPD';
+
+  @override
+  String get editorYes => 'Sim';
+
+  @override
+  String get editorNo => 'Não';
+
+  @override
+  String get editorMinutes => 'Minutos';
+
+  @override
+  String get editorClear => 'Limpar valor';
+
+  @override
+  String editorFullCount(int count, int limit) {
+    return '$count de $limit campos';
+  }
+
+  @override
+  String editorCount(int count) {
+    return 'Campos: $count';
+  }
+
+  @override
+  String editorPosition(int position, int count) {
+    return 'Posição $position de $count';
+  }
+
+  @override
+  String get editorChoiceReplaceHint =>
+      'Mudar as opções cria um novo campo. Os registos anteriores mantêm as opções originais.';
 }

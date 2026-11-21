@@ -2,7 +2,8 @@ import 'package:cpd_tracker/cpd_migration/legacy_migration.dart';
 import 'package:cpd_tracker/recording_engine/field_library.dart';
 import 'package:cpd_tracker/recording_engine/models.dart';
 
-const cpdActiveFieldLimit = 20;
+export 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart'
+    show cpdActiveFieldLimit;
 
 /// The bundled free layout uses the exact canonical migration/adapter bindings.
 TemplateVersion cpdFormTemplate() => TemplateVersion(

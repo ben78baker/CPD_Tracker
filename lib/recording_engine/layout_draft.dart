@@ -46,6 +46,33 @@ class LayoutDraft {
     _fields[index] = field;
   }
 
+  /// Replace a field in place for future records. Earlier revisions still
+  /// reference the original identity and values.
+  void replace(String id, LayoutField replacement) {
+    if (id == replacement.id) {
+      throw ArgumentError('A replacement needs a new field ID.');
+    }
+    final index = _index(id);
+    final fields = [..._fields]..[index] = replacement;
+    final headings = [
+      for (final heading in _headings)
+        if (heading.beforeFieldId == id)
+          SectionHeading(
+            heading.id,
+            heading.label,
+            beforeFieldId: replacement.id,
+          )
+        else
+          heading,
+    ];
+    validateLayout(fields, headings);
+    _fields[index] = replacement;
+    _headings
+      ..clear()
+      ..addAll(headings);
+    _includeExisting.remove(id);
+  }
+
   void retire(String id) {
     _fields.removeAt(_index(id));
     _includeExisting.remove(id);

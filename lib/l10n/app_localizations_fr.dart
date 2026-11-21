@@ -955,4 +955,268 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get migrationNew => 'Démarrer un nouvel essai';
+
+  @override
+  String get editFields => 'Modifier les champs';
+
+  @override
+  String get addField => 'Ajouter un champ';
+
+  @override
+  String get customField => 'Champ personnalisé';
+
+  @override
+  String get fieldLibrary => 'Bibliothèque de champs';
+
+  @override
+  String get chooseField => 'Choisir un type de champ';
+
+  @override
+  String get editorSearch => 'Rechercher des champs';
+
+  @override
+  String get editorAll => 'Toutes les catégories';
+
+  @override
+  String get editorNoResults =>
+      'Aucun champ trouvé. Essayez un autre mot ou une autre catégorie.';
+
+  @override
+  String get editorPreview => 'Aperçu';
+
+  @override
+  String get editorSettings => 'Réglages du champ';
+
+  @override
+  String get editorName => 'Nom du champ';
+
+  @override
+  String get editorHelp => 'Texte d’aide';
+
+  @override
+  String get editorPlaceholder => 'Texte indicatif';
+
+  @override
+  String get editorRequired => 'Obligatoire';
+
+  @override
+  String get editorProtected => 'Champ protégé';
+
+  @override
+  String get editorProtectedReason =>
+      'Ce champ sert au formulaire CPD et aux rapports. Vous pouvez le renommer ou le déplacer.';
+
+  @override
+  String get editorAdvanced => 'Autres réglages';
+
+  @override
+  String get editorDefault => 'Valeur par défaut';
+
+  @override
+  String get editorUnit => 'Unité';
+
+  @override
+  String get editorPrecision => 'Décimales';
+
+  @override
+  String get editorNonNegative => 'Zéro ou plus';
+
+  @override
+  String get editorChoice => 'Choix';
+
+  @override
+  String get editorAddChoice => 'Ajouter un choix';
+
+  @override
+  String get editorFormatting => 'Format d’affichage';
+
+  @override
+  String get editorFuture => 'Entrées futures uniquement';
+
+  @override
+  String get editorBoth => 'Entrées existantes et futures';
+
+  @override
+  String get editorHistoryHint =>
+      'Les entrées existantes gardent leurs valeurs et exigences d’origine.';
+
+  @override
+  String get editorInvalid => 'Vérifiez le nom, les choix et les valeurs.';
+
+  @override
+  String get editorBadRecord =>
+      'Renseignez les champs obligatoires et vérifiez les valeurs saisies.';
+
+  @override
+  String get editorDrag => 'Faire glisser pour réorganiser';
+
+  @override
+  String get editorMoveUp => 'Monter';
+
+  @override
+  String get editorMoveDown => 'Descendre';
+
+  @override
+  String get editorDuplicate => 'Dupliquer le champ';
+
+  @override
+  String get editorRemove => 'Retirer le champ';
+
+  @override
+  String get editorRemoveHint =>
+      'Le champ quitte le formulaire. Les valeurs et preuves restent dans les entrées anciennes.';
+
+  @override
+  String get editorReplace => 'Remplacer le champ';
+
+  @override
+  String get editorReplaceHint =>
+      'Modifier les réglages numériques crée un nouveau champ. Les anciennes valeurs gardent leur unité et leur précision.';
+
+  @override
+  String get editorDiscard => 'Abandonner les modifications ?';
+
+  @override
+  String get editorDiscardAction => 'Abandonner';
+
+  @override
+  String get editorUnsaved => 'Vos modifications ne sont pas enregistrées.';
+
+  @override
+  String get editorLimit => 'Retirez un champ pour en ajouter un autre.';
+
+  @override
+  String get editorSaveError =>
+      'La disposition n’a pas pu être enregistrée. Votre brouillon reste ouvert.';
+
+  @override
+  String get editorAlreadyAdded => 'Dans cette disposition';
+
+  @override
+  String get editorCreateCopy => 'Ajouter une autre copie';
+
+  @override
+  String get editorShort => 'Texte court';
+
+  @override
+  String get editorLong => 'Texte long';
+
+  @override
+  String get editorInteger => 'Nombre entier';
+
+  @override
+  String get editorDecimal => 'Nombre décimal';
+
+  @override
+  String get editorDate => 'Date';
+
+  @override
+  String get editorDuration => 'Durée';
+
+  @override
+  String get editorSingle => 'Choix unique';
+
+  @override
+  String get editorMultiple => 'Choix multiple';
+
+  @override
+  String get editorYesNo => 'Oui/non';
+
+  @override
+  String get editorCheckbox => 'Case à cocher';
+
+  @override
+  String get editorLink => 'Lien web';
+
+  @override
+  String get editorFile => 'Pièce jointe';
+
+  @override
+  String get editorPhoto => 'Photo';
+
+  @override
+  String get editorHeading => 'Titre de section';
+
+  @override
+  String get editorSample => 'Valeurs d’exemple';
+
+  @override
+  String get editorExample => 'Entrée d’exemple';
+
+  @override
+  String get editorSampleFile => 'Justificatif d’exemple';
+
+  @override
+  String get editorTry => 'Essayer le formulaire';
+
+  @override
+  String get editorPreviewNotice =>
+      'Essayez des valeurs ici. Elles seront effacées à la sortie.';
+
+  @override
+  String get editorTemplateDetails => 'À propos de ce modèle';
+
+  @override
+  String get editorExamplePdf => 'Exemple de rapport PDF';
+
+  @override
+  String get editorHistorical => 'Champs historiques';
+
+  @override
+  String get editorNewRecord => 'Nouvelle entrée d’exemple';
+
+  @override
+  String get editorRecords => 'Entrées d’exemple';
+
+  @override
+  String get editorExport => 'Voir l’export';
+
+  @override
+  String get editorVersion => 'Version du modèle';
+
+  @override
+  String get editorReviewed => 'Exigences vérifiées';
+
+  @override
+  String get editorProfession => 'Profession';
+
+  @override
+  String get editorCountry => 'Pays';
+
+  @override
+  String get editorBody => 'Organisme professionnel';
+
+  @override
+  String get editorScheme => 'Dispositif de DPC';
+
+  @override
+  String get editorYes => 'Oui';
+
+  @override
+  String get editorNo => 'Non';
+
+  @override
+  String get editorMinutes => 'Minutes';
+
+  @override
+  String get editorClear => 'Effacer la valeur';
+
+  @override
+  String editorFullCount(int count, int limit) {
+    return '$count champs sur $limit';
+  }
+
+  @override
+  String editorCount(int count) {
+    return 'Champs : $count';
+  }
+
+  @override
+  String editorPosition(int position, int count) {
+    return 'Position $position sur $count';
+  }
+
+  @override
+  String get editorChoiceReplaceHint =>
+      'Modifier les choix crée un nouveau champ. Les anciennes entrées gardent les choix d’origine.';
 }

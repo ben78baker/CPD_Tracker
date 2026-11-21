@@ -940,4 +940,268 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get migrationNew => 'Start a new rehearsal';
+
+  @override
+  String get editFields => 'Edit fields';
+
+  @override
+  String get addField => 'Add field';
+
+  @override
+  String get customField => 'Custom field';
+
+  @override
+  String get fieldLibrary => 'Field Library';
+
+  @override
+  String get chooseField => 'Choose a field type';
+
+  @override
+  String get editorSearch => 'Search fields';
+
+  @override
+  String get editorAll => 'All categories';
+
+  @override
+  String get editorNoResults =>
+      'No fields match. Try a different word or category.';
+
+  @override
+  String get editorPreview => 'Preview';
+
+  @override
+  String get editorSettings => 'Field settings';
+
+  @override
+  String get editorName => 'Field name';
+
+  @override
+  String get editorHelp => 'Help text';
+
+  @override
+  String get editorPlaceholder => 'Placeholder';
+
+  @override
+  String get editorRequired => 'Required';
+
+  @override
+  String get editorProtected => 'Protected field';
+
+  @override
+  String get editorProtectedReason =>
+      'This field is used by the standard CPD form and reports. You can rename or move it.';
+
+  @override
+  String get editorAdvanced => 'More settings';
+
+  @override
+  String get editorDefault => 'Default value';
+
+  @override
+  String get editorUnit => 'Unit';
+
+  @override
+  String get editorPrecision => 'Decimal places';
+
+  @override
+  String get editorNonNegative => 'Zero or greater';
+
+  @override
+  String get editorChoice => 'Choice';
+
+  @override
+  String get editorAddChoice => 'Add choice';
+
+  @override
+  String get editorFormatting => 'Display format';
+
+  @override
+  String get editorFuture => 'Future records only';
+
+  @override
+  String get editorBoth => 'Existing and future records';
+
+  @override
+  String get editorHistoryHint =>
+      'Existing records keep their saved values and original requirements.';
+
+  @override
+  String get editorInvalid => 'Check the field name, choices and values.';
+
+  @override
+  String get editorBadRecord =>
+      'Fill in the required fields and check the entered values.';
+
+  @override
+  String get editorDrag => 'Drag to reorder';
+
+  @override
+  String get editorMoveUp => 'Move up';
+
+  @override
+  String get editorMoveDown => 'Move down';
+
+  @override
+  String get editorDuplicate => 'Duplicate field';
+
+  @override
+  String get editorRemove => 'Remove field';
+
+  @override
+  String get editorRemoveHint =>
+      'This field leaves the current form. Saved values and evidence stay in older records.';
+
+  @override
+  String get editorReplace => 'Replace field';
+
+  @override
+  String get editorReplaceHint =>
+      'Changing number settings creates a new field for future records. Older values keep their original units and precision.';
+
+  @override
+  String get editorDiscard => 'Discard changes?';
+
+  @override
+  String get editorDiscardAction => 'Discard';
+
+  @override
+  String get editorUnsaved => 'Your changes have not been saved.';
+
+  @override
+  String get editorLimit => 'Remove a field to add another.';
+
+  @override
+  String get editorSaveError =>
+      'Could not save this layout. Your draft is still open.';
+
+  @override
+  String get editorAlreadyAdded => 'In this layout';
+
+  @override
+  String get editorCreateCopy => 'Add another copy';
+
+  @override
+  String get editorShort => 'Short text';
+
+  @override
+  String get editorLong => 'Long text';
+
+  @override
+  String get editorInteger => 'Whole number';
+
+  @override
+  String get editorDecimal => 'Decimal number';
+
+  @override
+  String get editorDate => 'Date';
+
+  @override
+  String get editorDuration => 'Duration';
+
+  @override
+  String get editorSingle => 'Single choice';
+
+  @override
+  String get editorMultiple => 'Multiple choice';
+
+  @override
+  String get editorYesNo => 'Yes/no';
+
+  @override
+  String get editorCheckbox => 'Checkbox';
+
+  @override
+  String get editorLink => 'Web link';
+
+  @override
+  String get editorFile => 'File attachment';
+
+  @override
+  String get editorPhoto => 'Photograph';
+
+  @override
+  String get editorHeading => 'Section heading';
+
+  @override
+  String get editorSample => 'Sample values';
+
+  @override
+  String get editorExample => 'Example entry';
+
+  @override
+  String get editorSampleFile => 'Sample evidence';
+
+  @override
+  String get editorTry => 'Try the form';
+
+  @override
+  String get editorPreviewNotice =>
+      'Try sample values here. They are discarded when you leave.';
+
+  @override
+  String get editorTemplateDetails => 'About this template';
+
+  @override
+  String get editorExamplePdf => 'Example PDF report';
+
+  @override
+  String get editorHistorical => 'Historical fields';
+
+  @override
+  String get editorNewRecord => 'New sample record';
+
+  @override
+  String get editorRecords => 'Sample records';
+
+  @override
+  String get editorExport => 'View export';
+
+  @override
+  String get editorVersion => 'Template version';
+
+  @override
+  String get editorReviewed => 'Requirements reviewed';
+
+  @override
+  String get editorProfession => 'Profession';
+
+  @override
+  String get editorCountry => 'Country';
+
+  @override
+  String get editorBody => 'Professional body';
+
+  @override
+  String get editorScheme => 'CPD scheme';
+
+  @override
+  String get editorYes => 'Yes';
+
+  @override
+  String get editorNo => 'No';
+
+  @override
+  String get editorMinutes => 'Minutes';
+
+  @override
+  String get editorClear => 'Clear value';
+
+  @override
+  String editorFullCount(int count, int limit) {
+    return '$count of $limit fields';
+  }
+
+  @override
+  String editorCount(int count) {
+    return 'Fields: $count';
+  }
+
+  @override
+  String editorPosition(int position, int count) {
+    return 'Position $position of $count';
+  }
+
+  @override
+  String get editorChoiceReplaceHint =>
+      'Choice changes create a new field for future records. Older records keep their original options.';
 }

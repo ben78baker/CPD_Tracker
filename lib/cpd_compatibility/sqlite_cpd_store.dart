@@ -9,6 +9,7 @@ import '../recording_engine/import_plan.dart';
 import '../recording_engine/models.dart';
 import '../recording_engine_storage/managed_attachment_files.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
+import 'cpd_layout_policy.dart';
 import 'cpd_data_store.dart';
 
 /// Compatibility writer for an explicitly supplied, verified staging database.
@@ -217,7 +218,7 @@ class SqliteCpdStore extends CpdDataStore {
       throw StateError('An active profession is required.');
     }
     final layout = (await tx.loadLayouts(group.id)).last;
-    final fields = _bindings(layout.fields);
+    final fields = cpdFieldBindings(layout.fields);
     final assets = await _describeAttachments(entry.attachments);
     final values = _values(entry, fields);
     if (assets.isNotEmpty) {
@@ -552,30 +553,7 @@ class SqliteCpdStore extends CpdDataStore {
       layouts = await tx.loadLayouts(record.collectionId);
       revisions?[record.collectionId] = layouts;
     }
-    return _bindings(resolveFields(record.layoutVersion, layouts));
-  }
-
-  static Map<String, String> _bindings(Iterable<LayoutField> fields) {
-    const canonical = {
-      'cpd.activityDate': FieldKind.date,
-      'cpd.title': FieldKind.text,
-      'cpd.details': FieldKind.text,
-      'cpd.creditedDuration': FieldKind.duration,
-      'cpd.evidence': FieldKind.attachments,
-    };
-    final bindings = <String, String>{};
-    for (final field in fields) {
-      final id = field.definition.id;
-      if (!canonical.containsKey(id)) continue;
-      if (canonical[id] != field.definition.kind || bindings.containsKey(id)) {
-        throw StateError('A CPD field binding is ambiguous.');
-      }
-      bindings[id] = field.id;
-    }
-    if (bindings.length != canonical.length) {
-      throw StateError('The layout is missing a protected CPD field.');
-    }
-    return bindings;
+    return cpdFieldBindings(resolveFields(record.layoutVersion, layouts));
   }
 
   static List<String> _assetIds(

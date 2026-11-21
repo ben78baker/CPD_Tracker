@@ -1755,6 +1755,504 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start a new rehearsal'**
   String get migrationNew;
+
+  /// No description provided for @editFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit fields'**
+  String get editFields;
+
+  /// No description provided for @addField.
+  ///
+  /// In en, this message translates to:
+  /// **'Add field'**
+  String get addField;
+
+  /// No description provided for @customField.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom field'**
+  String get customField;
+
+  /// No description provided for @fieldLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Field Library'**
+  String get fieldLibrary;
+
+  /// No description provided for @chooseField.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a field type'**
+  String get chooseField;
+
+  /// No description provided for @editorSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search fields'**
+  String get editorSearch;
+
+  /// No description provided for @editorAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get editorAll;
+
+  /// No description provided for @editorNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No fields match. Try a different word or category.'**
+  String get editorNoResults;
+
+  /// No description provided for @editorPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get editorPreview;
+
+  /// No description provided for @editorSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Field settings'**
+  String get editorSettings;
+
+  /// No description provided for @editorName.
+  ///
+  /// In en, this message translates to:
+  /// **'Field name'**
+  String get editorName;
+
+  /// No description provided for @editorHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help text'**
+  String get editorHelp;
+
+  /// No description provided for @editorPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Placeholder'**
+  String get editorPlaceholder;
+
+  /// No description provided for @editorRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get editorRequired;
+
+  /// No description provided for @editorProtected.
+  ///
+  /// In en, this message translates to:
+  /// **'Protected field'**
+  String get editorProtected;
+
+  /// No description provided for @editorProtectedReason.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is used by the standard CPD form and reports. You can rename or move it.'**
+  String get editorProtectedReason;
+
+  /// No description provided for @editorAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'More settings'**
+  String get editorAdvanced;
+
+  /// No description provided for @editorDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default value'**
+  String get editorDefault;
+
+  /// No description provided for @editorUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get editorUnit;
+
+  /// No description provided for @editorPrecision.
+  ///
+  /// In en, this message translates to:
+  /// **'Decimal places'**
+  String get editorPrecision;
+
+  /// No description provided for @editorNonNegative.
+  ///
+  /// In en, this message translates to:
+  /// **'Zero or greater'**
+  String get editorNonNegative;
+
+  /// No description provided for @editorChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Choice'**
+  String get editorChoice;
+
+  /// No description provided for @editorAddChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add choice'**
+  String get editorAddChoice;
+
+  /// No description provided for @editorFormatting.
+  ///
+  /// In en, this message translates to:
+  /// **'Display format'**
+  String get editorFormatting;
+
+  /// No description provided for @editorFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Future records only'**
+  String get editorFuture;
+
+  /// No description provided for @editorBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing and future records'**
+  String get editorBoth;
+
+  /// No description provided for @editorHistoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing records keep their saved values and original requirements.'**
+  String get editorHistoryHint;
+
+  /// No description provided for @editorInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the field name, choices and values.'**
+  String get editorInvalid;
+
+  /// No description provided for @editorBadRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the required fields and check the entered values.'**
+  String get editorBadRecord;
+
+  /// No description provided for @editorDrag.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get editorDrag;
+
+  /// No description provided for @editorMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get editorMoveUp;
+
+  /// No description provided for @editorMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get editorMoveDown;
+
+  /// No description provided for @editorDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate field'**
+  String get editorDuplicate;
+
+  /// No description provided for @editorRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove field'**
+  String get editorRemove;
+
+  /// No description provided for @editorRemoveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This field leaves the current form. Saved values and evidence stay in older records.'**
+  String get editorRemoveHint;
+
+  /// No description provided for @editorReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace field'**
+  String get editorReplace;
+
+  /// No description provided for @editorReplaceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing number settings creates a new field for future records. Older values keep their original units and precision.'**
+  String get editorReplaceHint;
+
+  /// No description provided for @editorDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get editorDiscard;
+
+  /// No description provided for @editorDiscardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get editorDiscardAction;
+
+  /// No description provided for @editorUnsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your changes have not been saved.'**
+  String get editorUnsaved;
+
+  /// No description provided for @editorLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove a field to add another.'**
+  String get editorLimit;
+
+  /// No description provided for @editorSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this layout. Your draft is still open.'**
+  String get editorSaveError;
+
+  /// No description provided for @editorAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'In this layout'**
+  String get editorAlreadyAdded;
+
+  /// No description provided for @editorCreateCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another copy'**
+  String get editorCreateCopy;
+
+  /// No description provided for @editorShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Short text'**
+  String get editorShort;
+
+  /// No description provided for @editorLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Long text'**
+  String get editorLong;
+
+  /// No description provided for @editorInteger.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole number'**
+  String get editorInteger;
+
+  /// No description provided for @editorDecimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Decimal number'**
+  String get editorDecimal;
+
+  /// No description provided for @editorDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get editorDate;
+
+  /// No description provided for @editorDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get editorDuration;
+
+  /// No description provided for @editorSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'Single choice'**
+  String get editorSingle;
+
+  /// No description provided for @editorMultiple.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiple choice'**
+  String get editorMultiple;
+
+  /// No description provided for @editorYesNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes/no'**
+  String get editorYesNo;
+
+  /// No description provided for @editorCheckbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkbox'**
+  String get editorCheckbox;
+
+  /// No description provided for @editorLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Web link'**
+  String get editorLink;
+
+  /// No description provided for @editorFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File attachment'**
+  String get editorFile;
+
+  /// No description provided for @editorPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photograph'**
+  String get editorPhoto;
+
+  /// No description provided for @editorHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Section heading'**
+  String get editorHeading;
+
+  /// No description provided for @editorSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample values'**
+  String get editorSample;
+
+  /// No description provided for @editorExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Example entry'**
+  String get editorExample;
+
+  /// No description provided for @editorSampleFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample evidence'**
+  String get editorSampleFile;
+
+  /// No description provided for @editorTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try the form'**
+  String get editorTry;
+
+  /// No description provided for @editorPreviewNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Try sample values here. They are discarded when you leave.'**
+  String get editorPreviewNotice;
+
+  /// No description provided for @editorTemplateDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'About this template'**
+  String get editorTemplateDetails;
+
+  /// No description provided for @editorExamplePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Example PDF report'**
+  String get editorExamplePdf;
+
+  /// No description provided for @editorHistorical.
+  ///
+  /// In en, this message translates to:
+  /// **'Historical fields'**
+  String get editorHistorical;
+
+  /// No description provided for @editorNewRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'New sample record'**
+  String get editorNewRecord;
+
+  /// No description provided for @editorRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample records'**
+  String get editorRecords;
+
+  /// No description provided for @editorExport.
+  ///
+  /// In en, this message translates to:
+  /// **'View export'**
+  String get editorExport;
+
+  /// No description provided for @editorVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Template version'**
+  String get editorVersion;
+
+  /// No description provided for @editorReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Requirements reviewed'**
+  String get editorReviewed;
+
+  /// No description provided for @editorProfession.
+  ///
+  /// In en, this message translates to:
+  /// **'Profession'**
+  String get editorProfession;
+
+  /// No description provided for @editorCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get editorCountry;
+
+  /// No description provided for @editorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional body'**
+  String get editorBody;
+
+  /// No description provided for @editorScheme.
+  ///
+  /// In en, this message translates to:
+  /// **'CPD scheme'**
+  String get editorScheme;
+
+  /// No description provided for @editorYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get editorYes;
+
+  /// No description provided for @editorNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get editorNo;
+
+  /// No description provided for @editorMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes'**
+  String get editorMinutes;
+
+  /// No description provided for @editorClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear value'**
+  String get editorClear;
+
+  /// No description provided for @editorFullCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {limit} fields'**
+  String editorFullCount(int count, int limit);
+
+  /// No description provided for @editorCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Fields: {count}'**
+  String editorCount(int count);
+
+  /// No description provided for @editorPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Position {position} of {count}'**
+  String editorPosition(int position, int count);
+
+  /// No description provided for @editorChoiceReplaceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choice changes create a new field for future records. Older records keep their original options.'**
+  String get editorChoiceReplaceHint;
 }
 
 class _AppLocalizationsDelegate

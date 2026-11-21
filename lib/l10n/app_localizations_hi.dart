@@ -938,4 +938,266 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get migrationNew => 'नया अभ्यास शुरू करें';
+
+  @override
+  String get editFields => 'फ़ील्ड संपादित करें';
+
+  @override
+  String get addField => 'फ़ील्ड जोड़ें';
+
+  @override
+  String get customField => 'कस्टम फ़ील्ड';
+
+  @override
+  String get fieldLibrary => 'फ़ील्ड लाइब्रेरी';
+
+  @override
+  String get chooseField => 'फ़ील्ड का प्रकार चुनें';
+
+  @override
+  String get editorSearch => 'फ़ील्ड खोजें';
+
+  @override
+  String get editorAll => 'सभी श्रेणियाँ';
+
+  @override
+  String get editorNoResults =>
+      'कोई फ़ील्ड नहीं मिला। दूसरा शब्द या श्रेणी आज़माएँ।';
+
+  @override
+  String get editorPreview => 'पूर्वावलोकन';
+
+  @override
+  String get editorSettings => 'फ़ील्ड सेटिंग';
+
+  @override
+  String get editorName => 'फ़ील्ड का नाम';
+
+  @override
+  String get editorHelp => 'सहायता पाठ';
+
+  @override
+  String get editorPlaceholder => 'संकेत पाठ';
+
+  @override
+  String get editorRequired => 'ज़रूरी';
+
+  @override
+  String get editorProtected => 'सुरक्षित फ़ील्ड';
+
+  @override
+  String get editorProtectedReason =>
+      'यह फ़ील्ड मानक CPD फ़ॉर्म और रिपोर्ट में काम आता है। इसका नाम या क्रम बदल सकते हैं।';
+
+  @override
+  String get editorAdvanced => 'और सेटिंग';
+
+  @override
+  String get editorDefault => 'डिफ़ॉल्ट मान';
+
+  @override
+  String get editorUnit => 'इकाई';
+
+  @override
+  String get editorPrecision => 'दशमलव अंक';
+
+  @override
+  String get editorNonNegative => 'शून्य या अधिक';
+
+  @override
+  String get editorChoice => 'विकल्प';
+
+  @override
+  String get editorAddChoice => 'विकल्प जोड़ें';
+
+  @override
+  String get editorFormatting => 'दिखाने का तरीका';
+
+  @override
+  String get editorFuture => 'केवल नए रिकॉर्ड';
+
+  @override
+  String get editorBoth => 'पुराने और नए रिकॉर्ड';
+
+  @override
+  String get editorHistoryHint =>
+      'पुराने रिकॉर्ड के मान और ज़रूरी फ़ील्ड वैसे ही रहते हैं।';
+
+  @override
+  String get editorInvalid => 'नाम, विकल्प और मान जाँचें।';
+
+  @override
+  String get editorBadRecord => 'ज़रूरी फ़ील्ड भरें और दर्ज किए गए मान जाँचें।';
+
+  @override
+  String get editorDrag => 'क्रम बदलने के लिए खींचें';
+
+  @override
+  String get editorMoveUp => 'ऊपर ले जाएँ';
+
+  @override
+  String get editorMoveDown => 'नीचे ले जाएँ';
+
+  @override
+  String get editorDuplicate => 'फ़ील्ड की प्रतिलिपि';
+
+  @override
+  String get editorRemove => 'फ़ील्ड हटाएँ';
+
+  @override
+  String get editorRemoveHint =>
+      'फ़ील्ड मौजूदा फ़ॉर्म से हटेगा। पुराने रिकॉर्ड के मान और साक्ष्य बने रहेंगे।';
+
+  @override
+  String get editorReplace => 'फ़ील्ड बदलें';
+
+  @override
+  String get editorReplaceHint =>
+      'संख्या की सेटिंग बदलने पर नया फ़ील्ड बनेगा। पुराने मान अपनी इकाई और दशमलव रखते हैं।';
+
+  @override
+  String get editorDiscard => 'बदलाव छोड़ दें?';
+
+  @override
+  String get editorDiscardAction => 'छोड़ें';
+
+  @override
+  String get editorUnsaved => 'आपके बदलाव अभी सहेजे नहीं गए हैं।';
+
+  @override
+  String get editorLimit => 'नया फ़ील्ड जोड़ने के लिए एक फ़ील्ड हटाएँ।';
+
+  @override
+  String get editorSaveError => 'लेआउट सहेजा नहीं गया। आपका ड्राफ़्ट खुला है।';
+
+  @override
+  String get editorAlreadyAdded => 'इस लेआउट में';
+
+  @override
+  String get editorCreateCopy => 'और एक प्रतिलिपि जोड़ें';
+
+  @override
+  String get editorShort => 'छोटा पाठ';
+
+  @override
+  String get editorLong => 'लंबा पाठ';
+
+  @override
+  String get editorInteger => 'पूर्णांक';
+
+  @override
+  String get editorDecimal => 'दशमलव संख्या';
+
+  @override
+  String get editorDate => 'तारीख';
+
+  @override
+  String get editorDuration => 'अवधि';
+
+  @override
+  String get editorSingle => 'एक विकल्प';
+
+  @override
+  String get editorMultiple => 'कई विकल्प';
+
+  @override
+  String get editorYesNo => 'हाँ/नहीं';
+
+  @override
+  String get editorCheckbox => 'चेकबॉक्स';
+
+  @override
+  String get editorLink => 'वेब लिंक';
+
+  @override
+  String get editorFile => 'फ़ाइल संलग्नक';
+
+  @override
+  String get editorPhoto => 'फ़ोटो';
+
+  @override
+  String get editorHeading => 'खंड शीर्षक';
+
+  @override
+  String get editorSample => 'नमूना मान';
+
+  @override
+  String get editorExample => 'उदाहरण रिकॉर्ड';
+
+  @override
+  String get editorSampleFile => 'नमूना साक्ष्य';
+
+  @override
+  String get editorTry => 'फ़ॉर्म आज़माएँ';
+
+  @override
+  String get editorPreviewNotice =>
+      'यहाँ नमूना मान आज़माएँ। बाहर जाने पर ये हट जाते हैं।';
+
+  @override
+  String get editorTemplateDetails => 'इस टेम्पलेट के बारे में';
+
+  @override
+  String get editorExamplePdf => 'नमूना PDF रिपोर्ट';
+
+  @override
+  String get editorHistorical => 'पुराने फ़ील्ड';
+
+  @override
+  String get editorNewRecord => 'नया नमूना रिकॉर्ड';
+
+  @override
+  String get editorRecords => 'नमूना रिकॉर्ड';
+
+  @override
+  String get editorExport => 'निर्यात देखें';
+
+  @override
+  String get editorVersion => 'टेम्पलेट संस्करण';
+
+  @override
+  String get editorReviewed => 'आवश्यकताओं की समीक्षा';
+
+  @override
+  String get editorProfession => 'पेशा';
+
+  @override
+  String get editorCountry => 'देश';
+
+  @override
+  String get editorBody => 'पेशेवर निकाय';
+
+  @override
+  String get editorScheme => 'CPD योजना';
+
+  @override
+  String get editorYes => 'हाँ';
+
+  @override
+  String get editorNo => 'नहीं';
+
+  @override
+  String get editorMinutes => 'मिनट';
+
+  @override
+  String get editorClear => 'मान हटाएँ';
+
+  @override
+  String editorFullCount(int count, int limit) {
+    return '$limit में से $count फ़ील्ड';
+  }
+
+  @override
+  String editorCount(int count) {
+    return 'फ़ील्ड: $count';
+  }
+
+  @override
+  String editorPosition(int position, int count) {
+    return '$count में से स्थान $position';
+  }
+
+  @override
+  String get editorChoiceReplaceHint =>
+      'विकल्प बदलने से नया फ़ील्ड बनता है। पुराने रिकॉर्ड में मूल विकल्प रहते हैं।';
 }

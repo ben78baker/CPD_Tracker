@@ -946,4 +946,269 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get migrationNew => 'Neuen Probelauf starten';
+
+  @override
+  String get editFields => 'Felder bearbeiten';
+
+  @override
+  String get addField => 'Feld hinzufügen';
+
+  @override
+  String get customField => 'Eigenes Feld';
+
+  @override
+  String get fieldLibrary => 'Feldbibliothek';
+
+  @override
+  String get chooseField => 'Feldtyp auswählen';
+
+  @override
+  String get editorSearch => 'Felder suchen';
+
+  @override
+  String get editorAll => 'Alle Kategorien';
+
+  @override
+  String get editorNoResults =>
+      'Keine passenden Felder. Ändern Sie die Suche oder Kategorie.';
+
+  @override
+  String get editorPreview => 'Vorschau';
+
+  @override
+  String get editorSettings => 'Feldeinstellungen';
+
+  @override
+  String get editorName => 'Feldname';
+
+  @override
+  String get editorHelp => 'Hilfetext';
+
+  @override
+  String get editorPlaceholder => 'Platzhalter';
+
+  @override
+  String get editorRequired => 'Erforderlich';
+
+  @override
+  String get editorProtected => 'Geschütztes Feld';
+
+  @override
+  String get editorProtectedReason =>
+      'Dieses Feld wird im CPD-Standardformular und in Berichten verwendet. Sie können es umbenennen oder verschieben.';
+
+  @override
+  String get editorAdvanced => 'Weitere Einstellungen';
+
+  @override
+  String get editorDefault => 'Standardwert';
+
+  @override
+  String get editorUnit => 'Einheit';
+
+  @override
+  String get editorPrecision => 'Nachkommastellen';
+
+  @override
+  String get editorNonNegative => 'Null oder größer';
+
+  @override
+  String get editorChoice => 'Option';
+
+  @override
+  String get editorAddChoice => 'Option hinzufügen';
+
+  @override
+  String get editorFormatting => 'Anzeigeformat';
+
+  @override
+  String get editorFuture => 'Nur künftige Einträge';
+
+  @override
+  String get editorBoth => 'Bestehende und künftige Einträge';
+
+  @override
+  String get editorHistoryHint =>
+      'Vorhandene Einträge behalten ihre Werte und ursprünglichen Anforderungen.';
+
+  @override
+  String get editorInvalid => 'Prüfen Sie Feldname, Optionen und Werte.';
+
+  @override
+  String get editorBadRecord =>
+      'Füllen Sie Pflichtfelder aus und prüfen Sie die eingegebenen Werte.';
+
+  @override
+  String get editorDrag => 'Zum Verschieben ziehen';
+
+  @override
+  String get editorMoveUp => 'Nach oben';
+
+  @override
+  String get editorMoveDown => 'Nach unten';
+
+  @override
+  String get editorDuplicate => 'Feld duplizieren';
+
+  @override
+  String get editorRemove => 'Feld entfernen';
+
+  @override
+  String get editorRemoveHint =>
+      'Das Feld entfällt im aktuellen Formular. Werte und Belege bleiben in älteren Einträgen.';
+
+  @override
+  String get editorReplace => 'Feld ersetzen';
+
+  @override
+  String get editorReplaceHint =>
+      'Geänderte Zahleneinstellungen erzeugen ein neues Feld. Alte Werte behalten ihre Einheit und Genauigkeit.';
+
+  @override
+  String get editorDiscard => 'Änderungen verwerfen?';
+
+  @override
+  String get editorDiscardAction => 'Verwerfen';
+
+  @override
+  String get editorUnsaved => 'Ihre Änderungen sind noch nicht gespeichert.';
+
+  @override
+  String get editorLimit =>
+      'Entfernen Sie ein Feld, um ein neues hinzuzufügen.';
+
+  @override
+  String get editorSaveError =>
+      'Das Layout konnte nicht gespeichert werden. Ihr Entwurf ist noch offen.';
+
+  @override
+  String get editorAlreadyAdded => 'In diesem Layout';
+
+  @override
+  String get editorCreateCopy => 'Weitere Kopie hinzufügen';
+
+  @override
+  String get editorShort => 'Kurztext';
+
+  @override
+  String get editorLong => 'Langtext';
+
+  @override
+  String get editorInteger => 'Ganze Zahl';
+
+  @override
+  String get editorDecimal => 'Dezimalzahl';
+
+  @override
+  String get editorDate => 'Datum';
+
+  @override
+  String get editorDuration => 'Dauer';
+
+  @override
+  String get editorSingle => 'Einzelauswahl';
+
+  @override
+  String get editorMultiple => 'Mehrfachauswahl';
+
+  @override
+  String get editorYesNo => 'Ja/Nein';
+
+  @override
+  String get editorCheckbox => 'Kontrollkästchen';
+
+  @override
+  String get editorLink => 'Weblink';
+
+  @override
+  String get editorFile => 'Dateianhang';
+
+  @override
+  String get editorPhoto => 'Foto';
+
+  @override
+  String get editorHeading => 'Abschnittstitel';
+
+  @override
+  String get editorSample => 'Beispielwerte';
+
+  @override
+  String get editorExample => 'Beispieleintrag';
+
+  @override
+  String get editorSampleFile => 'Beispielbeleg';
+
+  @override
+  String get editorTry => 'Formular ausprobieren';
+
+  @override
+  String get editorPreviewNotice =>
+      'Probieren Sie Beispielwerte aus. Beim Verlassen werden sie verworfen.';
+
+  @override
+  String get editorTemplateDetails => 'Über diese Vorlage';
+
+  @override
+  String get editorExamplePdf => 'PDF-Beispielbericht';
+
+  @override
+  String get editorHistorical => 'Historische Felder';
+
+  @override
+  String get editorNewRecord => 'Neuer Beispieleintrag';
+
+  @override
+  String get editorRecords => 'Beispieleinträge';
+
+  @override
+  String get editorExport => 'Export ansehen';
+
+  @override
+  String get editorVersion => 'Vorlagenversion';
+
+  @override
+  String get editorReviewed => 'Anforderungen überprüft';
+
+  @override
+  String get editorProfession => 'Beruf';
+
+  @override
+  String get editorCountry => 'Land';
+
+  @override
+  String get editorBody => 'Berufsorganisation';
+
+  @override
+  String get editorScheme => 'CPD-Regelung';
+
+  @override
+  String get editorYes => 'Ja';
+
+  @override
+  String get editorNo => 'Nein';
+
+  @override
+  String get editorMinutes => 'Minuten';
+
+  @override
+  String get editorClear => 'Wert löschen';
+
+  @override
+  String editorFullCount(int count, int limit) {
+    return '$count von $limit Feldern';
+  }
+
+  @override
+  String editorCount(int count) {
+    return 'Felder: $count';
+  }
+
+  @override
+  String editorPosition(int position, int count) {
+    return 'Position $position von $count';
+  }
+
+  @override
+  String get editorChoiceReplaceHint =>
+      'Geänderte Optionen erzeugen ein neues Feld. Ältere Einträge behalten ihre bisherigen Optionen.';
 }

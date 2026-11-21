@@ -948,4 +948,268 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get migrationNew => 'Iniciar otra prueba';
+
+  @override
+  String get editFields => 'Editar campos';
+
+  @override
+  String get addField => 'Añadir campo';
+
+  @override
+  String get customField => 'Campo personalizado';
+
+  @override
+  String get fieldLibrary => 'Biblioteca de campos';
+
+  @override
+  String get chooseField => 'Elige un tipo de campo';
+
+  @override
+  String get editorSearch => 'Buscar campos';
+
+  @override
+  String get editorAll => 'Todas las categorías';
+
+  @override
+  String get editorNoResults =>
+      'No hay resultados. Prueba otra palabra o categoría.';
+
+  @override
+  String get editorPreview => 'Vista previa';
+
+  @override
+  String get editorSettings => 'Ajustes del campo';
+
+  @override
+  String get editorName => 'Nombre del campo';
+
+  @override
+  String get editorHelp => 'Texto de ayuda';
+
+  @override
+  String get editorPlaceholder => 'Marcador de posición';
+
+  @override
+  String get editorRequired => 'Obligatorio';
+
+  @override
+  String get editorProtected => 'Campo protegido';
+
+  @override
+  String get editorProtectedReason =>
+      'Este campo se usa en el formulario y los informes de CPD. Puedes renombrarlo o moverlo.';
+
+  @override
+  String get editorAdvanced => 'Más ajustes';
+
+  @override
+  String get editorDefault => 'Valor predeterminado';
+
+  @override
+  String get editorUnit => 'Unidad';
+
+  @override
+  String get editorPrecision => 'Decimales';
+
+  @override
+  String get editorNonNegative => 'Cero o más';
+
+  @override
+  String get editorChoice => 'Opción';
+
+  @override
+  String get editorAddChoice => 'Añadir opción';
+
+  @override
+  String get editorFormatting => 'Formato';
+
+  @override
+  String get editorFuture => 'Solo registros futuros';
+
+  @override
+  String get editorBoth => 'Registros existentes y futuros';
+
+  @override
+  String get editorHistoryHint =>
+      'Los registros existentes conservan sus valores y requisitos originales.';
+
+  @override
+  String get editorInvalid => 'Revisa el nombre, las opciones y los valores.';
+
+  @override
+  String get editorBadRecord =>
+      'Completa los campos obligatorios y comprueba los valores introducidos.';
+
+  @override
+  String get editorDrag => 'Arrastra para reordenar';
+
+  @override
+  String get editorMoveUp => 'Mover arriba';
+
+  @override
+  String get editorMoveDown => 'Mover abajo';
+
+  @override
+  String get editorDuplicate => 'Duplicar campo';
+
+  @override
+  String get editorRemove => 'Quitar campo';
+
+  @override
+  String get editorRemoveHint =>
+      'El campo se quita del formulario. Los valores y las pruebas se conservan en registros anteriores.';
+
+  @override
+  String get editorReplace => 'Reemplazar campo';
+
+  @override
+  String get editorReplaceHint =>
+      'Cambiar los ajustes numéricos crea un campo nuevo. Los valores anteriores conservan la unidad y precisión.';
+
+  @override
+  String get editorDiscard => '¿Descartar cambios?';
+
+  @override
+  String get editorDiscardAction => 'Descartar';
+
+  @override
+  String get editorUnsaved => 'Tus cambios aún no se han guardado.';
+
+  @override
+  String get editorLimit => 'Quita un campo para añadir otro.';
+
+  @override
+  String get editorSaveError =>
+      'No se pudo guardar el diseño. Tu borrador sigue abierto.';
+
+  @override
+  String get editorAlreadyAdded => 'En este diseño';
+
+  @override
+  String get editorCreateCopy => 'Añadir otra copia';
+
+  @override
+  String get editorShort => 'Texto breve';
+
+  @override
+  String get editorLong => 'Texto largo';
+
+  @override
+  String get editorInteger => 'Número entero';
+
+  @override
+  String get editorDecimal => 'Número decimal';
+
+  @override
+  String get editorDate => 'Fecha';
+
+  @override
+  String get editorDuration => 'Duración';
+
+  @override
+  String get editorSingle => 'Selección única';
+
+  @override
+  String get editorMultiple => 'Selección múltiple';
+
+  @override
+  String get editorYesNo => 'Sí/No';
+
+  @override
+  String get editorCheckbox => 'Casilla';
+
+  @override
+  String get editorLink => 'Enlace web';
+
+  @override
+  String get editorFile => 'Archivo adjunto';
+
+  @override
+  String get editorPhoto => 'Fotografía';
+
+  @override
+  String get editorHeading => 'Título de sección';
+
+  @override
+  String get editorSample => 'Valores de ejemplo';
+
+  @override
+  String get editorExample => 'Registro de ejemplo';
+
+  @override
+  String get editorSampleFile => 'Prueba de ejemplo';
+
+  @override
+  String get editorTry => 'Prueba el formulario';
+
+  @override
+  String get editorPreviewNotice =>
+      'Prueba valores aquí. Se descartan al salir.';
+
+  @override
+  String get editorTemplateDetails => 'Sobre esta plantilla';
+
+  @override
+  String get editorExamplePdf => 'Informe PDF de ejemplo';
+
+  @override
+  String get editorHistorical => 'Campos históricos';
+
+  @override
+  String get editorNewRecord => 'Nuevo registro de ejemplo';
+
+  @override
+  String get editorRecords => 'Registros de ejemplo';
+
+  @override
+  String get editorExport => 'Ver exportación';
+
+  @override
+  String get editorVersion => 'Versión de la plantilla';
+
+  @override
+  String get editorReviewed => 'Requisitos revisados';
+
+  @override
+  String get editorProfession => 'Profesión';
+
+  @override
+  String get editorCountry => 'País';
+
+  @override
+  String get editorBody => 'Organismo profesional';
+
+  @override
+  String get editorScheme => 'Programa de CPD';
+
+  @override
+  String get editorYes => 'Sí';
+
+  @override
+  String get editorNo => 'No';
+
+  @override
+  String get editorMinutes => 'Minutos';
+
+  @override
+  String get editorClear => 'Borrar valor';
+
+  @override
+  String editorFullCount(int count, int limit) {
+    return '$count de $limit campos';
+  }
+
+  @override
+  String editorCount(int count) {
+    return 'Campos: $count';
+  }
+
+  @override
+  String editorPosition(int position, int count) {
+    return 'Posición $position de $count';
+  }
+
+  @override
+  String get editorChoiceReplaceHint =>
+      'Cambiar las opciones crea un campo nuevo. Los registros anteriores conservan sus opciones originales.';
 }
