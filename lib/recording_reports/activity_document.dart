@@ -3,6 +3,26 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import 'continuing_text.dart';
+
+enum ReportBranding { standard, subtle, attribution, none }
+
+/// Detect the script even when the report language differs from user content.
+class DevanagariPdfUnsupported implements Exception {
+  const DevanagariPdfUnsupported();
+
+  static bool _isDevanagari(int rune) =>
+      (rune >= 0x0900 && rune <= 0x097f) ||
+      (rune >= 0xa8e0 && rune <= 0xa8ff) ||
+      (rune >= 0x11b00 && rune <= 0x11b5f);
+
+  static void check(Iterable<String> text) {
+    if (text.any((value) => value.runes.any(_isDevanagari))) {
+      throw const DevanagariPdfUnsupported();
+    }
+  }
+}
+
 typedef DocumentField = ({String label, String value});
 typedef DocumentActivity = ({
   String title,
@@ -11,35 +31,107 @@ typedef DocumentActivity = ({
 });
 typedef DocumentReference = ({String label, String? url});
 
-/// Shared document flow. The caller supplies printable strings and evidence
-/// references. This renderer is independent of an activity's field semantics.
+/// Shared document flow. Its data is already formatted for the recipient.
 Future<Uint8List> buildActivityDocument({
   required String title,
-  required String footer,
+  required String appName,
+  required String attribution,
+  required String documentTag,
   required String summaryTitle,
   required List<String> metadata,
   required List<String> summary,
   required List<DocumentActivity> activities,
   required String evidenceTitle,
   required List<DocumentReference> evidence,
+  required String Function(String) continued,
+  required String Function(int, int) pageOf,
+  List<String> summaryColumns = const [],
+  List<List<String>> summaryRows = const [],
+  ReportBranding branding = ReportBranding.subtle,
+  Uint8List? brandIcon,
   String? versionNote,
   pw.Font? regular,
   pw.Font? bold,
   List<pw.Font> fallback = const [],
 }) {
+  DevanagariPdfUnsupported.check([
+    title,
+    documentTag,
+    summaryTitle,
+    ...metadata,
+    ...summary,
+    ...summaryColumns,
+    ...summaryRows.expand((row) => row),
+    ?versionNote,
+    evidenceTitle,
+    for (final item in evidence) item.label,
+    for (final activity in activities) ...[
+      activity.title,
+      activity.status,
+      for (final field in activity.fields) ...[field.label, field.value],
+    ],
+  ]);
   final document = pw.Document();
+  final accent =
+      branding == ReportBranding.standard || branding == ReportBranding.subtle
+      ? const PdfColor.fromInt(0xff486581)
+      : PdfColors.grey900;
   const rule = PdfColors.grey400;
-  final heading = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 15);
-  final label = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9);
-  pw.Widget text(String value, {double size = 10}) => pw.Text(
-    value,
-    overflow: pw.TextOverflow.span,
-    style: pw.TextStyle(
-      fontSize: size,
-      lineSpacing: 2,
-      color: PdfColors.grey900,
-    ),
+  final heading = pw.TextStyle(
+    fontWeight: pw.FontWeight.bold,
+    fontSize: 14,
+    color: accent,
   );
+  final label = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9);
+  const content = pw.TextStyle(
+    fontSize: 10,
+    lineSpacing: 2,
+    color: PdfColors.grey900,
+  );
+  const small = pw.TextStyle(
+    fontSize: 8.5,
+    lineSpacing: 2,
+    color: PdfColors.grey800,
+  );
+
+  pw.Widget text(String value, {pw.TextStyle style = content}) =>
+      pw.Text(value, overflow: pw.TextOverflow.span, style: style);
+
+  pw.TableRow row(List<String> cells, {bool header = false}) => pw.TableRow(
+    repeat: header,
+    decoration: header
+        ? const pw.BoxDecoration(color: PdfColors.grey100)
+        : null,
+    children: [
+      for (final (index, cell) in cells.indexed)
+        pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+          child: pw.Text(
+            cell,
+            style: header || index == 0 || index == cells.length - 1
+                ? label
+                : content,
+          ),
+        ),
+    ],
+  );
+
+  pw.TextSpan referenceSpan(DocumentReference reference) {
+    final url = reference.url;
+    return pw.TextSpan(
+      text: reference.label,
+      style: url == null
+          ? content
+          : content.copyWith(decoration: pw.TextDecoration.underline),
+      annotation: url == null ? null : pw.AnnotationUrl(url),
+    );
+  }
+
+  final footerBrand = switch (branding) {
+    ReportBranding.standard || ReportBranding.subtle => appName,
+    ReportBranding.attribution => attribution,
+    ReportBranding.none => '',
+  };
 
   document.addPage(
     pw.MultiPage(
@@ -51,73 +143,121 @@ Future<Uint8List> buildActivityDocument({
         bold: bold ?? pw.Font.helveticaBold(),
         fontFallback: fallback,
       ),
-      footer: (context) => pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      footer: (context) => pw.Column(
         children: [
-          pw.Text(
-            footer,
-            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey800),
-          ),
-          pw.Text(
-            '${context.pageNumber} / ${context.pagesCount}',
-            style: const pw.TextStyle(fontSize: 8),
+          pw.Divider(color: rule, height: 10),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Expanded(
+                child: pw.Text(
+                  [
+                    footerBrand,
+                    documentTag,
+                  ].where((value) => value.isNotEmpty).join(' · '),
+                  style: small,
+                ),
+              ),
+              pw.Text(
+                pageOf(context.pageNumber, context.pagesCount),
+                style: small,
+              ),
+            ],
           ),
         ],
       ),
       build: (_) => [
-        pw.Text(
-          title,
-          overflow: pw.TextOverflow.span,
-          style: heading.copyWith(fontSize: 24, color: PdfColors.blueGrey900),
-        ),
-        pw.SizedBox(height: 9),
+        if (branding == ReportBranding.standard)
+          pw.Row(
+            children: [
+              if (brandIcon != null) ...[
+                pw.Image(
+                  pw.MemoryImage(brandIcon, dpi: 216),
+                  width: 24,
+                  height: 24,
+                ),
+                pw.SizedBox(width: 8),
+              ],
+              pw.Text(appName, style: label.copyWith(color: accent)),
+            ],
+          ),
+        if (branding == ReportBranding.standard) pw.SizedBox(height: 9),
+        text(title, style: heading.copyWith(fontSize: 23)),
+        pw.SizedBox(height: 8),
         for (final line in metadata) text(line),
-        pw.SizedBox(height: 16),
+        pw.SizedBox(height: 15),
         pw.Text(summaryTitle, style: heading),
-        pw.Divider(color: rule, height: 12),
-        for (final line in summary) ...[text(line), pw.SizedBox(height: 3)],
+        pw.SizedBox(height: 5),
+        if (summaryColumns.isNotEmpty) ...[
+          pw.Table(
+            columnWidths: const {0: pw.FlexColumnWidth(1.45)},
+            border: const pw.TableBorder(
+              horizontalInside: pw.BorderSide(color: rule, width: 0.35),
+            ),
+            children: [
+              row(summaryColumns, header: true),
+              for (final values in summaryRows) row(values),
+            ],
+          ),
+          pw.SizedBox(height: 6),
+        ],
+        for (final line in summary) text(line, style: small),
         if (versionNote != null) ...[
-          pw.SizedBox(height: 8),
-          text(versionNote, size: 8),
+          pw.SizedBox(height: 5),
+          text(versionNote, style: small),
         ],
         for (final activity in activities) ...[
-          // Keep the first line of the activity with its title where possible.
-          pw.NewPage(freeSpace: 97),
-          pw.SizedBox(height: 14),
-          pw.Divider(color: rule, height: 11),
-          pw.Text(
-            activity.title,
-            overflow: pw.TextOverflow.span,
-            style: heading,
-          ),
-          if (activity.status.isNotEmpty) text(activity.status, size: 9),
-          for (final field in activity.fields) ...[
-            pw.NewPage(freeSpace: 38),
-            pw.SizedBox(height: 7),
-            pw.Text(field.label, overflow: pw.TextOverflow.span, style: label),
-            text(field.value),
-          ],
-        ],
-        if (evidence.isNotEmpty) ...[
-          pw.NewPage(freeSpace: 75),
-          pw.SizedBox(height: 17),
-          pw.Text(evidenceTitle, style: heading),
-          pw.Divider(color: rule, height: 12),
-          for (final reference in evidence)
-            if (reference.url case final url?
-                when reference.label.length <= 120)
-              pw.UrlLink(
-                destination: url,
-                child: pw.Text(
-                  reference.label,
-                  style: const pw.TextStyle(
-                    fontSize: 10,
-                    decoration: pw.TextDecoration.underline,
-                  ),
+          pw.NewPage(freeSpace: 65),
+          pw.SizedBox(height: 8),
+          pw.Divider(color: rule, height: 8),
+          ContinuingPdfText(
+            continuationLabel: continued(activity.title),
+            continuationStyle: label.copyWith(color: accent),
+            text: pw.TextSpan(
+              style: content,
+              children: [
+                pw.TextSpan(
+                  text: '${activity.title}\n',
+                  style: heading.copyWith(fontSize: 13),
                 ),
-              )
-            else
-              text(reference.label),
+                if (activity.status.isNotEmpty)
+                  pw.TextSpan(text: '${activity.status}\n', style: label),
+                for (final (index, field) in activity.fields.indexed) ...[
+                  pw.TextSpan(text: '${field.label}  ', style: label),
+                  pw.TextSpan(text: field.value),
+                  if (index + 1 != activity.fields.length)
+                    const pw.TextSpan(text: '\n'),
+                ],
+              ],
+            ),
+          ),
+        ],
+        if (evidence.length == 1 && evidence.single.label.length <= 90) ...[
+          pw.NewPage(freeSpace: 26),
+          pw.SizedBox(height: 7),
+          pw.RichText(
+            text: pw.TextSpan(
+              style: content,
+              children: [
+                pw.TextSpan(
+                  text: '$evidenceTitle  ',
+                  style: label.copyWith(color: accent),
+                ),
+                referenceSpan(evidence.single),
+              ],
+            ),
+            overflow: pw.TextOverflow.span,
+          ),
+        ] else if (evidence.isNotEmpty) ...[
+          pw.NewPage(freeSpace: 43),
+          pw.SizedBox(height: 9),
+          pw.Text(evidenceTitle, style: heading),
+          pw.Divider(color: rule, height: 8),
+          for (final reference in evidence)
+            pw.RichText(
+              text: referenceSpan(reference),
+              overflow: pw.TextOverflow.span,
+            ),
         ],
       ],
     ),

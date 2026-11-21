@@ -2667,6 +2667,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reporting rules'**
   String get p7RuleRevision;
+
+  /// No description provided for @reportLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Report language'**
+  String get reportLanguage;
+
+  /// No description provided for @reportFollowAppLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Use app language'**
+  String get reportFollowAppLanguage;
+
+  /// No description provided for @reportTemplateLanguageFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Some template labels or guidance are shown in the source language where a translation is unavailable.'**
+  String get reportTemplateLanguageFallback;
+
+  /// No description provided for @p7aSavedPeriods.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved periods'**
+  String get p7aSavedPeriods;
+
+  /// No description provided for @p7aNewPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a period'**
+  String get p7aNewPeriod;
+
+  /// No description provided for @p7aCurrentPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected period'**
+  String get p7aCurrentPeriod;
+
+  /// No description provided for @p7aUsePeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this period'**
+  String get p7aUsePeriod;
+
+  /// No description provided for @p7aPeriodDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Period details'**
+  String get p7aPeriodDetails;
+
+  /// No description provided for @p7aFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Full cycle from a start date'**
+  String get p7aFixed;
+
+  /// No description provided for @p7aRolling.
+  ///
+  /// In en, this message translates to:
+  /// **'Full cycle ending on a chosen date'**
+  String get p7aRolling;
+
+  /// No description provided for @p7aReportMeasure.
+  ///
+  /// In en, this message translates to:
+  /// **'Measure'**
+  String get p7aReportMeasure;
+
+  /// No description provided for @p7aEligible.
+  ///
+  /// In en, this message translates to:
+  /// **'Eligible'**
+  String get p7aEligible;
+
+  /// No description provided for @p7aAttribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated using CPD Progress Tracker'**
+  String get p7aAttribution;
+
+  /// No description provided for @reportHindiRequiresShaping.
+  ///
+  /// In en, this message translates to:
+  /// **'This PDF contains Devanagari text and needs a renderer that can shape the script. Your records and report language setting are saved.'**
+  String get reportHindiRequiresShaping;
 }
 
 class _AppLocalizationsDelegate

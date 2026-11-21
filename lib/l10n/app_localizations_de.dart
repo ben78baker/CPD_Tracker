@@ -1429,4 +1429,48 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get p7RuleRevision => 'Berichtsregeln';
+
+  @override
+  String get reportLanguage => 'Berichtssprache';
+
+  @override
+  String get reportFollowAppLanguage => 'App-Sprache verwenden';
+
+  @override
+  String get reportTemplateLanguageFallback =>
+      'Einige Vorlagenbeschriftungen und Hinweise erscheinen in der Originalsprache, wenn keine Übersetzung vorliegt.';
+
+  @override
+  String get p7aSavedPeriods => 'Gespeicherte Zeiträume';
+
+  @override
+  String get p7aNewPeriod => 'Zeitraum hinzufügen';
+
+  @override
+  String get p7aCurrentPeriod => 'Ausgewählter Zeitraum';
+
+  @override
+  String get p7aUsePeriod => 'Diesen Zeitraum verwenden';
+
+  @override
+  String get p7aPeriodDetails => 'Zeitraumdetails';
+
+  @override
+  String get p7aFixed => 'Vollständiger Zyklus ab einem Startdatum';
+
+  @override
+  String get p7aRolling => 'Vollständiger Zyklus bis zu einem gewählten Datum';
+
+  @override
+  String get p7aReportMeasure => 'Kennzahl';
+
+  @override
+  String get p7aEligible => 'Anrechenbar';
+
+  @override
+  String get p7aAttribution => 'Erstellt mit CPD Progress Tracker';
+
+  @override
+  String get reportHindiRequiresShaping =>
+      'Dieses PDF enthält Devanagari-Text und benötigt eine geeignete Schriftdarstellung. Ihre Einträge und die Berichtssprache bleiben gespeichert.';
 }

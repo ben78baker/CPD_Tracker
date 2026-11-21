@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../cpd_compatibility/report_locale.dart';
 import '../l10n/app_localizations.dart';
 import '../recording_engine/models.dart';
 import '../recording_reports/activity_document.dart';
@@ -12,20 +12,13 @@ import 'scheme_progress.dart';
 import 'template_bundle.dart';
 
 String formatSchemeDate(String day, AppLocalizations strings) =>
-    DateFormat.yMMMd(
-      strings.localeName,
-    ).format(DateTime.parse('${day}T00:00:00Z'));
+    ReportLocale(strings).date(DateTime.parse('${day}T00:00:00Z'));
 
 String formatSchemePeriod(SchemePeriod period, AppLocalizations strings) =>
     '${formatSchemeDate(period.start, strings)} – ${formatSchemeDate(period.lastDay, strings)}';
 
-String formatSchemeMinutes(int minutes, AppLocalizations strings) {
-  if (minutes < 60) return strings.minutesPlural(minutes);
-  final hours = strings.hoursPlural(minutes ~/ 60);
-  return minutes % 60 == 0
-      ? hours
-      : '$hours ${strings.minutesPlural(minutes % 60)}';
-}
+String formatSchemeMinutes(int minutes, AppLocalizations strings) =>
+    ReportLocale(strings).duration(minutes);
 
 String _issue(ActivityIssue issue, AppLocalizations s) => switch (issue) {
   ActivityIssue.unknownDate => s.p7IssueDate,
@@ -42,6 +35,8 @@ Future<Uint8List> buildSchemeReport({
   required Map<String, SchemeEvidence> evidence,
   required AppLocalizations strings,
   required String practitioner,
+  ReportLocale? reportLocale,
+  Uint8List? brandIcon,
   Set<String> excluded = const {},
   bool incompleteLayout = false,
   bool example = false,
@@ -49,9 +44,24 @@ Future<Uint8List> buildSchemeReport({
   pw.Font? bold,
   List<pw.Font> fallback = const [],
 }) async {
-  final s = strings;
-  await initializeDateFormatting(s.localeName);
-  final locale = s.localeName;
+  await initializeDateFormatting();
+  final display = reportLocale ?? ReportLocale(strings);
+  final s = display.strings;
+  final locale = display.tag;
+  String date(String day) => display.date(DateTime.parse('${day}T00:00:00Z'));
+  var sourceLanguageUsed = false;
+  String localised(
+    String key,
+    String fallback, {
+    bool fallbackTranslated = false,
+  }) {
+    final text = bundle.translatedLabel(key, locale);
+    if (text == null && !fallbackTranslated && s.localeName != 'en') {
+      sourceLanguageUsed = true;
+    }
+    return text ?? fallback;
+  }
+
   final titleField = bindings[bundle.inputs[ActivityInput.title]]!;
   final byInstance = {
     for (final entry in bindings.entries) entry.value.id: entry.key,
@@ -60,7 +70,8 @@ Future<Uint8List> buildSchemeReport({
   String attachmentReference(String id) {
     final number = appendix.putIfAbsent(id, () {
       final item = evidence[id];
-      final label = 'E${appendix.length + 1} · ${item?.name ?? id}';
+      final label =
+          'E${display.integer(appendix.length + 1)} · ${item?.name ?? id}';
       return (
         label: item?.available == true
             ? label
@@ -78,11 +89,17 @@ Future<Uint8List> buildSchemeReport({
     } on ArgumentError {
       return '${value.toString()} · ${s.p7IssueInvalid}';
     }
+    if (def.choices.isNotEmpty && s.localeName != 'en') {
+      // Controlled labels are retained as authored for each historical version.
+      sourceLanguageUsed = true;
+    }
     return switch (def.kind) {
       FieldKind.attachments =>
         (value as List).cast<String>().map(attachmentReference).join(', '),
-      FieldKind.duration => formatSchemeMinutes(value as int, s),
-      FieldKind.date => formatSchemeDate(value as String, s),
+      FieldKind.duration => display.duration(value as int),
+      FieldKind.date => date(value as String),
+      FieldKind.integer => display.integer(value as int),
+      FieldKind.decimal => display.decimal(value as String),
       FieldKind.multipleChoices => (def.displayValue(value) as List).join(', '),
       _ => def.displayValue(value).toString(),
     };
@@ -98,20 +115,28 @@ Future<Uint8List> buildSchemeReport({
         field.definition.version != original.version) {
       return label;
     }
-    return bundle.label(key!, label, locale);
+    return localised(
+      key!,
+      label,
+      fallbackTranslated: localize(
+        '',
+        field.definition.translations,
+        locale,
+      ).isNotEmpty,
+    );
   }
 
   final activities = <DocumentActivity>[
-    for (final (index, result) in progress.activities.indexed)
+    for (final result in progress.activities)
       (
         title: switch (result.activity.values[titleField.id]) {
           final String title
               when title.trim().isNotEmpty &&
                   !excluded.contains(titleField.id) =>
             title,
-          _ => '${s.editorExample} ${index + 1}',
+          _ => s.noTitle,
         },
-        status: result.issues.map((issue) => _issue(issue, s)).join(' • '),
+        status: result.issues.map((issue) => _issue(issue, s)).join(' · '),
         fields: [
           for (final field in result.activity.fields)
             if (!excluded.contains(field.id) &&
@@ -124,35 +149,68 @@ Future<Uint8List> buildSchemeReport({
       ),
   ];
   final period = progress.period;
+  final title = localised(
+    'report',
+    bundle.recipe.localizedLabel(locale),
+    fallbackTranslated: localize(
+      '',
+      bundle.recipe.translations,
+      locale,
+    ).isNotEmpty,
+  );
+  final periodLabel = localised('period', s.p7Period, fallbackTranslated: true);
+  final scope = localised('scope', s.p7ReportScope, fallbackTranslated: true);
+  final metricRows = [
+    for (final metric in bundle.metrics)
+      [
+        localised(metric.id, metric.id),
+        display.duration(metric.target),
+        display.duration(progress.metrics[metric.id]!.recorded),
+        display.duration(progress.metrics[metric.id]!.complete),
+        display.duration(progress.metrics[metric.id]!.eligible),
+      ],
+  ];
   return buildActivityDocument(
-    title: bundle.label('report', bundle.recipe.localizedLabel(locale), locale),
-    footer: '${s.appTitle} · ${example ? s.p7Synthetic : s.p7Internal}',
+    title: title,
+    appName: 'CPD Progress Tracker',
+    attribution: s.p7aAttribution,
+    documentTag: example ? s.p7Synthetic : s.p7Internal,
+    branding: bundle.branding,
+    brandIcon: brandIcon,
     summaryTitle: s.p7Summary,
+    summaryColumns: [
+      s.p7aReportMeasure,
+      s.p7Target,
+      s.p7Recorded,
+      s.p7Complete,
+      s.p7aEligible,
+    ],
+    summaryRows: metricRows,
     metadata: [
       if (practitioner.trim().isNotEmpty)
         '${s.p7Practitioner} · ${practitioner.trim()}',
-      '${s.p7Period} · ${formatSchemePeriod(period, s).replaceAll(' – ', ' - ')}',
+      '$periodLabel · ${date(period.start)} - ${date(period.lastDay)}',
       if (bundle.showDeadline)
         period.deadline == null
             ? s.p7MissingDeadline
-            : '${s.p7Deadline} · ${formatSchemeDate(period.deadline!, s)}',
+            : '${s.p7Deadline} · ${date(period.deadline!)}',
     ],
     summary: [
-      for (final metric in bundle.metrics)
-        '${bundle.label(metric.id, metric.id, locale)} · ${s.p7Target} ${formatSchemeMinutes(metric.target, s)}\n'
-            '${s.p7Recorded} ${formatSchemeMinutes(progress.metrics[metric.id]!.recorded, s)}  |  '
-            '${s.p7Complete} ${formatSchemeMinutes(progress.metrics[metric.id]!.complete, s)}  |  '
-            '${s.p7Eligible} ${formatSchemeMinutes(progress.metrics[metric.id]!.eligible, s)}',
-      if (progress.incomplete > 0) '${s.p7ReviewLog} · ${progress.incomplete}',
+      if (progress.incomplete > 0)
+        '${s.p7ReviewLog} · ${display.integer(progress.incomplete)}',
       if (incompleteLayout) s.p7LayoutWarning,
-      bundle.label('scope', s.p7ReportScope, locale),
+      scope,
+      if (sourceLanguageUsed) s.reportTemplateLanguageFallback,
     ],
     activities: activities,
     evidenceTitle: s.p7EvidenceIndex,
     evidence: appendix.values.toList(),
+    continued: s.cpdPdfContinuedTitle,
+    pageOf: s.pageOf,
     versionNote:
-        '${s.editorVersion} ${bundle.recipe.version} · ${s.p7RuleRevision} ${bundle.ruleVersion} · '
-        '${s.p7Reviewed} ${formatSchemeDate(bundle.reviewed, s)}',
+        '${s.editorVersion} ${display.integer(bundle.recipe.version)} · '
+        '${s.p7RuleRevision} ${display.integer(bundle.ruleVersion)} · '
+        '${s.p7Reviewed} ${date(bundle.reviewed)}',
     regular: regular,
     bold: bold,
     fallback: fallback,
@@ -163,6 +221,8 @@ Future<Uint8List> buildBundleExampleReport({
   required ProfessionTemplateBundle bundle,
   required SchemePeriod period,
   required AppLocalizations strings,
+  ReportLocale? reportLocale,
+  Uint8List? brandIcon,
   pw.Font? regular,
   pw.Font? bold,
   List<pw.Font> fallback = const [],
@@ -186,7 +246,9 @@ Future<Uint8List> buildBundleExampleReport({
     progress: progress,
     bindings: bindings,
     strings: strings,
-    practitioner: strings.p7Synthetic,
+    practitioner: (reportLocale?.strings ?? strings).p7Synthetic,
+    reportLocale: reportLocale,
+    brandIcon: brandIcon,
     example: true,
     evidence: {
       for (final item in bundle.sampleEvidence.entries)

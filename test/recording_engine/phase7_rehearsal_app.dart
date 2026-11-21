@@ -1,25 +1,52 @@
 import 'dart:io';
 
+import 'package:cpd_tracker/cpd_compatibility/cpd_data_store.dart';
 import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
 import 'package:cpd_tracker/cpd_creation/scheme_period_store.dart';
 import 'package:cpd_tracker/cpd_creation/scheme_progress.dart';
 import 'package:cpd_tracker/cpd_creation/template_bundle.dart';
+import 'package:cpd_tracker/home_page.dart';
+import 'package:cpd_tracker/l10n/app_localizations.dart';
+import 'package:cpd_tracker/theme/app_accent.dart';
+import 'package:cpd_tracker/theme/app_theme.dart';
 import 'package:cpd_tracker/recording_engine/models.dart';
 import 'package:cpd_tracker/recording_engine_storage/managed_attachment_files.dart';
 import 'package:cpd_tracker/recording_engine_storage/sqlite_recording_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'phase6_rehearsal_app.dart';
 import 'phase7_rehearsal_pages.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (const bool.fromEnvironment('PHASE7A_REFERENCE')) {
+    SharedPreferences.setMockInitialValues({
+      'professions': [
+        cpdProfessionLabel('Standard CPD · Mentoring'),
+        cpdProfessionLabel('Community nursing'),
+      ],
+      'onboarding_complete': true,
+    });
+    runApp(
+      MaterialApp(
+        locale: const Locale('en', 'GB'),
+        theme: AppTheme.forAccent(AppAccent.purple),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        debugShowCheckedModeBanner: false,
+        home: const HomePage(),
+      ),
+    );
+    return;
+  }
+
   final root = Directory(
-    p.join((await getApplicationSupportDirectory()).path, 'phase7_rehearsal'),
+    p.join((await getApplicationSupportDirectory()).path, 'phase7a_rehearsal'),
   );
   final originals = ManagedAttachmentFiles(root);
   runApp(

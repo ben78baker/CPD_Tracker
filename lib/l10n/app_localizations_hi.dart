@@ -1415,4 +1415,48 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get p7RuleRevision => 'रिपोर्ट के नियम';
+
+  @override
+  String get reportLanguage => 'रिपोर्ट की भाषा';
+
+  @override
+  String get reportFollowAppLanguage => 'ऐप की भाषा इस्तेमाल करें';
+
+  @override
+  String get reportTemplateLanguageFallback =>
+      'अनुवाद उपलब्ध न होने पर कुछ टेम्पलेट लेबल और निर्देश मूल भाषा में दिखाए गए हैं।';
+
+  @override
+  String get p7aSavedPeriods => 'सहेजी गई अवधियाँ';
+
+  @override
+  String get p7aNewPeriod => 'अवधि जोड़ें';
+
+  @override
+  String get p7aCurrentPeriod => 'चुनी गई अवधि';
+
+  @override
+  String get p7aUsePeriod => 'इस अवधि का उपयोग करें';
+
+  @override
+  String get p7aPeriodDetails => 'अवधि का विवरण';
+
+  @override
+  String get p7aFixed => 'शुरुआती तारीख से पूरा चक्र';
+
+  @override
+  String get p7aRolling => 'चुनी हुई तारीख तक पूरा चक्र';
+
+  @override
+  String get p7aReportMeasure => 'माप';
+
+  @override
+  String get p7aEligible => 'पात्र';
+
+  @override
+  String get p7aAttribution => 'CPD Progress Tracker से बनाया गया';
+
+  @override
+  String get reportHindiRequiresShaping =>
+      'इस PDF में देवनागरी पाठ है। सही अक्षर-रचना के लिए समर्थित रेंडरर चाहिए। आपके रिकॉर्ड और रिपोर्ट की भाषा सुरक्षित हैं।';
 }

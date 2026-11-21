@@ -101,6 +101,7 @@ class TemplatePreviewPage extends StatelessWidget {
     required Iterable<String> featuresAndLimits,
     required Iterable<TemplatePreviewExample> examples,
     this.sampleReport,
+    this.onReportError,
     this.sampleAttachmentLabel,
     this.arrangementPreview,
   }) : examples = List.unmodifiable(examples),
@@ -131,6 +132,7 @@ class TemplatePreviewPage extends StatelessWidget {
   )?
   sampleReport;
   final String? sampleAttachmentLabel;
+  final Widget Function(BuildContext, Object)? onReportError;
   final WidgetBuilder? arrangementPreview;
 
   @override
@@ -218,6 +220,7 @@ class TemplatePreviewPage extends StatelessWidget {
                   appBar: AppBar(title: Text(s.editorExamplePdf)),
                   body: PdfPreview(
                     build: (_) => buildReport(template, examples.first),
+                    onError: onReportError,
                     initialPageFormat: PdfPageFormat.a4,
                     allowPrinting: false,
                     allowSharing: false,

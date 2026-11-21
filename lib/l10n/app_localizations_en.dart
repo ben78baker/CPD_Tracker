@@ -1422,4 +1422,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get p7RuleRevision => 'Reporting rules';
+
+  @override
+  String get reportLanguage => 'Report language';
+
+  @override
+  String get reportFollowAppLanguage => 'Use app language';
+
+  @override
+  String get reportTemplateLanguageFallback =>
+      'Some template labels or guidance are shown in the source language where a translation is unavailable.';
+
+  @override
+  String get p7aSavedPeriods => 'Saved periods';
+
+  @override
+  String get p7aNewPeriod => 'Add a period';
+
+  @override
+  String get p7aCurrentPeriod => 'Selected period';
+
+  @override
+  String get p7aUsePeriod => 'Use this period';
+
+  @override
+  String get p7aPeriodDetails => 'Period details';
+
+  @override
+  String get p7aFixed => 'Full cycle from a start date';
+
+  @override
+  String get p7aRolling => 'Full cycle ending on a chosen date';
+
+  @override
+  String get p7aReportMeasure => 'Measure';
+
+  @override
+  String get p7aEligible => 'Eligible';
+
+  @override
+  String get p7aAttribution => 'Generated using CPD Progress Tracker';
+
+  @override
+  String get reportHindiRequiresShaping =>
+      'This PDF contains Devanagari text and needs a renderer that can shape the script. Your records and report language setting are saved.';
 }

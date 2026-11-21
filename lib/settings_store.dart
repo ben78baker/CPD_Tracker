@@ -1,5 +1,6 @@
 import 'cpd_migration/legacy_write_gate.dart';
 import 'cpd_compatibility/cpd_data_store.dart';
+import 'cpd_compatibility/report_locale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -80,6 +81,20 @@ class SettingsStore implements CpdProfessionStore {
       locale.value = null;
     }
   }
+
+  Future<ReportLanguage> getReportLanguage() async {
+    final prefs = await _prefsWithRetry();
+    return ReportLanguage.fromStored(prefs.getString('report_locale_code'));
+  }
+
+  Future<void> setReportLanguage(ReportLanguage language) =>
+      LegacyWriteGate.instance.write(() async {
+        final prefs = await _prefsWithRetry();
+        final saved = language == ReportLanguage.app
+            ? await prefs.remove('report_locale_code')
+            : await prefs.setString('report_locale_code', language.tag);
+        if (!saved) throw StateError('The report language could not be saved.');
+      });
 
   Future<String> getDateFormat() async {
     final prefs = await _prefsWithRetry();

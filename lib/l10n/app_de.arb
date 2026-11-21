@@ -549,5 +549,19 @@
   "p7LayoutWarning": "In der Berichtskonfiguration fehlen Felder. Prüfen Sie die Feldauswahl.",
   "p7Synthetic": "Synthetisches Beispiel",
   "p7Internal": "Interner Testlauf",
-  "p7RuleRevision": "Berichtsregeln"
+  "p7RuleRevision": "Berichtsregeln",
+  "reportLanguage": "Berichtssprache",
+  "reportFollowAppLanguage": "App-Sprache verwenden",
+  "reportTemplateLanguageFallback": "Einige Vorlagenbeschriftungen und Hinweise erscheinen in der Originalsprache, wenn keine Übersetzung vorliegt.",
+  "p7aSavedPeriods": "Gespeicherte Zeiträume",
+  "p7aNewPeriod": "Zeitraum hinzufügen",
+  "p7aCurrentPeriod": "Ausgewählter Zeitraum",
+  "p7aUsePeriod": "Diesen Zeitraum verwenden",
+  "p7aPeriodDetails": "Zeitraumdetails",
+  "p7aFixed": "Vollständiger Zyklus ab einem Startdatum",
+  "p7aRolling": "Vollständiger Zyklus bis zu einem gewählten Datum",
+  "p7aReportMeasure": "Kennzahl",
+  "p7aEligible": "Anrechenbar",
+  "p7aAttribution": "Erstellt mit CPD Progress Tracker",
+  "reportHindiRequiresShaping": "Dieses PDF enthält Devanagari-Text und benötigt eine geeignete Schriftdarstellung. Ihre Einträge und die Berichtssprache bleiben gespeichert."
 }

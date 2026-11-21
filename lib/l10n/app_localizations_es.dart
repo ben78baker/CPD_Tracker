@@ -1429,4 +1429,48 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get p7RuleRevision => 'Reglas del informe';
+
+  @override
+  String get reportLanguage => 'Idioma del informe';
+
+  @override
+  String get reportFollowAppLanguage => 'Usar idioma de la app';
+
+  @override
+  String get reportTemplateLanguageFallback =>
+      'Algunas etiquetas e indicaciones se muestran en su idioma original si no hay traducción.';
+
+  @override
+  String get p7aSavedPeriods => 'Periodos guardados';
+
+  @override
+  String get p7aNewPeriod => 'Añadir un periodo';
+
+  @override
+  String get p7aCurrentPeriod => 'Periodo seleccionado';
+
+  @override
+  String get p7aUsePeriod => 'Usar este periodo';
+
+  @override
+  String get p7aPeriodDetails => 'Detalles del periodo';
+
+  @override
+  String get p7aFixed => 'Ciclo completo desde una fecha de inicio';
+
+  @override
+  String get p7aRolling => 'Ciclo completo hasta la fecha elegida';
+
+  @override
+  String get p7aReportMeasure => 'Indicador';
+
+  @override
+  String get p7aEligible => 'Computable';
+
+  @override
+  String get p7aAttribution => 'Generado con CPD Progress Tracker';
+
+  @override
+  String get reportHindiRequiresShaping =>
+      'Este PDF contiene texto en devanagari y necesita un motor de composición compatible. Se han guardado los registros y el idioma del informe.';
 }

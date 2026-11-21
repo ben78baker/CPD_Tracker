@@ -549,5 +549,19 @@
   "p7LayoutWarning": "Des champs du dispositif manquent dans le rapport. Vérifiez la sélection.",
   "p7Synthetic": "Exemple fictif",
   "p7Internal": "Essai interne",
-  "p7RuleRevision": "Règles du rapport"
+  "p7RuleRevision": "Règles du rapport",
+  "reportLanguage": "Langue du rapport",
+  "reportFollowAppLanguage": "Utiliser la langue de l’application",
+  "reportTemplateLanguageFallback": "Certains libellés ou conseils sont affichés dans la langue d’origine en l’absence de traduction.",
+  "p7aSavedPeriods": "Périodes enregistrées",
+  "p7aNewPeriod": "Ajouter une période",
+  "p7aCurrentPeriod": "Période sélectionnée",
+  "p7aUsePeriod": "Utiliser cette période",
+  "p7aPeriodDetails": "Détails de la période",
+  "p7aFixed": "Cycle complet à partir d’une date de début",
+  "p7aRolling": "Cycle complet jusqu’à une date choisie",
+  "p7aReportMeasure": "Indicateur",
+  "p7aEligible": "Admissible",
+  "p7aAttribution": "Créé avec CPD Progress Tracker",
+  "reportHindiRequiresShaping": "Ce PDF contient du texte devanagari et nécessite un moteur de composition compatible. Vos enregistrements et la langue du rapport sont conservés."
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../cpd_compatibility/cpd_layout_policy.dart';
 import '../recording_engine/models.dart';
 import '../recording_engine/template_review.dart';
+import '../recording_reports/activity_document.dart' show ReportBranding;
 
 enum ActivityInput {
   date(FieldKind.date),
@@ -115,6 +116,14 @@ class ProfessionTemplateBundle {
       throw const FormatException('Unsupported report renderer.');
     }
     reportVersion = report['version'] as int;
+    final brand = report['branding'] as String?;
+    if (brand != null &&
+        !ReportBranding.values.any((mode) => mode.name == brand)) {
+      throw const FormatException('Unsupported report branding.');
+    }
+    branding = brand == null
+        ? ReportBranding.subtle
+        : ReportBranding.values.byName(brand);
     reportFields = List.unmodifiable((report['fields'] as List).cast<String>());
     final preview = json['preview'] as Map<String, dynamic>;
     sampleEvidence = Map.unmodifiable(
@@ -155,6 +164,7 @@ class ProfessionTemplateBundle {
   late final Set<PeriodKind> periods;
   late final List<SchemeMetric> metrics;
   late final bool showDeadline;
+  late final ReportBranding branding;
   late final Map<String, String> sampleEvidence;
   late final List<BundleExample> examples;
   late final Map<String, Map<String, String>> labels;
@@ -163,6 +173,13 @@ class ProfessionTemplateBundle {
       recipe.fields.singleWhere((field) => field.id == key);
   String label(String key, String fallback, String locale) =>
       localize(fallback, labels[key] ?? const {}, locale);
+
+  String? translatedLabel(String key, String locale) {
+    final translations = labels[key] ?? const <String, String>{};
+    final display = localize('', translations, locale);
+    return display.isEmpty ? null : display;
+  }
+
   Set<String> get protectedKeys => {
     for (final input in requiredInputs) inputs[input]!,
   };
@@ -279,6 +296,7 @@ class ProfessionTemplateBundle {
                 key == 'description' ||
                 key == 'report' ||
                 key == 'periodHint' ||
+                key == 'period' ||
                 key == 'scope',
           ) &&
           labels.values.every(
@@ -351,6 +369,7 @@ class ProfessionTemplateBundle {
     'report': {
       'kind': 'activity_log_v1',
       'version': reportVersion,
+      'branding': branding.name,
       'fields': reportFields,
     },
     'preview': {

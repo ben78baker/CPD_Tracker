@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cpd_tracker/cpd_compatibility/report_locale.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_creation/scheme_period_store.dart';
 import 'package:cpd_tracker/cpd_creation/scheme_progress.dart';
@@ -30,6 +31,8 @@ Future<void> main() async {
   final originals = ManagedAttachmentFiles(root);
   try {
     final (first, second) = await seedPhase7(phase6Store(db), root);
+    await phase6Store(db).saveSetting('locale', 'es');
+    await phase6Store(db).saveSetting('reportLocale', 'fr');
     final periods = SchemePeriodStore(db);
     final original = await periods.load(first);
     _check(original.periods.length == 2, 'old period preserved');
@@ -109,6 +112,17 @@ Future<void> main() async {
       ),
       'independent adopted field IDs',
     );
+    final settings = await phase6Store(db).settings();
+    final reportLocale = await ReportLocale.resolve(
+      ReportLanguage.fromStored(settings['reportLocale']),
+      AppLocalizationsEn(),
+    );
+    _check(
+      settings['locale'] == 'es' &&
+          reportLocale.strings.localeName == 'fr' &&
+          bundle.country == 'United Kingdom',
+      'report locale survives independently of app and scheme',
+    );
     final pdf = await buildSchemeReport(
       bundle: bundle,
       progress: report.progress,
@@ -116,6 +130,7 @@ Future<void> main() async {
       evidence: report.evidence,
       strings: AppLocalizationsEn(),
       practitioner: 'Synthetic practitioner',
+      reportLocale: reportLocale,
     );
     _check(
       String.fromCharCodes(pdf.take(5)) == '%PDF-',

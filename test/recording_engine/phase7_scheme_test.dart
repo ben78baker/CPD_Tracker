@@ -382,10 +382,17 @@ void main() {
             ),
             findsOneWidget,
           );
-          expect(find.text(s.p7Period), findsOneWidget);
+          expect(
+            find.text(_bundle.label('period', s.p7Period, s.localeName)),
+            findsOneWidget,
+          );
           expect(find.text(s.setEditTarget), findsOneWidget);
-          await tester.ensureVisible(find.text(s.p7Period));
-          await tester.tap(find.text(s.p7Period));
+          await tester.ensureVisible(
+            find.text(_bundle.label('period', s.p7Period, s.localeName)),
+          );
+          await tester.tap(
+            find.text(_bundle.label('period', s.p7Period, s.localeName)),
+          );
           expect(opened, 1);
           expect(tester.takeException(), isNull);
         },

@@ -8,8 +8,10 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import '../cpd_compatibility/report_locale.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+import '../recording_reports/continuing_text.dart';
 import 'export_attachment.dart';
 import 'export_selection.dart';
 import 'pdf_evidence_rasterizer.dart';
@@ -55,6 +57,7 @@ class PdfExportTexts {
     required this.attachmentLinksTitle,
     required this.linksFileName,
     required this.fileNamePrefix,
+    this.reportDate,
   });
 
   factory PdfExportTexts.english() => PdfExportTexts(
@@ -102,7 +105,11 @@ class PdfExportTexts {
     fileNamePrefix: 'cpd_records',
   );
 
-  factory PdfExportTexts.fromLoc(AppLocalizations loc) => PdfExportTexts(
+  factory PdfExportTexts.fromLoc(
+    AppLocalizations loc, {
+    ReportLocale? reportLocale,
+  }) => PdfExportTexts(
+    reportDate: reportLocale?.date,
     appTitle: loc.appTitle,
     allTime: loc.allTime,
     to: loc.toWord,
@@ -134,8 +141,8 @@ class PdfExportTexts {
     originalFileInZipWithName: loc.cpdPdfOriginalFileInZipWithName,
     unavailableEvidenceLabel: loc.cpdPdfUnavailableEvidenceLabel,
     noTitle: loc.noTitle,
-    hoursText: loc.hoursPlural,
-    minutesText: loc.minutesPlural,
+    hoursText: reportLocale?.hours ?? loc.hoursPlural,
+    minutesText: reportLocale?.minutes ?? loc.minutesPlural,
     fileNotFoundWithName: loc.fileNotFoundWithName,
     unsupportedImageWithName: loc.cpdPdfUnsupportedImageWithName,
     shareSubjectPdf: loc.cpdRecordsShareSubject,
@@ -145,6 +152,7 @@ class PdfExportTexts {
     fileNamePrefix: loc.exportFilePrefix,
   );
 
+  final String Function(DateTime)? reportDate;
   final String appTitle;
   final String allTime;
   final String to;
@@ -437,7 +445,9 @@ Future<CpdPdfPresentation> prepareCpdPdfPresentation({
     records.add(
       CpdPdfRecord(
         sourceId: entry.id,
-        date: formatDate(entry.date, dateFormat),
+        date:
+            texts.reportDate?.call(entry.date) ??
+            formatDate(entry.date, dateFormat),
         title: entry.title.trim().isEmpty ? texts.noTitle : entry.title.trim(),
         details: entry.details.trim(),
         duration: _durationText(entry.hours, entry.minutes, texts),
@@ -455,8 +465,8 @@ Future<CpdPdfPresentation> prepareCpdPdfPresentation({
     profile: profile.normalized(),
     profession: selection.profession,
     period:
-        '${formatDate(selection.range.start, dateFormat)} '
-        '${texts.to} ${formatDate(selection.range.end, dateFormat)}',
+        '${texts.reportDate?.call(selection.range.start) ?? formatDate(selection.range.start, dateFormat)} '
+        '${texts.to} ${texts.reportDate?.call(selection.range.end) ?? formatDate(selection.range.end, dateFormat)}',
     totalDuration: _durationText(totalMinutes ~/ 60, totalMinutes % 60, texts),
     records: List<CpdPdfRecord>.unmodifiable(records),
     evidenceMode: evidenceMode,
@@ -1270,100 +1280,24 @@ PdfPoint _photoDisplaySize(CpdPdfImageData image) {
 /// before delegating layout keeps pagination, text shaping and page breaking in
 /// the package's standard `MultiPage` flow, including records longer than two
 /// pages.
-class _ContinuedDetailsText extends pw.Text {
-  _ContinuedDetailsText(super.text, {required this.continuationLabel})
+class _ContinuedDetailsText extends ContinuingPdfText {
+  _ContinuedDetailsText(String text, {required super.continuationLabel})
     : super(
-        overflow: pw.TextOverflow.span,
-        style: const pw.TextStyle(
-          fontSize: 10.5,
-          lineSpacing: 2.2,
-          color: _bodyText,
+        text: pw.TextSpan(
+          text: text,
+          style: const pw.TextStyle(
+            fontSize: 10.5,
+            lineSpacing: 2.2,
+            color: _bodyText,
+          ),
+        ),
+        continuationStyle: pw.TextStyle(
+          fontSize: 9,
+          fontWeight: pw.FontWeight.bold,
+          fontStyle: pw.FontStyle.italic,
+          color: _accent,
         ),
       );
-
-  final String continuationLabel;
-
-  pw.Text? _label;
-  double _contentHeight = 0;
-  double _labelGap = 0;
-
-  @override
-  void layout(
-    pw.Context context,
-    pw.BoxConstraints constraints, {
-    bool parentUsesSize = false,
-  }) {
-    final textContext = saveContext() as pw.RichTextContext;
-    final isContinuation =
-        textContext.spanStart > 0 || textContext.startOffset != 0;
-
-    _label = isContinuation
-        ? pw.Text(
-            continuationLabel,
-            maxLines: 2,
-            overflow: pw.TextOverflow.clip,
-            style: pw.TextStyle(
-              fontSize: 9,
-              fontWeight: pw.FontWeight.bold,
-              fontStyle: pw.FontStyle.italic,
-              color: _accent,
-            ),
-          )
-        : null;
-    _labelGap = _label == null ? 0 : 6;
-
-    var labelHeight = 0.0;
-    if (_label != null) {
-      _label!.layout(
-        context,
-        constraints.copyWith(maxHeight: double.infinity),
-        parentUsesSize: true,
-      );
-      labelHeight = _label!.box!.height;
-    }
-
-    final reservedHeight = labelHeight + _labelGap;
-    super.layout(
-      context,
-      constraints.copyWith(
-        minHeight: 0,
-        maxHeight: math.max(0, constraints.maxHeight - reservedHeight),
-      ),
-      parentUsesSize: parentUsesSize,
-    );
-
-    _contentHeight = box!.height;
-    box = PdfRect(
-      box!.left,
-      box!.bottom,
-      box!.width,
-      _contentHeight + reservedHeight,
-    );
-  }
-
-  @override
-  void paint(pw.Context context) {
-    final outerBox = box!;
-    box = PdfRect(
-      outerBox.left,
-      outerBox.bottom,
-      outerBox.width,
-      _contentHeight,
-    );
-    super.paint(context);
-    box = outerBox;
-
-    final label = _label;
-    if (label != null) {
-      label.box = PdfRect(
-        outerBox.left,
-        outerBox.bottom + _contentHeight + _labelGap,
-        label.box!.width,
-        label.box!.height,
-      );
-      label.paint(context);
-    }
-  }
 }
 
 String _wrapLongText(String value, {int maxSegmentLength = 72}) {

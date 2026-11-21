@@ -550,5 +550,19 @@
   "p7LayoutWarning": "रिपोर्ट में योजना के फ़ील्ड गुम हैं। फ़ील्ड चयन जाँचें।",
   "p7Synthetic": "काल्पनिक उदाहरण",
   "p7Internal": "आंतरिक परीक्षण",
-  "p7RuleRevision": "रिपोर्ट के नियम"
+  "p7RuleRevision": "रिपोर्ट के नियम",
+  "reportLanguage": "रिपोर्ट की भाषा",
+  "reportFollowAppLanguage": "ऐप की भाषा इस्तेमाल करें",
+  "reportTemplateLanguageFallback": "अनुवाद उपलब्ध न होने पर कुछ टेम्पलेट लेबल और निर्देश मूल भाषा में दिखाए गए हैं।",
+  "p7aSavedPeriods": "सहेजी गई अवधियाँ",
+  "p7aNewPeriod": "अवधि जोड़ें",
+  "p7aCurrentPeriod": "चुनी गई अवधि",
+  "p7aUsePeriod": "इस अवधि का उपयोग करें",
+  "p7aPeriodDetails": "अवधि का विवरण",
+  "p7aFixed": "शुरुआती तारीख से पूरा चक्र",
+  "p7aRolling": "चुनी हुई तारीख तक पूरा चक्र",
+  "p7aReportMeasure": "माप",
+  "p7aEligible": "पात्र",
+  "p7aAttribution": "CPD Progress Tracker से बनाया गया",
+  "reportHindiRequiresShaping": "इस PDF में देवनागरी पाठ है। सही अक्षर-रचना के लिए समर्थित रेंडरर चाहिए। आपके रिकॉर्ड और रिपोर्ट की भाषा सुरक्षित हैं।"
 }

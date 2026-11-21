@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
+import 'package:cpd_tracker/cpd_compatibility/report_locale.dart';
 import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_pilot.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
@@ -54,9 +55,18 @@ class _ProfessionCreationPageState extends State<ProfessionCreationPage> {
     setState(() => _opening = true);
     try {
       if (kind == ProfessionKind.template) {
+        final reportLanguage = widget.phase7
+            ? ReportLanguage.fromStored(
+                (await widget.store.settings())['reportLocale'],
+              )
+            : ReportLanguage.app;
+        if (!mounted) return;
         final chosen = await Navigator.of(context).push<bool>(
           MaterialPageRoute(
-            builder: (_) => _PilotCatalogue(phase7: widget.phase7),
+            builder: (_) => _PilotCatalogue(
+              phase7: widget.phase7,
+              reportLanguage: reportLanguage,
+            ),
           ),
         );
         if (!mounted || chosen != true) return;
@@ -234,7 +244,8 @@ class DraftChoices extends StatelessWidget {
 }
 
 class _PilotCatalogue extends StatelessWidget {
-  const _PilotCatalogue({required this.phase7});
+  const _PilotCatalogue({required this.phase7, required this.reportLanguage});
+  final ReportLanguage reportLanguage;
   final bool phase7;
 
   @override
@@ -264,8 +275,11 @@ class _PilotCatalogue extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (_) =>
-                          nursingPilotPreview(context, phase7: phase7),
+                      builder: (_) => nursingPilotPreview(
+                        context,
+                        phase7: phase7,
+                        reportLanguage: reportLanguage,
+                      ),
                     ),
                   ),
                   icon: const Icon(Icons.visibility_outlined),
@@ -287,6 +301,7 @@ class _PilotCatalogue extends StatelessWidget {
 TemplatePreviewPage nursingPilotPreview(
   BuildContext context, {
   bool phase7 = false,
+  ReportLanguage reportLanguage = ReportLanguage.app,
 }) {
   final s = editorStrings(context);
   final base = nursingPilot;
@@ -331,9 +346,12 @@ TemplatePreviewPage nursingPilotPreview(
           )
         : nursingExamples(recipe),
     sampleAttachmentLabel: 'Synthetic activity evidence',
-    sampleReport: (template, _) => phase7
-        ? exampleSchemeReport(context)
-        : nursingSampleReport(template, ReportSelection()),
+    onReportError: phase7 ? rehearsalReportError : null,
+    sampleReport: (template, _) async {
+      if (!phase7) return nursingSampleReport(template, ReportSelection());
+      final locale = await ReportLocale.resolve(reportLanguage, s);
+      return exampleSchemeReport(locale);
+    },
     arrangementPreview: (_) => EditFieldsPage(
       title: s.p6TryArrangement,
       layout: layout,

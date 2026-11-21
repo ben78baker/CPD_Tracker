@@ -18,6 +18,7 @@ import 'package:cpd_tracker/recording_engine/layout_draft.dart';
 import 'package:cpd_tracker/recording_engine_storage/sqlite_recording_repository.dart';
 import 'package:cpd_tracker/theme/app_accent.dart';
 import 'package:cpd_tracker/theme/app_theme.dart';
+import 'package:cpd_tracker/widgets/home_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:path/path.dart' as p;
@@ -318,78 +319,128 @@ class _HomeState extends State<_Home> {
     _refresh();
   }
 
+  Future<void> _addProfession() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<String>(
+        builder: (context) => ProfessionCreationPage(
+          store: widget.store,
+          phase7: widget.phase7,
+          onCreated: (id) => Navigator.pop(context, id),
+        ),
+      ),
+    );
+    _refresh();
+  }
+
+  Future<void> _chooseSearchProfession() async {
+    final active = (await _professions).where(
+      (profession) => !profession.deleted,
+    );
+    if (!mounted) return;
+    final selection = await showModalBottomSheet<RecordingCollection>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            for (final profession in active)
+              ListTile(
+                title: Text(profession.label),
+                leading: const Icon(Icons.search),
+                onTap: () => Navigator.pop(context, profession),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (mounted && selection != null) await _open(selection, search: true);
+  }
+
+  void _rehearsalAction() {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(editorStrings(context).p7Internal)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = editorStrings(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(s.appTitle)),
-      body: FutureBuilder(
-        future: _professions,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return RetryPage(retry: _refresh);
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final active = snapshot.requireData.where(
-            (profession) => !profession.deleted,
+    final body = FutureBuilder(
+      future: _professions,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return RetryPage(retry: _refresh);
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final active = snapshot.requireData
+            .where((profession) => !profession.deleted)
+            .toList();
+        if (widget.phase7) {
+          return HomeProfessionList(
+            itemCount: active.length,
+            itemBuilder: (context, index) {
+              final profession = active[index];
+              return RehearsalProfessionCard(
+                key: ValueKey(profession.id),
+                store: widget.store,
+                profession: profession,
+                originals: widget.originals,
+                onRefresh: _refresh,
+                onAdd: () => _open(profession, add: true),
+                onView: () => _open(profession),
+                onSearch: () => _open(profession, search: true),
+                onScan: _rehearsalAction,
+                onRename: () => _manage(profession),
+                onDelete: () => _manage(profession, delete: true),
+              );
+            },
           );
-          return BoundedList(
-            children: [
-              FilledButton.icon(
-                key: const Key('phase6-home-add'),
-                icon: const Icon(Icons.add),
-                label: Text(s.addProfession),
-                onPressed: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute<String>(
-                      builder: (context) => ProfessionCreationPage(
-                        store: widget.store,
-                        phase7: widget.phase7,
-                        onCreated: (id) => Navigator.pop(context, id),
-                      ),
-                    ),
-                  );
-                  _refresh();
-                },
-              ),
-              const SizedBox(height: 12),
-              for (final profession in active)
-                if (widget.phase7)
-                  RehearsalProfessionCard(
-                    key: ValueKey(profession.id),
-                    store: widget.store,
-                    profession: profession,
-                    originals: widget.originals,
-                    onRefresh: _refresh,
-                    onAdd: () => _open(profession, add: true),
-                    onView: () => _open(profession),
-                    onSearch: () => _open(profession, search: true),
-                    onScan: () => ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(s.p7Internal))),
-                    onRename: () => _manage(profession),
-                    onDelete: () => _manage(profession, delete: true),
-                  )
-                else
-                  ListTile(
-                    key: ValueKey(profession.id),
-                    title: Text(profession.label),
-                    leading: const Icon(Icons.work_outline),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => _ProfessionPage(
-                          store: widget.store,
-                          profession: profession,
-                        ),
-                      ),
+        }
+        return BoundedList(
+          children: [
+            FilledButton.icon(
+              key: const Key('phase6-home-add'),
+              icon: const Icon(Icons.add),
+              label: Text(s.addProfession),
+              onPressed: _addProfession,
+            ),
+            const SizedBox(height: 12),
+            for (final profession in active)
+              ListTile(
+                key: ValueKey(profession.id),
+                title: Text(profession.label),
+                leading: const Icon(Icons.work_outline),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => _ProfessionPage(
+                      store: widget.store,
+                      profession: profession,
                     ),
                   ),
-            ],
-          );
-        },
-      ),
+                ),
+              ),
+          ],
+        );
+      },
     );
+    return widget.phase7
+        ? HomeShell(
+            onSearch: _chooseSearchProfession,
+            onMenuSelected: (action) {
+              if (action == 'add_profession') {
+                _addProfession();
+              } else {
+                _rehearsalAction();
+              }
+            },
+            body: body,
+          )
+        : Scaffold(
+            appBar: AppBar(title: Text(s.appTitle)),
+            body: body,
+          );
   }
 }
 
@@ -538,6 +589,26 @@ class _ProfessionPageState extends State<_ProfessionPage> {
       widget.profession.id,
       history.last.version,
     );
+    if (widget.phase7) {
+      if (!mounted) return;
+      try {
+        await openLayoutReport(
+          context,
+          widget.store,
+          widget.profession,
+          history,
+          records,
+          selected.excluded,
+        );
+      } on Object {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(editorStrings(context).editorSaveError)),
+          );
+        }
+      }
+      return;
+    }
     final rows = [
       for (final record in records)
         ...recordExportRows(

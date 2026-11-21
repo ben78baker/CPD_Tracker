@@ -64,6 +64,7 @@ final nursingBundle = ProfessionTemplateBundle.decode(
     },
     'report': {
       'kind': 'activity_log_v1',
+      'branding': 'subtle',
       'version': 1,
       'fields': nursingPilot.fields.map((field) => field.id).toList(),
     },
@@ -85,6 +86,14 @@ final nursingBundle = ProfessionTemplateBundle.decode(
 );
 
 const _labels = {
+  'period': {
+    'en': 'Revalidation period',
+    'de': 'Revalidierungszeitraum',
+    'es': 'Periodo de revalidación',
+    'fr': 'Période de revalidation',
+    'hi': 'पुनर्सत्यापन अवधि',
+    'pt': 'Período de revalidação',
+  },
   'scope': {
     'en':
         "Independent CPD log. Confirm eligibility and submit revalidation separately through MyNMC.",
@@ -193,11 +202,12 @@ const _labels = {
     'pt': 'Primeiro dia de uma atividade com vários dias',
   },
   'nmc.participatory': {
-    'de': 'Minuten interaktiven Lernens',
-    'es': 'Minutos de aprendizaje participativo',
-    'fr': 'Minutes d’apprentissage participatif',
-    'hi': 'सहभागी प्रशिक्षण के मिनट',
-    'pt': 'Minutos de aprendizagem participativa',
+    'en': 'Participatory learning',
+    'de': 'Interaktives Lernen',
+    'es': 'Aprendizaje participativo',
+    'fr': 'Apprentissage participatif',
+    'hi': 'सहभागी प्रशिक्षण',
+    'pt': 'Aprendizagem participativa',
   },
   'nmc.code': {
     'de': 'Relevante Teile des Kodex',

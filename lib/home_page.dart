@@ -11,8 +11,8 @@ import 'cpd_records_page.dart';
 import 'deleted_records_page.dart';
 import 'l10n/app_localizations.dart';
 import 'global_search_page.dart';
-import 'theme/app_theme.dart';
 import 'widgets/branded_headers.dart';
+import 'widgets/home_shell.dart';
 import 'widgets/profession_card.dart';
 import 'widgets/tactile_button.dart';
 
@@ -425,190 +425,77 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final brand = context.brandColors;
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 64,
-        titleSpacing: 16,
-        backgroundColor: AppColors.canvas,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, color: brand.outlineVariant),
+  Future<void> _selectHomeAction(String value) async {
+    final nav = Navigator.of(context);
+    if (value == 'add_profession') {
+      await _addProfessionDialog();
+    } else if (value == 'edit_details') {
+      await nav.push(
+        MaterialPageRoute(builder: (_) => const EditDetailsPage()),
+      );
+      if (mounted) setState(() {});
+    } else if (value == 'settings') {
+      await nav.push(MaterialPageRoute(builder: (_) => const SettingsPage()));
+      if (mounted) setState(() => _progressBump++);
+    } else if (value == 'deleted_records') {
+      await nav.push(
+        MaterialPageRoute(
+          builder: (_) => DeletedRecordsPage(dataStore: widget.dataStore),
         ),
-        title: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(9),
-              child: Image.asset(
-                'assets/icon/1024x1024_app_icon.png',
-                key: const ValueKey('home-brand-logo'),
-                width: 34,
-                height: 34,
-                fit: BoxFit.cover,
-                excludeFromSemantics: true,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Semantics(
-                header: true,
-                child: Text(
-                  AppLocalizations.of(context)!.appTitle,
-                  key: const ValueKey('home-app-title'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: brand.onAccentLight,
-                    fontSize: 21,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-              ),
-            ),
-          ],
+      );
+      await _load();
+      if (mounted) setState(() => _progressBump++);
+    } else if (value == 'view_deleted') {
+      await nav.push(
+        MaterialPageRoute(
+          builder: (_) =>
+              DeletedProfessionsPage(professionStore: _professionStore),
         ),
-        actions: [
-          IconButton(
-            key: const ValueKey('home-search-action'),
-            tooltip: 'Search all records',
-            style: _homeHeaderActionStyle(context),
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => GlobalSearchPage(dataStore: widget.dataStore),
-                ),
-              );
-            },
-          ),
-          PopupMenuButton<String>(
-            key: const ValueKey('home-menu-action'),
-            tooltip: AppLocalizations.of(context)!.menuTooltip,
-            icon: const Icon(Icons.more_vert_rounded),
-            style: _homeHeaderActionStyle(context),
-            onSelected: (value) async {
-              final nav = Navigator.of(context);
-              if (value == 'add_profession') {
-                await _addProfessionDialog();
-              } else if (value == 'edit_details') {
-                await nav.push(
-                  MaterialPageRoute(builder: (_) => const EditDetailsPage()),
-                );
-                if (mounted) setState(() {});
-              } else if (value == 'settings') {
-                await nav.push(
-                  MaterialPageRoute(builder: (_) => const SettingsPage()),
-                );
-                if (mounted) setState(() => _progressBump++);
-              } else if (value == 'deleted_records') {
-                await nav.push(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        DeletedRecordsPage(dataStore: widget.dataStore),
-                  ),
-                );
-                await _load();
-                if (mounted) setState(() => _progressBump++);
-              } else if (value == 'view_deleted') {
-                await nav.push(
-                  MaterialPageRoute(
-                    builder: (_) => DeletedProfessionsPage(
-                      professionStore: _professionStore,
-                    ),
-                  ),
-                );
-                await _load();
-              }
-            },
-            itemBuilder: (ctx) => [
-              PopupMenuItem(
-                value: 'add_profession',
-                child: Text(AppLocalizations.of(ctx)!.addProfession),
-              ),
-              PopupMenuItem(
-                value: 'edit_details',
-                child: Text(AppLocalizations.of(ctx)!.editPersonalDetails),
-              ),
-              PopupMenuItem(
-                value: 'settings',
-                child: Text(AppLocalizations.of(ctx)!.settings),
-              ),
-              PopupMenuItem(
-                value: 'deleted_records',
-                child: Text(AppLocalizations.of(ctx)!.deletedRecordsTitle),
-              ),
-              PopupMenuItem(
-                value: 'view_deleted',
-                child: Text(AppLocalizations.of(ctx)!.viewDeletedProfessions),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: _professions.isEmpty
-          ? Center(child: Text(AppLocalizations.of(context)!.noProfessionsYet))
-          : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              itemCount: _professions.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final name = _professions[index];
-                return ProfessionCard(
-                  name: name,
-                  target: _targets[name],
-                  computeCompleted: (cycle) =>
-                      _computeCompletedMinutes(name, cycle),
-                  onSetTarget: () => _editTarget(name),
-                  onAdd: () async {
-                    final saved = await Navigator.of(context).push<bool>(
-                      MaterialPageRoute(
-                        builder: (_) => AddEntryPage(
-                          profession: name,
-                          recordStore: widget.dataStore,
-                        ),
-                      ),
-                    );
-                    if (mounted && saved == true) {
-                      setState(() {
-                        _progressBump++;
-                      }); // force progress refresh only if saved
-                    }
-                  },
-                  onScan: () => _scanQrAndPrefill(name),
-                  onView: () async => _openRecords(name),
-                  onSearch: () async =>
-                      _openRecords(name, startInSearchMode: true),
-                  onRename: () => _renameProfession(index),
-                  onDelete: () => _deleteProfession(index),
-                  refreshToken: _progressBump,
-                );
-              },
-            ),
-    );
+      );
+      await _load();
+    }
   }
-}
 
-ButtonStyle _homeHeaderActionStyle(BuildContext context) {
-  final brand = context.brandColors;
-  return ButtonStyle(
-    minimumSize: const WidgetStatePropertyAll(Size.square(48)),
-    maximumSize: const WidgetStatePropertyAll(Size.square(48)),
-    padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-    foregroundColor: WidgetStatePropertyAll(brand.accentDark),
-    backgroundColor: WidgetStateProperty.resolveWith((states) {
-      if (states.contains(WidgetState.pressed) ||
-          states.contains(WidgetState.hovered) ||
-          states.contains(WidgetState.focused)) {
-        return brand.accentLight;
-      }
-      return Colors.transparent;
-    }),
-    overlayColor: WidgetStatePropertyAll(brand.accent.withValues(alpha: 0.08)),
-    shape: WidgetStatePropertyAll(
-      RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  @override
+  Widget build(BuildContext context) => HomeShell(
+    onSearch: () => Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GlobalSearchPage(dataStore: widget.dataStore),
+      ),
+    ),
+    onMenuSelected: _selectHomeAction,
+    body: HomeProfessionList(
+      itemCount: _professions.length,
+      itemBuilder: (context, index) {
+        final name = _professions[index];
+        return ProfessionCard(
+          name: name,
+          target: _targets[name],
+          computeCompleted: (cycle) => _computeCompletedMinutes(name, cycle),
+          onSetTarget: () => _editTarget(name),
+          onAdd: () async {
+            final saved = await Navigator.of(context).push<bool>(
+              MaterialPageRoute(
+                builder: (_) => AddEntryPage(
+                  profession: name,
+                  recordStore: widget.dataStore,
+                ),
+              ),
+            );
+            if (mounted && saved == true) {
+              setState(() {
+                _progressBump++;
+              }); // force progress refresh only if saved
+            }
+          },
+          onScan: () => _scanQrAndPrefill(name),
+          onView: () async => _openRecords(name),
+          onSearch: () async => _openRecords(name, startInSearchMode: true),
+          onRename: () => _renameProfession(index),
+          onDelete: () => _deleteProfession(index),
+          refreshToken: _progressBump,
+        );
+      },
     ),
   );
 }

@@ -549,5 +549,19 @@
   "p7LayoutWarning": "Faltam campos do regime no relatório. Reveja a seleção.",
   "p7Synthetic": "Exemplo fictício",
   "p7Internal": "Ensaio interno",
-  "p7RuleRevision": "Regras do relatório"
+  "p7RuleRevision": "Regras do relatório",
+  "reportLanguage": "Idioma do relatório",
+  "reportFollowAppLanguage": "Usar idioma da aplicação",
+  "reportTemplateLanguageFallback": "Algumas etiquetas ou orientações aparecem no idioma original quando não há tradução.",
+  "p7aSavedPeriods": "Períodos guardados",
+  "p7aNewPeriod": "Adicionar um período",
+  "p7aCurrentPeriod": "Período selecionado",
+  "p7aUsePeriod": "Usar este período",
+  "p7aPeriodDetails": "Detalhes do período",
+  "p7aFixed": "Ciclo completo a partir de uma data inicial",
+  "p7aRolling": "Ciclo completo até à data escolhida",
+  "p7aReportMeasure": "Indicador",
+  "p7aEligible": "Elegível",
+  "p7aAttribution": "Gerado com CPD Progress Tracker",
+  "reportHindiRequiresShaping": "Este PDF contém texto em devanágari e precisa de um motor de composição compatível. Os registos e o idioma do relatório foram guardados."
 }

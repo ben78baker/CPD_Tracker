@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:cpd_tracker/cpd_compatibility/report_locale.dart';
 import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_targets.dart';
@@ -14,12 +13,19 @@ import 'package:cpd_tracker/recording_editor/strings.dart';
 import 'package:cpd_tracker/recording_editor/template_preview.dart'
     show BoundedList;
 import 'package:cpd_tracker/recording_engine/layout_draft.dart';
+import 'package:cpd_tracker/recording_reports/activity_document.dart';
+import 'package:cpd_tracker/utils/cpd_pdf_document.dart'
+    show CpdPdfFonts, loadCpdPdfFonts;
 import 'package:cpd_tracker/recording_engine/models.dart';
 import 'package:cpd_tracker/recording_engine_storage/managed_attachment_files.dart';
+import 'package:cpd_tracker/widgets/branded_headers.dart';
+import 'package:cpd_tracker/widgets/form_section_tile.dart';
 import 'package:cpd_tracker/widgets/profession_card.dart';
+import 'package:cpd_tracker/widgets/report_language_tile.dart';
+import 'package:cpd_tracker/widgets/tactile_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
 
@@ -51,23 +57,33 @@ List<LayoutField> previewFields(ProfessionTemplateBundle bundle) => [
     }),
 ];
 
-Future<Uint8List> exampleSchemeReport(BuildContext context) async {
-  final strings = editorStrings(context);
-  final fallback = await _schemeFonts(strings.localeName);
+Future<Uint8List> exampleSchemeReport(ReportLocale locale) async {
+  final outputFonts = await _schemeFonts();
   return buildBundleExampleReport(
     bundle: nursingBundle,
     period: rehearsalPeriod,
-    strings: strings,
-    fallback: fallback,
+    strings: locale.strings,
+    reportLocale: locale,
+    regular: outputFonts.regular,
+    bold: outputFonts.bold,
   );
 }
 
-Future<List<pw.Font>> _schemeFonts(String locale) async => [
-  if (locale == 'hi')
-    await PdfGoogleFonts.notoSansDevanagariRegular().timeout(
-      const Duration(seconds: 12),
+Future<CpdPdfFonts> _schemeFonts() => loadCpdPdfFonts().timeout(
+  const Duration(seconds: 4),
+  onTimeout: CpdPdfFonts.standard,
+);
+
+Widget rehearsalReportError(BuildContext context, Object error) => Center(
+  child: Padding(
+    padding: const EdgeInsets.all(20),
+    child: Text(
+      error is DevanagariPdfUnsupported
+          ? editorStrings(context).reportHindiRequiresShaping
+          : editorStrings(context).editorSaveError,
     ),
-];
+  ),
+);
 
 class RehearsalProfessionCard extends StatelessWidget {
   const RehearsalProfessionCard({
@@ -249,7 +265,7 @@ class RehearsalProfessionCard extends StatelessWidget {
         computeCompleted: _standardCompleted,
         onSetTarget: period,
         refreshToken: 0,
-        targetMenuLabel: bundle == null ? null : s.p7ConfigurePeriod,
+        targetMenuLabel: bundle?.label('period', s.p7Period, s.localeName),
         progressContent: bundle == null
             ? null
             : SchemeProgressPanel(
@@ -300,6 +316,7 @@ class _PeriodsPageState extends State<_PeriodsPage> {
   DateTime? _end;
   DateTime? _deadline;
   bool _busy = false;
+  bool _creating = false;
 
   Future<void> _select(SchemePeriod period) async {
     setState(() => _busy = true);
@@ -318,11 +335,16 @@ class _PeriodsPageState extends State<_PeriodsPage> {
 
   Future<void> _chooseDate({bool deadline = false}) async {
     final now = DateTime.now();
+    final appLocale = Localizations.localeOf(context);
+    final calendarLocale = appLocale.languageCode == 'en'
+        ? const Locale('en', 'GB')
+        : appLocale;
     final first = DateTime(1900);
     final last = DateTime(now.year + 30, 12, 31);
     if (!deadline && _kind == PeriodKind.custom) {
       final dates = await showDateRangePicker(
         context: context,
+        locale: calendarLocale,
         firstDate: first,
         lastDate: last,
         initialDateRange: _anchor == null || _end == null
@@ -339,6 +361,7 @@ class _PeriodsPageState extends State<_PeriodsPage> {
     }
     final date = await showDatePicker(
       context: context,
+      locale: calendarLocale,
       firstDate: first,
       lastDate: last,
       initialDate:
@@ -356,13 +379,59 @@ class _PeriodsPageState extends State<_PeriodsPage> {
     }
   }
 
+  Future<void> _review(SchemePeriod period, bool selected) async {
+    final s = editorStrings(context);
+    final use = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(s.p7aPeriodDetails),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                formatSchemePeriod(period, s),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              if (selected) Text(s.p7aCurrentPeriod),
+              const SizedBox(height: 10),
+              if (widget.bundle.showDeadline)
+                Text(
+                  period.deadline == null
+                      ? s.p7MissingDeadline
+                      : '${s.p7Deadline} · ${formatSchemeDate(period.deadline!, s)}',
+                ),
+              Text('${s.editorVersion} ${period.templateVersion}'),
+              Text('${s.p7RuleRevision} ${period.ruleVersion}'),
+            ],
+          ),
+        ),
+        actions: [
+          TactileButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(s.cancel),
+          ),
+          if (!selected)
+            TactileButton(
+              onPressed: () => Navigator.pop(context, true),
+              variant: TactileButtonVariant.primary,
+              child: Text(s.p7aUsePeriod),
+            ),
+        ],
+      ),
+    );
+    if (use == true && mounted) await _select(period);
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = editorStrings(context);
+    final title = widget.bundle.label('period', s.p7Period, s.localeName);
     final labels = {
       PeriodKind.custom: s.p7CustomPeriod,
-      PeriodKind.fixed: s.p7FixedPeriod,
-      PeriodKind.rolling: s.p7RollingPeriod,
+      PeriodKind.fixed: s.p7aFixed,
+      PeriodKind.rolling: s.p7aRolling,
     };
     final preview = _anchor == null
         ? null
@@ -379,78 +448,148 @@ class _PeriodsPageState extends State<_PeriodsPage> {
             deadline: _deadline == null ? null : schemeDay(_deadline!),
           );
     return Scaffold(
-      appBar: AppBar(title: Text(s.p7Period)),
-      body: FutureBuilder(
-        future: _periods,
-        builder: (_, snapshot) => BoundedList(
-          children: [
-            Text(
-              widget.bundle.label('periodHint', s.p7PeriodHint, s.localeName),
-            ),
-            if (snapshot.hasError) Text(s.editorSaveError),
-            for (final period
-                in snapshot.data?.periods ?? const <SchemePeriod>[])
-              ListTile(
-                title: Text(formatSchemePeriod(period, s)),
-                subtitle: Text(
-                  'v${period.templateVersion} · v${period.ruleVersion}',
-                ),
-                leading: Icon(
-                  period.id == snapshot.data?.selected
-                      ? Icons.check_circle_outline
-                      : Icons.history,
-                ),
-                onTap: _busy ? null : () => _select(period),
-              ),
-            DropdownButton<PeriodKind>(
-              isExpanded: true,
-              value: _kind,
-              items: [
-                for (final kind in widget.bundle.periods)
-                  DropdownMenuItem(value: kind, child: Text(labels[kind]!)),
-              ],
-              onChanged: _busy
-                  ? null
-                  : (kind) => setState(() {
-                      _kind = kind!;
-                      _anchor = null;
-                      _end = null;
-                    }),
-            ),
-            OutlinedButton(
-              onPressed: _busy ? null : () => _chooseDate(),
-              child: Text(
-                preview == null ? s.selectDate : formatSchemePeriod(preview, s),
-              ),
-            ),
-            if (widget.bundle.showDeadline)
-              OutlinedButton(
-                onPressed: _busy ? null : () => _chooseDate(deadline: true),
-                child: Text(
-                  _deadline == null
-                      ? s.p7ChooseDeadline
-                      : '${s.p7Deadline} · ${formatSchemeDate(schemeDay(_deadline!), s)}',
-                ),
-              ),
-            FilledButton(
-              onPressed: _busy || preview == null
-                  ? null
-                  : () => _select(
-                      SchemePeriod(
-                        id: const Uuid().v4(),
-                        kind: preview.kind,
-                        templateId: preview.templateId,
-                        templateVersion: preview.templateVersion,
-                        ruleVersion: preview.ruleVersion,
-                        start: preview.start,
-                        end: preview.end,
-                        deadline: preview.deadline,
+      appBar: AppBar(),
+      body: Column(
+        children: [
+          BrandedPageHeader(title: title, icon: Icons.date_range_outlined),
+          Expanded(
+            child: FutureBuilder(
+              future: _periods,
+              builder: (_, snapshot) => BoundedList(
+                children: [
+                  if (snapshot.hasError) Text(s.editorSaveError),
+                  if (!snapshot.hasData && !snapshot.hasError)
+                    const Center(child: CircularProgressIndicator()),
+                  if (snapshot.hasData &&
+                      snapshot.requireData.periods.isNotEmpty)
+                    FormSectionTile(
+                      label: s.p7aSavedPeriods,
+                      icon: Icons.history,
+                      child: Column(
+                        children: [
+                          for (final period in snapshot.requireData.periods)
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(formatSchemePeriod(period, s)),
+                              subtitle:
+                                  period.id == snapshot.requireData.selected
+                                  ? Text(s.p7aCurrentPeriod)
+                                  : null,
+                              leading: Icon(
+                                period.id == snapshot.requireData.selected
+                                    ? Icons.check_circle_outline
+                                    : Icons.history,
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              selected:
+                                  period.id == snapshot.requireData.selected,
+                              onTap: _busy
+                                  ? null
+                                  : () => _review(
+                                      period,
+                                      period.id ==
+                                          snapshot.requireData.selected,
+                                    ),
+                            ),
+                        ],
                       ),
                     ),
-              child: Text(s.save),
+                  if (snapshot.hasData) ...[
+                    const SizedBox(height: 12),
+                    if (!_creating)
+                      TactileButton.icon(
+                        onPressed: () => setState(() => _creating = true),
+                        icon: const Icon(Icons.add),
+                        label: Text(s.p7aNewPeriod),
+                        variant: TactileButtonVariant.primary,
+                      )
+                    else
+                      FormSectionTile(
+                        label: s.p7aNewPeriod,
+                        icon: Icons.event_available_outlined,
+                        supportingText: widget.bundle.label(
+                          'periodHint',
+                          s.p7PeriodHint,
+                          s.localeName,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 10),
+                            DropdownButtonFormField<PeriodKind>(
+                              initialValue: _kind,
+                              isExpanded: true,
+                              isDense: false,
+                              itemHeight: null,
+                              items: [
+                                for (final kind in widget.bundle.periods)
+                                  DropdownMenuItem(
+                                    value: kind,
+                                    child: Text(labels[kind]!, maxLines: 3),
+                                  ),
+                              ],
+                              onChanged: _busy
+                                  ? null
+                                  : (kind) => setState(() {
+                                      _kind = kind!;
+                                      _anchor = null;
+                                      _end = null;
+                                    }),
+                            ),
+                            const SizedBox(height: 10),
+                            TactileButton.icon(
+                              onPressed: _busy ? null : () => _chooseDate(),
+                              icon: const Icon(Icons.calendar_month_outlined),
+                              label: Text(
+                                preview == null
+                                    ? s.selectDate
+                                    : formatSchemePeriod(preview, s),
+                              ),
+                            ),
+                            if (widget.bundle.showDeadline) ...[
+                              const SizedBox(height: 8),
+                              TactileButton.icon(
+                                onPressed: _busy
+                                    ? null
+                                    : () => _chooseDate(deadline: true),
+                                icon: const Icon(Icons.flag_outlined),
+                                label: Text(
+                                  _deadline == null
+                                      ? s.p7ChooseDeadline
+                                      : '${s.p7Deadline} · ${formatSchemeDate(schemeDay(_deadline!), s)}',
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 8),
+                            TactileButton(
+                              variant: TactileButtonVariant.primary,
+                              loading: _busy,
+                              onPressed: _busy || preview == null
+                                  ? null
+                                  : () => _select(
+                                      SchemePeriod(
+                                        id: const Uuid().v4(),
+                                        kind: preview.kind,
+                                        templateId: preview.templateId,
+                                        templateVersion:
+                                            preview.templateVersion,
+                                        ruleVersion: preview.ruleVersion,
+                                        start: preview.start,
+                                        end: preview.end,
+                                        deadline: preview.deadline,
+                                      ),
+                                    ),
+                              child: Text(s.save),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -500,12 +639,14 @@ Future<void> openSchemeReport(
     );
     if (!context.mounted) return;
     final s = editorStrings(context);
-    final practitioner = await showDialog<String>(
-      context: context,
-      builder: (_) => const _PractitionerDialog(),
-    );
-    if (practitioner == null || !context.mounted) return;
-    final fallback = await _schemeFonts(s.localeName);
+    final request = await pickPresentation(context, store);
+    if (request == null || !context.mounted) return;
+    final outputFonts = await _schemeFonts();
+    final icon = bundle.branding == ReportBranding.standard
+        ? (await rootBundle.load(
+            'assets/icon/1024x1024_app_icon.png',
+          )).buffer.asUint8List()
+        : null;
     if (!context.mounted) return;
     final layoutStatus = SchemeReportRules(
       version: bundle.ruleVersion,
@@ -527,15 +668,19 @@ Future<void> openSchemeReport(
             canChangeOrientation: false,
             canDebug: false,
             useActions: false,
+            onError: rehearsalReportError,
             build: (_) => buildSchemeReport(
               bundle: bundle,
               progress: result.progress,
               bindings: result.bindings,
               evidence: result.evidence,
               strings: s,
-              practitioner: practitioner,
+              practitioner: request.practitioner,
+              reportLocale: request.locale,
+              brandIcon: icon,
               excluded: excluded,
-              fallback: fallback,
+              regular: outputFonts.regular,
+              bold: outputFonts.bold,
               incompleteLayout: layoutStatus.incomplete,
             ),
           ),
@@ -551,15 +696,41 @@ Future<void> openSchemeReport(
   }
 }
 
-class _PractitionerDialog extends StatefulWidget {
-  const _PractitionerDialog();
-
-  @override
-  State<_PractitionerDialog> createState() => _PractitionerDialogState();
+Future<({ReportLocale locale, String practitioner})?> pickPresentation(
+  BuildContext context,
+  ProfessionCreationStore store,
+) async {
+  final strings = editorStrings(context);
+  final current = ReportLanguage.fromStored(
+    (await store.settings())['reportLocale'],
+  );
+  if (!context.mounted) return null;
+  final request =
+      await showDialog<({ReportLanguage language, String practitioner})>(
+        context: context,
+        builder: (_) => _ReportPreferences(initial: current),
+      );
+  if (request == null) return null;
+  if (current != request.language) {
+    await store.saveSetting('reportLocale', request.language.tag);
+  }
+  return (
+    locale: await ReportLocale.resolve(request.language, strings),
+    practitioner: request.practitioner,
+  );
 }
 
-class _PractitionerDialogState extends State<_PractitionerDialog> {
+class _ReportPreferences extends StatefulWidget {
+  const _ReportPreferences({required this.initial});
+  final ReportLanguage initial;
+
+  @override
+  State<_ReportPreferences> createState() => _ReportPreferencesState();
+}
+
+class _ReportPreferencesState extends State<_ReportPreferences> {
   final _name = TextEditingController();
+  late ReportLanguage _language = widget.initial;
 
   @override
   void dispose() {
@@ -571,18 +742,129 @@ class _PractitionerDialogState extends State<_PractitionerDialog> {
   Widget build(BuildContext context) {
     final s = editorStrings(context);
     return AlertDialog(
-      title: Text(s.p7Practitioner),
-      content: TextField(controller: _name, maxLength: 120),
+      title: Text(s.p6OpenReport),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _name,
+              maxLength: 120,
+              decoration: InputDecoration(labelText: s.p7Practitioner),
+            ),
+            ReportLanguageTile(
+              language: _language,
+              onChanged: (value) => setState(() => _language = value),
+            ),
+          ],
+        ),
+      ),
       actions: [
-        TextButton(
+        TactileButton(
           onPressed: () => Navigator.pop(context),
           child: Text(s.cancel),
         ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, _name.text),
+        TactileButton(
+          onPressed: () => Navigator.pop(context, (
+            language: _language,
+            practitioner: _name.text,
+          )),
+          variant: TactileButtonVariant.primary,
           child: Text(s.continueLabel),
         ),
       ],
     );
   }
+}
+
+Future<void> openLayoutReport(
+  BuildContext context,
+  ProfessionCreationStore store,
+  RecordingCollection profession,
+  List<LayoutRevision> history,
+  List<RecordingRecord> records,
+  Set<String> exclusions,
+) async {
+  final request = await pickPresentation(context, store);
+  if (request == null || !context.mounted) return;
+  final app = editorStrings(context);
+  final locale = request.locale;
+  final s = locale.strings;
+  final outputFonts = await _schemeFonts();
+  if (!context.mounted) return;
+
+  String valueLabel(LayoutField field, Object value) {
+    final definition = field.definition;
+    return switch (definition.kind) {
+      FieldKind.date => locale.date(DateTime.parse(value as String)),
+      FieldKind.duration => locale.duration(value as int),
+      FieldKind.integer => locale.integer(value as int),
+      FieldKind.decimal => locale.decimal(value as String),
+      FieldKind.attachments => (value as List).join(', '),
+      FieldKind.multipleChoices =>
+        (definition.displayValue(value) as List).join(', '),
+      _ => definition.displayValue(value).toString(),
+    };
+  }
+
+  final activities = [
+    for (final record in records.where((record) => !record.deleted))
+      (
+        title:
+            resolveFields(record.layoutVersion, history)
+                .where((field) => field.definition.id == 'cpd.title')
+                .where((field) => !exclusions.contains(field.id))
+                .map((field) => record.values[field.id] as String?)
+                .firstOrNull ??
+            s.noTitle,
+        status: '',
+        fields: [
+          for (final field in resolveFields(record.layoutVersion, history))
+            if (!exclusions.contains(field.id) &&
+                field.definition.id != 'cpd.title')
+              if (record.values[field.id] case final value?)
+                (
+                  label: field.localizedLabel(locale.tag),
+                  value: valueLabel(field, value),
+                ),
+        ],
+      ),
+  ];
+  await Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: Text(app.editorExport)),
+        body: PdfPreview(
+          initialPageFormat: PdfPageFormat.a4,
+          allowSharing: false,
+          allowPrinting: false,
+          canChangePageFormat: false,
+          canChangeOrientation: false,
+          canDebug: false,
+          useActions: false,
+          onError: rehearsalReportError,
+          build: (_) => buildActivityDocument(
+            title: s.cpdPdfDocumentTitle,
+            appName: 'CPD Progress Tracker',
+            attribution: s.p7aAttribution,
+            documentTag: s.p7Internal,
+            summaryTitle: s.cpdRecordsTitle,
+            metadata: [
+              profession.label,
+              if (request.practitioner.trim().isNotEmpty)
+                request.practitioner.trim(),
+            ],
+            summary: const [],
+            activities: activities,
+            evidenceTitle: s.p7EvidenceIndex,
+            evidence: const [],
+            continued: s.cpdPdfContinuedTitle,
+            pageOf: s.pageOf,
+            regular: outputFonts.regular,
+            bold: outputFonts.bold,
+          ),
+        ),
+      ),
+    ),
+  );
 }

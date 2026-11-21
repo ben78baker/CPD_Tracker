@@ -17,6 +17,7 @@ Future<Map<String, Object?>> readCpdLegacyPreferences(
       'date_format',
       'week_start',
       'locale_code',
+      'report_locale_code',
       'app_accent',
       'profile_name',
       'profile_company',

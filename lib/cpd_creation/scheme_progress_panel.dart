@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import '../widgets/profession_card.dart';
 import '../widgets/tactile_button.dart';
 import 'scheme_progress.dart';
 import 'scheme_report.dart';
@@ -21,58 +22,66 @@ class SchemeProgressPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppLocalizations.of(context)!;
+    final periodLabel = bundle.label('period', s.p7Period, s.localeName);
     final result = progress;
     if (result == null) {
       return TactileButton.icon(
         onPressed: onPeriods,
         icon: const Icon(Icons.date_range_outlined),
-        label: Text(s.p7ConfigurePeriod),
+        label: Text(periodLabel),
       );
     }
-    final small = Theme.of(context).textTheme.bodySmall;
-    final title = Theme.of(context).textTheme.labelLarge;
-    final warning = Theme.of(context).colorScheme.onSurfaceVariant;
+    final text = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final id in bundle.tileMetrics)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _GoalProgress(
-              name: bundle.label(id, id, s.localeName),
-              metric: bundle.metrics.singleWhere((metric) => metric.id == id),
-              progress: result.metrics[id]!,
-            ),
+        Text(s.p7Eligible, style: text.bodySmall),
+        for (final id in bundle.tileMetrics) ...[
+          const SizedBox(height: 6),
+          _GoalProgress(
+            name: bundle.label(id, id, s.localeName),
+            metric: bundle.metrics.singleWhere((metric) => metric.id == id),
+            progress: result.metrics[id]!,
           ),
-        TextButton(
+        ],
+        const SizedBox(height: 8),
+        TactileButton.icon(
           onPressed: onPeriods,
-          style: TextButton.styleFrom(
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(vertical: 4),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          icon: const Icon(Icons.date_range_outlined),
+          label: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(s.p7Period, style: title),
-              Text(formatSchemePeriod(result.period, s), style: small),
+              Text(periodLabel),
+              Text(formatSchemePeriod(result.period, s), style: text.bodySmall),
+            ],
+          ),
+        ),
+        if (bundle.showDeadline ||
+            result.incomplete > 0 ||
+            result.activities.isEmpty) ...[
+          const SizedBox(height: 7),
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            children: [
               if (bundle.showDeadline)
                 Text(
                   result.period.deadline == null
                       ? s.p7MissingDeadline
                       : '${s.p7Deadline} · ${formatSchemeDate(result.period.deadline!, s)}',
-                  style: small,
+                  style: text.bodySmall,
                 ),
+              if (result.incomplete > 0)
+                Text(
+                  '${s.p7ReviewLog} · ${result.incomplete}',
+                  style: text.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                )
+              else if (result.activities.isEmpty)
+                Text(s.noRecordsInSelectedPeriod, style: text.bodySmall),
             ],
           ),
-        ),
-        if (result.incomplete > 0 || result.activities.isEmpty)
-          Text(
-            result.activities.isEmpty
-                ? s.noRecordsInSelectedPeriod
-                : '${s.p7ReviewLog} · ${result.incomplete}',
-            style: small?.copyWith(color: warning),
-          ),
+        ],
       ],
     );
   }
@@ -91,23 +100,25 @@ class _GoalProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppLocalizations.of(context)!;
-    final summary =
+    final time =
         '${formatSchemeMinutes(progress.eligible, s)} / '
         '${formatSchemeMinutes(metric.target, s)}';
-    final theme = Theme.of(context);
+    final text = Theme.of(context).textTheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(name, style: theme.textTheme.labelLarge),
-        Text('${s.p7Eligible} · $summary', style: theme.textTheme.bodySmall),
-        const SizedBox(height: 5),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(
-            minHeight: 6,
-            value: (progress.eligible / metric.target).clamp(0, 1).toDouble(),
-            semanticsLabel: name,
-          ),
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          spacing: 10,
+          children: [
+            Text(name, style: text.labelLarge),
+            Text(time, style: text.bodySmall),
+          ],
+        ),
+        const SizedBox(height: 4),
+        CpdTargetBar(
+          value: (progress.eligible / metric.target).clamp(0, 1).toDouble(),
+          label: name,
         ),
       ],
     );

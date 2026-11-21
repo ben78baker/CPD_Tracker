@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'cpd_compatibility/cpd_data_store.dart';
+import 'cpd_compatibility/report_locale.dart';
 import 'entry_repository.dart';
 import 'models.dart';
 import 'settings_store.dart';
@@ -218,10 +219,24 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
 
     setState(() => _lastRange = picked); // remember picked range in AppBar
 
-    // Choose format via shared sheet (CSV now, PDF later)
-    if (!mounted) return; // guard before async UI
-    final choice = await showShareFormatSheet(context);
-    if (!mounted) return; // guard after async UI
+    final app = AppLocalizations.of(context)!;
+    final savedLanguage = await _settings.getReportLanguage();
+    var reportLanguage = savedLanguage;
+    if (!mounted) return;
+    final choice = await showShareFormatSheet(
+      context,
+      initialLanguage: savedLanguage,
+      onReportLanguageChanged: (choice) => reportLanguage = choice,
+    );
+    if (!mounted) return;
+
+    Future<PdfExportTexts> pdfTexts() async {
+      if (reportLanguage == ReportLanguage.app) {
+        return PdfExportTexts.fromLoc(app);
+      }
+      final locale = await ReportLocale.resolve(reportLanguage, app);
+      return PdfExportTexts.fromLoc(locale.strings, reportLocale: locale);
+    }
 
     debugPrint('Share format choice: $choice');
     if (choice == null) {
@@ -229,7 +244,25 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       return;
     }
 
+    if (savedLanguage != reportLanguage) {
+      try {
+        await _settings.setReportLanguage(reportLanguage);
+      } on Object {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(app.editorSaveError)));
+        return;
+      }
+      if (!mounted) return;
+    }
     final sel = choice.trim().toLowerCase();
+    if (reportLanguage == ReportLanguage.hindi && sel != 'csv') {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(app.reportHindiRequiresShaping)));
+      return;
+    }
     debugPrint('Normalized share format choice: $sel');
 
     final exportSelection = CpdExportSelection.fromVisibleRecords(
@@ -300,7 +333,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         debugPrint(
           'Exporting PDF for ${widget.profession} range ${picked.start} – ${picked.end}',
         );
-        final pdfTexts = PdfExportTexts.fromLoc(AppLocalizations.of(context)!);
+        final texts = await pdfTexts();
         await exportRecordsPdf(
           selection: exportSelection,
           dateFormat: _fmt,
@@ -308,7 +341,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           company: company,
           address: address,
           email: email,
-          texts: pdfTexts,
+          texts: texts,
           evidenceMode: sel == 'pdf_evidence'
               ? CpdPdfEvidenceMode.embeddedImages
               : CpdPdfEvidenceMode.textOnly,
@@ -345,7 +378,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
         debugPrint(
           'Exporting PDF Bundle for ${widget.profession} range ${picked.start} – ${picked.end}',
         );
-        final pdfTexts = PdfExportTexts.fromLoc(AppLocalizations.of(context)!);
+        final texts = await pdfTexts();
         await exportRecordsBundleZip(
           selection: exportSelection,
           dateFormat: _fmt,
@@ -353,7 +386,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
           company: company,
           address: address,
           email: email,
-          texts: pdfTexts,
+          texts: texts,
         );
         if (!mounted) return;
         Navigator.of(context).popUntil((route) => route is PageRoute);

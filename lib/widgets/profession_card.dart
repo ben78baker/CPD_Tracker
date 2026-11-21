@@ -245,10 +245,7 @@ class _TargetProgressState extends State<_TargetProgress> {
               : loc.timeRemaining(remainingHours, remainingMinutes, cycleLabel),
         ),
         const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(minHeight: 10, value: ratio),
-        ),
+        CpdTargetBar(value: ratio),
         FutureBuilder<String>(
           future: SettingsStore.instance.getWeekStart(),
           builder: (context, snapshot) {
@@ -274,4 +271,21 @@ class _TargetProgressState extends State<_TargetProgress> {
       ],
     );
   }
+}
+
+class CpdTargetBar extends StatelessWidget {
+  const CpdTargetBar({super.key, required this.value, this.label});
+
+  final double value;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(6),
+    child: LinearProgressIndicator(
+      minHeight: 10,
+      value: value,
+      semanticsLabel: label,
+    ),
+  );
 }
