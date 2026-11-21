@@ -1,0 +1,165 @@
+{
+  "reportRegression": {
+    "westernPages": 78,
+    "boundaryPages": {
+      "1": 1,
+      "38": 1,
+      "67": 2,
+      "121": 3
+    }
+  },
+  "shaping": [
+    {
+      "name": "android-hindi.pdf",
+      "pages": 5,
+      "bytes": 74030,
+      "lastNumberedParagraphs": 2,
+      "searchHits": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 3,
+        "हिन्दी में चिकित्सा क्षेत्र": 3,
+        "प्रशिक्षण पूरा हुआ।": 3
+      },
+      "exactCopies": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "allNumberedParagraphs": true,
+      "allNamedLinks": true,
+      "hasActualText": true
+    },
+    {
+      "name": "android-mixed.pdf",
+      "pages": 5,
+      "bytes": 67251,
+      "lastNumberedParagraphs": 2,
+      "searchHits": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 3,
+        "हिन्दी में चिकित्सा क्षेत्र": 3,
+        "प्रशिक्षण पूरा हुआ।": 3
+      },
+      "exactCopies": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "allNumberedParagraphs": true,
+      "allNamedLinks": true,
+      "hasActualText": true
+    },
+    {
+      "name": "android24-hindi.pdf",
+      "pages": 5,
+      "bytes": 136396,
+      "lastNumberedParagraphs": 2,
+      "searchHits": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "exactCopies": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "allNumberedParagraphs": false,
+      "allNamedLinks": true,
+      "hasActualText": false
+    },
+    {
+      "name": "android24-mixed.pdf",
+      "pages": 5,
+      "bytes": 133061,
+      "lastNumberedParagraphs": 2,
+      "searchHits": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "exactCopies": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "allNumberedParagraphs": false,
+      "allNamedLinks": true,
+      "hasActualText": false
+    },
+    {
+      "name": "ios-hindi.pdf",
+      "pages": 5,
+      "bytes": 75609,
+      "lastNumberedParagraphs": 2,
+      "searchHits": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "exactCopies": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "allNumberedParagraphs": true,
+      "allNamedLinks": false,
+      "hasActualText": false
+    },
+    {
+      "name": "ios-mixed.pdf",
+      "pages": 5,
+      "bytes": 67936,
+      "lastNumberedParagraphs": 2,
+      "searchHits": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "exactCopies": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "allNumberedParagraphs": true,
+      "allNamedLinks": false,
+      "hasActualText": false
+    },
+    {
+      "name": "chrome-hindi.pdf",
+      "pages": 5,
+      "bytes": 97175,
+      "lastNumberedParagraphs": 2,
+      "searchHits": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 3,
+        "हिन्दी में चिकित्सा क्षेत्र": 3,
+        "प्रशिक्षण पूरा हुआ।": 3
+      },
+      "exactCopies": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "allNumberedParagraphs": true,
+      "allNamedLinks": true,
+      "hasActualText": true
+    },
+    {
+      "name": "chrome-mixed.pdf",
+      "pages": 5,
+      "bytes": 89766,
+      "lastNumberedParagraphs": 2,
+      "searchHits": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 3,
+        "हिन्दी में चिकित्सा क्षेत्र": 3,
+        "प्रशिक्षण पूरा हुआ।": 3
+      },
+      "exactCopies": {
+        "शिक्षा और व्यावसायिक प्रशिक्षण": 0,
+        "हिन्दी में चिकित्सा क्षेत्र": 0,
+        "प्रशिक्षण पूरा हुआ।": 0
+      },
+      "allNumberedParagraphs": true,
+      "allNamedLinks": true,
+      "hasActualText": true
+    }
+  ]
+}

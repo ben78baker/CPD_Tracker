@@ -71,3 +71,11 @@ The report configuration sets branding according to recipient needs. Support a b
 Use readable tables for scheme metrics and full-width activity sections. Identify the activity on continuation pages and retain long text and reference links. Original attachment bytes remain independent. Keep standard PDF, evidence PDF, CSV and conditional ZIP. For specialised release, qualify native sharing, printing and equivalent access to originals. Portable backup and restore cover source records and report configuration. Generated PDFs reside with the user when exported.
 
 Qualify cold offline generation at the supported OS versions. For complex scripts, verify glyph shaping as well as embedded font coverage, extraction, mixed-script wrapping and pagination. [Phase 7A presentation, field-limit and Hindi evidence](international/phase7a_implementation_report.md)
+
+## Recipient metadata and text fidelity
+
+Keep template versions, rule revisions and regulatory review dates in the app’s report details. Include them in recipient-facing PDFs only when a reviewed rule expressly requires them. Use subtle CPD Progress Tracker branding when appropriate and let documented recipient requirements override it.
+
+Author each bundle in the scheme’s working language. Use reviewed translations where available and preserve source terminology where they are unavailable. Keep the separate, optional report language and format dates, numbers and durations accordingly. Report generation never translates recorded values.
+
+Verify multiple long activities in one report, line and page boundaries, unbroken reference IDs, exact link destinations, missing originals, retired values and excluded fields. Count pages with meaningful body content independently of the footer. Complex-script qualification requires offline rendering, valid links, original text preserved by search and copy, and review on both minimum OS versions. [Phase 7B reporting verification](international/phase7b_implementation_report.md)

@@ -30,6 +30,7 @@
 - [Phase 6 implementation report](international/phase6_implementation_report.md) · shared creation, scoped entitlement enforcement, pilot sources and PDF, and rehearsal results.
 - [Phase 7 template bundles and scheme reporting](international/phase7_implementation_report.md) · shared profession cards, NMC targets and periods, generated examples, and remaining release gates.
 - [Phase 7A presentation and reporting locales](international/phase7a_implementation_report.md) · production Home comparison, period and PDF refinements, field limit and offline Hindi findings.
+- [Phase 7B reporting completion and compatibility](international/phase7b_implementation_report.md) · recipient traceability, stress and blank-page checks, offline shaping, simulator incident and minimum-OS findings.
 - [Open questions and validation](international/validation_plan.md).
 - [Custom Fields UI specification](../../docs/custom_fields_ui.md) · the agreed editor and Field Library design.
 
