@@ -1211,4 +1211,135 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get editorChoiceReplaceHint =>
       'Geänderte Optionen erzeugen ein neues Feld. Ältere Einträge behalten ihre bisherigen Optionen.';
+
+  @override
+  String get p6Standard => 'Standard-CPD';
+
+  @override
+  String get p6Custom => 'Eigenes CPD';
+
+  @override
+  String get p6Templates => 'Berufsvorlagen';
+
+  @override
+  String get p6StandardDetail =>
+      'Kostenlose CPD-Erfassung mit Standardfeldern.';
+
+  @override
+  String get p6CustomDetail =>
+      'Formular mit Editor und Feldbibliothek gestalten.';
+
+  @override
+  String get p6TemplateDetail =>
+      'Recherchierte Erfassungsformulare und Berichte für Ihren Beruf durchsuchen.';
+
+  @override
+  String get p6Create => 'Beruf anlegen';
+
+  @override
+  String get p6First => 'Ersten Beruf anlegen';
+
+  @override
+  String get p6Name => 'Berufsbezeichnung';
+
+  @override
+  String get p6CustomScope =>
+      'Eigene Felder ermöglichen die Gestaltung aller Berufsformulare.';
+
+  @override
+  String get p6TemplateScope =>
+      'Enthält die vorgegebenen Felder, Anordnung und Berichtsauswahl. Eigene Felder sind für neue oder geänderte Definitionen erforderlich.';
+
+  @override
+  String get p6ChooseTemplate => 'Diese Vorlage auswählen';
+
+  @override
+  String get p6TryArrangement => 'Anordnung ausprobieren';
+
+  @override
+  String get p6Layout => 'Erfassungsfelder anordnen';
+
+  @override
+  String get p6RestoreField => 'Vorgegebenes Feld wieder aufnehmen';
+
+  @override
+  String get p6ReportFields => 'Berichtsfelder';
+
+  @override
+  String get p6ReportHint =>
+      'Bericht und Eingabe werden getrennt konfiguriert.';
+
+  @override
+  String get p6RestoreDefaults => 'Vorlageneinstellungen wiederherstellen';
+
+  @override
+  String get p6ResetHint =>
+      'Formular und Bericht werden zurückgesetzt. Historische Werte bleiben verfügbar.';
+
+  @override
+  String get p6Compatible => 'Erforderliche Berichtsfelder verfügbar';
+
+  @override
+  String get p6Optional => 'Optionale Berichtsinhalte geändert';
+
+  @override
+  String get p6Incomplete => 'Unvollständiger Aktivitätsbericht';
+
+  @override
+  String get p6CompatibilityHint =>
+      'Nehmen Sie die aufgeführten Felder wieder auf. Ein unvollständiger Bericht bleibt verfügbar.';
+
+  @override
+  String get p6Resume => 'Entwurf fortsetzen';
+
+  @override
+  String get p6Discard => 'Entwurf verwerfen';
+
+  @override
+  String get p6DraftHint => 'Ein Entwurf wird erst beim Speichern übernommen.';
+
+  @override
+  String get p6Store => 'Test-Shop';
+
+  @override
+  String get p6StoreHint => 'Simulierter Kauf. Es erfolgt keine Zahlung.';
+
+  @override
+  String get p6Checkout => 'Testkauf starten';
+
+  @override
+  String get p6Pending => 'Kauf ausstehend';
+
+  @override
+  String get p6Complete => 'Abschluss simulieren';
+
+  @override
+  String get p6CancelPurchase => 'Abbruch simulieren';
+
+  @override
+  String get p6Cancelled => 'Kauf abgebrochen';
+
+  @override
+  String get p6Restore => 'Testkauf wiederherstellen';
+
+  @override
+  String get p6Legacy => 'Früheren Kauf simuliert prüfen';
+
+  @override
+  String get p6Offline => 'Shop nicht erreichbar';
+
+  @override
+  String get p6UseOffline => 'Shop-Ausfall simulieren';
+
+  @override
+  String get p6Owned => 'Zugriff bestätigt';
+
+  @override
+  String get p6Options => 'Berufsauswahl';
+
+  @override
+  String get p6OpenReport => 'Aktivitätsbericht öffnen';
+
+  @override
+  String get p6TemplateUpdate => 'Vorlagenupdate prüfen';
 }

@@ -1219,4 +1219,133 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get editorChoiceReplaceHint =>
       'Modifier les choix crée un nouveau champ. Les anciennes entrées gardent les choix d’origine.';
+
+  @override
+  String get p6Standard => 'DPC standard';
+
+  @override
+  String get p6Custom => 'DPC personnalisé';
+
+  @override
+  String get p6Templates => 'Modèles professionnels';
+
+  @override
+  String get p6StandardDetail => 'Suivi gratuit avec les champs standard.';
+
+  @override
+  String get p6CustomDetail =>
+      'Créez un formulaire avec l’éditeur et la bibliothèque.';
+
+  @override
+  String get p6TemplateDetail =>
+      'Découvrez des formulaires et rapports documentés pour votre profession.';
+
+  @override
+  String get p6Create => 'Créer une profession';
+
+  @override
+  String get p6First => 'Créez votre première profession';
+
+  @override
+  String get p6Name => 'Nom de la profession';
+
+  @override
+  String get p6CustomScope =>
+      'Champs personnalisés permet de modifier les formulaires de toutes les professions.';
+
+  @override
+  String get p6TemplateScope =>
+      'Comprend les champs fournis, la disposition et la sélection du rapport. Champs personnalisés est requis pour modifier les définitions.';
+
+  @override
+  String get p6ChooseTemplate => 'Choisir ce modèle';
+
+  @override
+  String get p6TryArrangement => 'Essayer la disposition';
+
+  @override
+  String get p6Layout => 'Organiser les champs de saisie';
+
+  @override
+  String get p6RestoreField => 'Rétablir un champ fourni';
+
+  @override
+  String get p6ReportFields => 'Champs du rapport';
+
+  @override
+  String get p6ReportHint => 'Le rapport et la saisie se règlent séparément.';
+
+  @override
+  String get p6RestoreDefaults => 'Rétablir la configuration du modèle';
+
+  @override
+  String get p6ResetHint =>
+      'Le formulaire et le rapport sont rétablis. Les valeurs historiques restent accessibles.';
+
+  @override
+  String get p6Compatible => 'Champs requis disponibles';
+
+  @override
+  String get p6Optional => 'Contenu facultatif modifié';
+
+  @override
+  String get p6Incomplete => 'Rapport d’activité incomplet';
+
+  @override
+  String get p6CompatibilityHint =>
+      'Rétablissez et incluez les champs indiqués. Un journal incomplet reste disponible.';
+
+  @override
+  String get p6Resume => 'Reprendre le brouillon';
+
+  @override
+  String get p6Discard => 'Supprimer le brouillon';
+
+  @override
+  String get p6DraftHint => 'Le brouillon est appliqué à l’enregistrement.';
+
+  @override
+  String get p6Store => 'Boutique de test';
+
+  @override
+  String get p6StoreHint => 'Achat simulé, sans paiement.';
+
+  @override
+  String get p6Checkout => 'Commencer l’achat simulé';
+
+  @override
+  String get p6Pending => 'Achat en attente';
+
+  @override
+  String get p6Complete => 'Simuler la finalisation';
+
+  @override
+  String get p6CancelPurchase => 'Simuler l’annulation';
+
+  @override
+  String get p6Cancelled => 'Achat annulé';
+
+  @override
+  String get p6Restore => 'Restaurer l’achat simulé';
+
+  @override
+  String get p6Legacy => 'Vérifier un ancien acheteur simulé';
+
+  @override
+  String get p6Offline => 'Boutique indisponible';
+
+  @override
+  String get p6UseOffline => 'Simuler une panne de boutique';
+
+  @override
+  String get p6Owned => 'Accès vérifié';
+
+  @override
+  String get p6Options => 'Choix de profession';
+
+  @override
+  String get p6OpenReport => 'Ouvrir le rapport d’activité';
+
+  @override
+  String get p6TemplateUpdate => 'Examiner la mise à jour';
 }

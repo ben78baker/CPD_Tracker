@@ -102,6 +102,7 @@ class TemplatePreviewPage extends StatelessWidget {
     required Iterable<TemplatePreviewExample> examples,
     this.sampleReport,
     this.sampleAttachmentLabel,
+    this.arrangementPreview,
   }) : examples = List.unmodifiable(examples),
        featuresAndLimits = List.unmodifiable(featuresAndLimits) {
     final fields = {for (final field in template.fields) field.id: field};
@@ -130,6 +131,7 @@ class TemplatePreviewPage extends StatelessWidget {
   )?
   sampleReport;
   final String? sampleAttachmentLabel;
+  final WidgetBuilder? arrangementPreview;
 
   @override
   Widget build(BuildContext context) {
@@ -182,6 +184,12 @@ class TemplatePreviewPage extends StatelessWidget {
               ),
             ),
           ),
+          if (arrangementPreview case final builder?)
+            OutlinedButton.icon(
+              icon: const Icon(Icons.tune),
+              label: Text(s.p6TryArrangement),
+              onPressed: () => _open(context, builder),
+            ),
           for (final example in examples)
             ListTile(
               leading: const Icon(Icons.assignment_outlined),

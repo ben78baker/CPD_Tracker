@@ -15,11 +15,54 @@ class LayoutDraft {
   final List<LayoutField> _fields;
   final List<SectionHeading> _headings;
   final _includeExisting = <String>{};
+  final _reinstated = <String>{};
 
   int get activeFieldCount => _fields.length;
   List<LayoutField> get fields => List.unmodifiable(_fields);
   List<SectionHeading> get headings => List.unmodifiable(_headings);
   Set<String> get includeExisting => Set.unmodifiable(_includeExisting);
+  Set<String> get reinstated => Set.unmodifiable(_reinstated);
+
+  /// Redisplay an existing instance for future records. Persistence verifies
+  /// the instance against its historic definition.
+  void reinstate(LayoutField field) {
+    add(field);
+    _reinstated.add(field.id);
+  }
+
+  Map<String, Object?> toJson() => {
+    'collectionId': collectionId,
+    'version': baseVersion,
+    'fields': [for (final field in fields) field.toJson()],
+    'headings': [for (final heading in headings) heading.toJson()],
+    'includeExisting': includeExisting.toList(),
+    'reinstated': reinstated.toList(),
+  };
+
+  factory LayoutDraft.fromJson(
+    Map<String, dynamic> json, {
+    int? maxActiveFields,
+  }) {
+    final layout = LayoutRevision(
+      collectionId: json['collectionId'] as String,
+      version: json['version'] as int,
+      fields: (json['fields'] as List).cast<Map<String, dynamic>>().map(
+        LayoutField.fromJson,
+      ),
+      headings: readHeadings(json['headings']),
+      includeExisting: (json['includeExisting'] as List).cast<String>(),
+    );
+    final draft = LayoutDraft(layout, maxActiveFields: maxActiveFields);
+    draft._includeExisting.addAll(layout.includeExisting);
+    draft._reinstated.addAll((json['reinstated'] as List).cast<String>());
+    if ((maxActiveFields != null && draft.activeFieldCount > maxActiveFields) ||
+        draft.reinstated.any(
+          (id) => !draft.fields.any((field) => field.id == id),
+        )) {
+      throw ArgumentError('Invalid layout draft.');
+    }
+    return draft;
+  }
 
   void add(LayoutField field, {bool applyToExisting = false}) {
     final maximum = maxActiveFields;
@@ -71,11 +114,13 @@ class LayoutDraft {
       ..clear()
       ..addAll(headings);
     _includeExisting.remove(id);
+    _reinstated.remove(id);
   }
 
   void retire(String id) {
     _fields.removeAt(_index(id));
     _includeExisting.remove(id);
+    _reinstated.remove(id);
     // Remove headings anchored to the retired field from this draft.
     _headings.removeWhere((heading) => heading.beforeFieldId == id);
   }

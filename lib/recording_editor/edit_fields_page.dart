@@ -19,6 +19,11 @@ class EditFieldsPage extends StatefulWidget {
     required this.save,
     this.maxActiveFields,
     this.protectedDefinitionIds = const {},
+    this.initialDraft,
+    this.arrangementOnly = false,
+    this.suppliedFields = const [],
+    this.onDraftChanged,
+    this.onExit,
   });
 
   final String title;
@@ -27,6 +32,11 @@ class EditFieldsPage extends StatefulWidget {
   final Future<LayoutRevision> Function(LayoutDraft draft) save;
   final int? maxActiveFields;
   final Set<String> protectedDefinitionIds;
+  final LayoutDraft? initialDraft;
+  final bool arrangementOnly;
+  final List<LayoutField> suppliedFields;
+  final Future<void> Function(LayoutDraft)? onDraftChanged;
+  final Future<void> Function()? onExit;
 
   @override
   State<EditFieldsPage> createState() => _EditFieldsPageState();
@@ -36,10 +46,9 @@ enum _FieldAction { settings, up, down, duplicate, remove }
 
 class _EditFieldsPageState extends State<EditFieldsPage> {
   static const _uuid = Uuid();
-  late final _draft = LayoutDraft(
-    widget.layout,
-    maxActiveFields: widget.maxActiveFields,
-  );
+  late final _draft =
+      widget.initialDraft ??
+      LayoutDraft(widget.layout, maxActiveFields: widget.maxActiveFields);
   bool _dirty = false;
   bool _saving = false;
   bool _leaving = false;
@@ -49,7 +58,38 @@ class _EditFieldsPageState extends State<EditFieldsPage> {
   bool get _atCapacity =>
       _draft.activeFieldCount >= (widget.maxActiveFields ?? double.infinity);
   bool _protected(LayoutField? field) =>
-      widget.protectedDefinitionIds.contains(field?.definition.id);
+      widget.protectedDefinitionIds.contains(field?.definition.id) ||
+      (widget.arrangementOnly && field?.required == true);
+
+  List<LayoutField> get _missingSupplied {
+    final active = _draft.fields.map((field) => field.id).toSet();
+    return widget.suppliedFields
+        .where((field) => !active.contains(field.id))
+        .toList();
+  }
+
+  Future<void> _reinstate() async {
+    final selected = await showModalBottomSheet<LayoutField>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            for (final field in _missingSupplied)
+              ListTile(
+                title: Text(
+                  field.localizedLabel(
+                    Localizations.localeOf(context).toLanguageTag(),
+                  ),
+                ),
+                onTap: () => Navigator.pop(context, field),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (mounted && selected != null) _change(() => _draft.reinstate(selected));
+  }
 
   /// Indexing headings and fields in visible order makes both drag and menu
   /// reordering operate on the same sequence.
@@ -199,6 +239,7 @@ class _EditFieldsPageState extends State<EditFieldsPage> {
     if (_saving || _leaving) return;
     final s = editorStrings(context);
     if (_dirty &&
+        widget.onDraftChanged == null &&
         !await editorConfirmation(
           context,
           s.editorDiscard,
@@ -206,6 +247,15 @@ class _EditFieldsPageState extends State<EditFieldsPage> {
           s.editorDiscardAction,
         )) {
       return;
+    }
+    if (!mounted) return;
+    if (widget.onExit case final exit?) {
+      try {
+        await exit();
+      } on Exception {
+        _showSaveError();
+        return;
+      }
     }
     if (!mounted) return;
     setState(() => _leaving = true);
@@ -239,11 +289,17 @@ class _EditFieldsPageState extends State<EditFieldsPage> {
     }
   }
 
-  void _change(VoidCallback change) => setState(() {
-    change();
-    _dirty = true;
-    _error = null;
-  });
+  void _change(VoidCallback change) {
+    setState(() {
+      change();
+      _dirty = true;
+      _error = null;
+    });
+    final autosave = widget.onDraftChanged;
+    if (autosave != null) {
+      autosave(_draft).catchError((Object _) => _showSaveError());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +307,7 @@ class _EditFieldsPageState extends State<EditFieldsPage> {
     final items = _items;
     final colors = Theme.of(context).colorScheme;
     return PopScope(
-      canPop: !_saving && (!_dirty || _leaving),
+      canPop: !_saving && (_leaving || !_dirty && widget.onExit == null),
       onPopInvokedWithResult: (popped, _) {
         if (!popped) _cancel();
       },
@@ -286,12 +342,22 @@ class _EditFieldsPageState extends State<EditFieldsPage> {
                                 widget.maxActiveFields!,
                               ),
                       ),
-                      FilledButton.icon(
-                        key: const Key('open-add-field'),
-                        onPressed: _saving ? null : _add,
-                        icon: const Icon(Icons.add),
-                        label: Text(s.addField),
-                      ),
+                      if (!widget.arrangementOnly)
+                        FilledButton.icon(
+                          key: const Key('open-add-field'),
+                          onPressed: _saving ? null : _add,
+                          icon: const Icon(Icons.add),
+                          label: Text(s.addField),
+                        ),
+                      if (widget.suppliedFields.isNotEmpty)
+                        OutlinedButton.icon(
+                          onPressed:
+                              _saving || _atCapacity || _missingSupplied.isEmpty
+                              ? null
+                              : _reinstate,
+                          icon: const Icon(Icons.restore),
+                          label: Text(s.p6RestoreField),
+                        ),
                     ],
                   ),
                 ),
@@ -391,10 +457,11 @@ class _EditFieldsPageState extends State<EditFieldsPage> {
                                     ),
                                   },
                                   itemBuilder: (_) => [
-                                    PopupMenuItem(
-                                      value: _FieldAction.settings,
-                                      child: Text(s.editorSettings),
-                                    ),
+                                    if (!widget.arrangementOnly)
+                                      PopupMenuItem(
+                                        value: _FieldAction.settings,
+                                        child: Text(s.editorSettings),
+                                      ),
                                     if (index > 0)
                                       PopupMenuItem(
                                         value: _FieldAction.up,
@@ -405,14 +472,17 @@ class _EditFieldsPageState extends State<EditFieldsPage> {
                                         value: _FieldAction.down,
                                         child: Text(s.editorMoveDown),
                                       ),
-                                    if (field != null &&
+                                    if (!widget.arrangementOnly &&
+                                        field != null &&
                                         !locked &&
                                         !_atCapacity)
                                       PopupMenuItem(
                                         value: _FieldAction.duplicate,
                                         child: Text(s.editorDuplicate),
                                       ),
-                                    if (!locked)
+                                    if (!locked &&
+                                        (!widget.arrangementOnly ||
+                                            field != null))
                                       PopupMenuItem(
                                         value: _FieldAction.remove,
                                         child: Text(s.editorRemove),
@@ -467,7 +537,11 @@ class _EditFieldsPageState extends State<EditFieldsPage> {
               children: [
                 TextButton(
                   onPressed: _saving ? null : _cancel,
-                  child: Text(s.cancel),
+                  child: Text(
+                    widget.onDraftChanged == null
+                        ? s.cancel
+                        : MaterialLocalizations.of(context).closeButtonLabel,
+                  ),
                 ),
                 OutlinedButton.icon(
                   onPressed: _saving

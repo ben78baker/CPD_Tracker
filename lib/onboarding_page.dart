@@ -7,8 +7,25 @@ import 'widgets/branded_headers.dart';
 import 'widgets/form_section_tile.dart';
 import 'widgets/tactile_button.dart';
 
+class OnboardingPreferences {
+  const OnboardingPreferences({
+    required this.locale,
+    required this.accent,
+    required this.initial,
+    required this.save,
+    required this.onContinue,
+  });
+
+  final ValueNotifier<Locale?> locale;
+  final ValueNotifier<AppAccent> accent;
+  final Map<String, String> initial;
+  final Future<void> Function(String key, String value) save;
+  final VoidCallback onContinue;
+}
+
 class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({super.key});
+  const OnboardingPage({super.key, this.preferences});
+  final OnboardingPreferences? preferences;
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
 }
@@ -24,6 +41,41 @@ class _OnboardingPageState extends State<OnboardingPage> {
   // Onboarding choice for week start (default to device locale)
   String _weekStart = 'locale'; // 'monday' | 'sunday' | 'saturday' | 'locale'
 
+  bool _saving = false;
+
+  ValueNotifier<Locale?> get _locale =>
+      widget.preferences?.locale ?? SettingsStore.instance.locale;
+  ValueNotifier<AppAccent> get _accent =>
+      widget.preferences?.accent ?? SettingsStore.instance.appAccent;
+
+  @override
+  void initState() {
+    super.initState();
+    final saved = widget.preferences?.initial;
+    if (saved == null) return;
+    _name.text = saved['name'] ?? '';
+    _company.text = saved['company'] ?? '';
+    _address.text = saved['address'] ?? '';
+    _email.text = saved['email'] ?? '';
+    _weekStart = saved['week'] ?? 'locale';
+  }
+
+  Future<void> _savePreference(String key, String value) async {
+    final preferences = widget.preferences;
+    if (preferences == null) return;
+    try {
+      await preferences.save(key, value);
+    } on Exception {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.editorSaveError),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _name.dispose();
@@ -35,7 +87,37 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_saving || !_formKey.currentState!.validate()) return;
+    if (widget.preferences case final preferences?) {
+      setState(() => _saving = true);
+      try {
+        final values = {
+          'name': _name.text.trim(),
+          'company': _company.text.trim(),
+          'address': _address.text.trim(),
+          'email': _email.text.trim(),
+          'week': _weekStart,
+          'locale': _locale.value?.languageCode ?? '',
+          'accent': _accent.value.storageValue,
+          'welcome': 'true',
+        };
+        for (final entry in values.entries) {
+          await preferences.save(entry.key, entry.value);
+        }
+        if (mounted) preferences.onContinue();
+      } on Exception {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.editorSaveError),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _saving = false);
+      }
+      return;
+    }
 
     try {
       // Save profile fields via SettingsStore
@@ -72,7 +154,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Locale?>(
-      valueListenable: SettingsStore.instance.locale,
+      valueListenable: _locale,
       builder: (context, forcedLocale, _) {
         final loc = AppLocalizations.of(context)!;
         return Scaffold(
@@ -98,7 +180,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           label: loc.language,
                           icon: Icons.language_rounded,
                           child: ValueListenableBuilder<Locale?>(
-                            valueListenable: SettingsStore.instance.locale,
+                            valueListenable: _locale,
                             builder: (context, forcedLocale, _) {
                               final current = forcedLocale?.languageCode ?? '';
                               return DropdownButtonFormField<String>(
@@ -106,9 +188,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                 initialValue: current,
                                 isExpanded: true,
                                 onChanged: (value) async {
-                                  await SettingsStore.instance.setLocaleCode(
-                                    value ?? '',
-                                  );
+                                  if (widget.preferences == null) {
+                                    await SettingsStore.instance.setLocaleCode(
+                                      value ?? '',
+                                    );
+                                  } else {
+                                    _locale.value =
+                                        value == null || value.isEmpty
+                                        ? null
+                                        : Locale(value);
+                                    await _savePreference(
+                                      'locale',
+                                      value ?? '',
+                                    );
+                                  }
                                 },
                                 items: [
                                   DropdownMenuItem(
@@ -149,7 +242,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         ),
                         const SizedBox(height: 12),
                         ValueListenableBuilder<AppAccent>(
-                          valueListenable: SettingsStore.instance.appAccent,
+                          valueListenable: _accent,
                           builder: (context, selected, _) => FormSectionTile(
                             key: const ValueKey('onboarding-app-colour'),
                             label: loc.chooseYourAppColour,
@@ -158,7 +251,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             child: AppColourSelector(
                               selectedAccent: selected,
                               onChanged: (accent) {
-                                SettingsStore.instance.setAppAccent(accent);
+                                if (widget.preferences == null) {
+                                  SettingsStore.instance.setAppAccent(accent);
+                                } else {
+                                  _accent.value = accent;
+                                  _savePreference(
+                                    'accent',
+                                    accent.storageValue,
+                                  );
+                                }
                               },
                             ),
                           ),
@@ -214,21 +315,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        FormSectionTile(
-                          label: loc.firstProfessionRequired,
-                          icon: Icons.work_outline_rounded,
-                          child: TextFormField(
-                            controller: _profession,
-                            textCapitalization: TextCapitalization.words,
-                            decoration: InputDecoration(
-                              hintText: loc.professionExample,
+                        if (widget.preferences == null)
+                          FormSectionTile(
+                            label: loc.firstProfessionRequired,
+                            icon: Icons.work_outline_rounded,
+                            child: TextFormField(
+                              controller: _profession,
+                              textCapitalization: TextCapitalization.words,
+                              decoration: InputDecoration(
+                                hintText: loc.professionExample,
+                              ),
+                              validator: (value) =>
+                                  (value == null || value.trim().isEmpty)
+                                  ? loc.enterProfession
+                                  : null,
                             ),
-                            validator: (value) =>
-                                (value == null || value.trim().isEmpty)
-                                ? loc.enterProfession
-                                : null,
                           ),
-                        ),
                         const SizedBox(height: 12),
                         FormSectionTile(
                           label: loc.weekStartsOn,
@@ -262,13 +364,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             onChanged: (value) {
                               if (value != null) {
                                 setState(() => _weekStart = value);
+                                _savePreference('week', value);
                               }
                             },
                           ),
                         ),
                         const SizedBox(height: 16),
                         TactileButton(
-                          onPressed: _save,
+                          onPressed: _saving ? null : _save,
                           variant: TactileButtonVariant.primary,
                           minimumSize: const Size.fromHeight(52),
                           child: Text(loc.continueLabel),

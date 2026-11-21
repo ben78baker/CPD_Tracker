@@ -1200,4 +1200,132 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get editorChoiceReplaceHint =>
       'विकल्प बदलने से नया फ़ील्ड बनता है। पुराने रिकॉर्ड में मूल विकल्प रहते हैं।';
+
+  @override
+  String get p6Standard => 'मानक सीपीडी';
+
+  @override
+  String get p6Custom => 'कस्टम सीपीडी';
+
+  @override
+  String get p6Templates => 'पेशेवर टेम्पलेट';
+
+  @override
+  String get p6StandardDetail => 'मानक फ़ील्ड के साथ मुफ़्त सीपीडी रिकॉर्डिंग।';
+
+  @override
+  String get p6CustomDetail => 'एडिटर और लाइब्रेरी से फ़ॉर्म बनाएँ।';
+
+  @override
+  String get p6TemplateDetail =>
+      'अपने पेशे के लिए शोध-आधारित फ़ॉर्म और रिपोर्ट देखें।';
+
+  @override
+  String get p6Create => 'पेशा बनाएँ';
+
+  @override
+  String get p6First => 'पहला पेशा बनाएँ';
+
+  @override
+  String get p6Name => 'पेशे का नाम';
+
+  @override
+  String get p6CustomScope =>
+      'कस्टम फ़ील्ड से सभी पेशों के फ़ॉर्म बना और बदल सकते हैं।';
+
+  @override
+  String get p6TemplateScope =>
+      'इसमें दिए गए फ़ील्ड, उनका क्रम और रिपोर्ट विकल्प हैं। परिभाषाएँ बदलने के लिए कस्टम फ़ील्ड चाहिए।';
+
+  @override
+  String get p6ChooseTemplate => 'यह टेम्पलेट चुनें';
+
+  @override
+  String get p6TryArrangement => 'लेआउट विकल्प आज़माएँ';
+
+  @override
+  String get p6Layout => 'रिकॉर्ड फ़ील्ड व्यवस्थित करें';
+
+  @override
+  String get p6RestoreField => 'दिया गया फ़ील्ड वापस लाएँ';
+
+  @override
+  String get p6ReportFields => 'रिपोर्ट में फ़ील्ड';
+
+  @override
+  String get p6ReportHint => 'रिपोर्ट और रिकॉर्ड फ़ील्ड की सेटिंग अलग है।';
+
+  @override
+  String get p6RestoreDefaults => 'मूल सेटिंग लौटाएँ';
+
+  @override
+  String get p6ResetHint =>
+      'मूल फ़ॉर्म और रिपोर्ट सेटिंग लौटेंगी। पुराने मान बने रहेंगे।';
+
+  @override
+  String get p6Compatible => 'ज़रूरी रिपोर्ट फ़ील्ड उपलब्ध हैं';
+
+  @override
+  String get p6Optional => 'वैकल्पिक रिपोर्ट सामग्री बदली है';
+
+  @override
+  String get p6Incomplete => 'गतिविधि रिपोर्ट अधूरी है';
+
+  @override
+  String get p6CompatibilityHint =>
+      'योजना की रिपोर्ट के लिए सूची के फ़ील्ड वापस जोड़ें। अधूरी रिपोर्ट फिर भी उपलब्ध है।';
+
+  @override
+  String get p6Resume => 'ड्राफ़्ट फिर खोलें';
+
+  @override
+  String get p6Discard => 'ड्राफ़्ट छोड़ें';
+
+  @override
+  String get p6DraftHint => 'ड्राफ़्ट केवल सहेजने पर लागू होगा।';
+
+  @override
+  String get p6Store => 'परीक्षण स्टोर';
+
+  @override
+  String get p6StoreHint => 'परीक्षण खरीद। कोई भुगतान नहीं होगा।';
+
+  @override
+  String get p6Checkout => 'परीक्षण खरीद शुरू करें';
+
+  @override
+  String get p6Pending => 'खरीद लंबित है';
+
+  @override
+  String get p6Complete => 'पूरा होने का परीक्षण';
+
+  @override
+  String get p6CancelPurchase => 'रद्द होने का परीक्षण';
+
+  @override
+  String get p6Cancelled => 'खरीद रद्द हुई';
+
+  @override
+  String get p6Restore => 'परीक्षण खरीद बहाल करें';
+
+  @override
+  String get p6Legacy => 'पुराने खरीदार का परीक्षण सत्यापन';
+
+  @override
+  String get p6Offline => 'स्टोर उपलब्ध नहीं है';
+
+  @override
+  String get p6UseOffline => 'स्टोर बंद होने का परीक्षण';
+
+  @override
+  String get p6Owned => 'पहुँच सत्यापित है';
+
+  @override
+  String get p6Options => 'पेशे के विकल्प';
+
+  @override
+  String get p6OpenReport => 'गतिविधि रिपोर्ट खोलें';
+
+  @override
+  String get p6TemplateUpdate => 'टेम्पलेट अपडेट देखें';
 }

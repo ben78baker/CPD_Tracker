@@ -2253,6 +2253,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choice changes create a new field for future records. Older records keep their original options.'**
   String get editorChoiceReplaceHint;
+
+  /// No description provided for @p6Standard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard CPD'**
+  String get p6Standard;
+
+  /// No description provided for @p6Custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom CPD'**
+  String get p6Custom;
+
+  /// No description provided for @p6Templates.
+  ///
+  /// In en, this message translates to:
+  /// **'Profession Templates'**
+  String get p6Templates;
+
+  /// No description provided for @p6StandardDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Free CPD recording with the standard fields.'**
+  String get p6StandardDetail;
+
+  /// No description provided for @p6CustomDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Design a form with the field editor and Field Library.'**
+  String get p6CustomDetail;
+
+  /// No description provided for @p6TemplateDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse researched recording forms and reports for your profession.'**
+  String get p6TemplateDetail;
+
+  /// No description provided for @p6Create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create profession'**
+  String get p6Create;
+
+  /// No description provided for @p6First.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first profession'**
+  String get p6First;
+
+  /// No description provided for @p6Name.
+  ///
+  /// In en, this message translates to:
+  /// **'Profession name'**
+  String get p6Name;
+
+  /// No description provided for @p6CustomScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Fields lets you design and edit forms across professions.'**
+  String get p6CustomScope;
+
+  /// No description provided for @p6TemplateScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes the supplied fields, layout arrangement and optional report selections. Custom Fields is needed to change or add field definitions.'**
+  String get p6TemplateScope;
+
+  /// No description provided for @p6ChooseTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose this template'**
+  String get p6ChooseTemplate;
+
+  /// No description provided for @p6TryArrangement.
+  ///
+  /// In en, this message translates to:
+  /// **'Try the layout controls'**
+  String get p6TryArrangement;
+
+  /// No description provided for @p6Layout.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrange recording fields'**
+  String get p6Layout;
+
+  /// No description provided for @p6RestoreField.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstate a supplied field'**
+  String get p6RestoreField;
+
+  /// No description provided for @p6ReportFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fields in the report'**
+  String get p6ReportFields;
+
+  /// No description provided for @p6ReportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Report choices and recording fields are configured separately.'**
+  String get p6ReportHint;
+
+  /// No description provided for @p6RestoreDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore supplied defaults'**
+  String get p6RestoreDefaults;
+
+  /// No description provided for @p6ResetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This restores the supplied form and report choices. Historical values remain available.'**
+  String get p6ResetHint;
+
+  /// No description provided for @p6Compatible.
+  ///
+  /// In en, this message translates to:
+  /// **'Required report fields available'**
+  String get p6Compatible;
+
+  /// No description provided for @p6Optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional report content changed'**
+  String get p6Optional;
+
+  /// No description provided for @p6Incomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Incomplete activity report'**
+  String get p6Incomplete;
+
+  /// No description provided for @p6CompatibilityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore and include the listed fields to recover the scheme report. An incomplete activity log is still available.'**
+  String get p6CompatibilityHint;
+
+  /// No description provided for @p6Resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume draft'**
+  String get p6Resume;
+
+  /// No description provided for @p6Discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard draft'**
+  String get p6Discard;
+
+  /// No description provided for @p6DraftHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A draft becomes a profession or layout only when you save it.'**
+  String get p6DraftHint;
+
+  /// No description provided for @p6Store.
+  ///
+  /// In en, this message translates to:
+  /// **'Rehearsal store'**
+  String get p6Store;
+
+  /// No description provided for @p6StoreHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulated checkout. No payment is taken.'**
+  String get p6StoreHint;
+
+  /// No description provided for @p6Checkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Start simulated checkout'**
+  String get p6Checkout;
+
+  /// No description provided for @p6Pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase pending'**
+  String get p6Pending;
+
+  /// No description provided for @p6Complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate completion'**
+  String get p6Complete;
+
+  /// No description provided for @p6CancelPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate cancellation'**
+  String get p6CancelPurchase;
+
+  /// No description provided for @p6Cancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase cancelled'**
+  String get p6Cancelled;
+
+  /// No description provided for @p6Restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore simulated purchase'**
+  String get p6Restore;
+
+  /// No description provided for @p6Legacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify simulated original paid customer'**
+  String get p6Legacy;
+
+  /// No description provided for @p6Offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Store unavailable'**
+  String get p6Offline;
+
+  /// No description provided for @p6UseOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate store outage'**
+  String get p6UseOffline;
+
+  /// No description provided for @p6Owned.
+  ///
+  /// In en, this message translates to:
+  /// **'Access verified'**
+  String get p6Owned;
+
+  /// No description provided for @p6Options.
+  ///
+  /// In en, this message translates to:
+  /// **'Profession choices'**
+  String get p6Options;
+
+  /// No description provided for @p6OpenReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Open activity report'**
+  String get p6OpenReport;
+
+  /// No description provided for @p6TemplateUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Review template update'**
+  String get p6TemplateUpdate;
 }
 
 class _AppLocalizationsDelegate

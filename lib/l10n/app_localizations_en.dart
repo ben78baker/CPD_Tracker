@@ -1204,4 +1204,135 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get editorChoiceReplaceHint =>
       'Choice changes create a new field for future records. Older records keep their original options.';
+
+  @override
+  String get p6Standard => 'Standard CPD';
+
+  @override
+  String get p6Custom => 'Custom CPD';
+
+  @override
+  String get p6Templates => 'Profession Templates';
+
+  @override
+  String get p6StandardDetail => 'Free CPD recording with the standard fields.';
+
+  @override
+  String get p6CustomDetail =>
+      'Design a form with the field editor and Field Library.';
+
+  @override
+  String get p6TemplateDetail =>
+      'Browse researched recording forms and reports for your profession.';
+
+  @override
+  String get p6Create => 'Create profession';
+
+  @override
+  String get p6First => 'Create your first profession';
+
+  @override
+  String get p6Name => 'Profession name';
+
+  @override
+  String get p6CustomScope =>
+      'Custom Fields lets you design and edit forms across professions.';
+
+  @override
+  String get p6TemplateScope =>
+      'Includes the supplied fields, layout arrangement and optional report selections. Custom Fields is needed to change or add field definitions.';
+
+  @override
+  String get p6ChooseTemplate => 'Choose this template';
+
+  @override
+  String get p6TryArrangement => 'Try the layout controls';
+
+  @override
+  String get p6Layout => 'Arrange recording fields';
+
+  @override
+  String get p6RestoreField => 'Reinstate a supplied field';
+
+  @override
+  String get p6ReportFields => 'Fields in the report';
+
+  @override
+  String get p6ReportHint =>
+      'Report choices and recording fields are configured separately.';
+
+  @override
+  String get p6RestoreDefaults => 'Restore supplied defaults';
+
+  @override
+  String get p6ResetHint =>
+      'This restores the supplied form and report choices. Historical values remain available.';
+
+  @override
+  String get p6Compatible => 'Required report fields available';
+
+  @override
+  String get p6Optional => 'Optional report content changed';
+
+  @override
+  String get p6Incomplete => 'Incomplete activity report';
+
+  @override
+  String get p6CompatibilityHint =>
+      'Restore and include the listed fields to recover the scheme report. An incomplete activity log is still available.';
+
+  @override
+  String get p6Resume => 'Resume draft';
+
+  @override
+  String get p6Discard => 'Discard draft';
+
+  @override
+  String get p6DraftHint =>
+      'A draft becomes a profession or layout only when you save it.';
+
+  @override
+  String get p6Store => 'Rehearsal store';
+
+  @override
+  String get p6StoreHint => 'Simulated checkout. No payment is taken.';
+
+  @override
+  String get p6Checkout => 'Start simulated checkout';
+
+  @override
+  String get p6Pending => 'Purchase pending';
+
+  @override
+  String get p6Complete => 'Simulate completion';
+
+  @override
+  String get p6CancelPurchase => 'Simulate cancellation';
+
+  @override
+  String get p6Cancelled => 'Purchase cancelled';
+
+  @override
+  String get p6Restore => 'Restore simulated purchase';
+
+  @override
+  String get p6Legacy => 'Verify simulated original paid customer';
+
+  @override
+  String get p6Offline => 'Store unavailable';
+
+  @override
+  String get p6UseOffline => 'Simulate store outage';
+
+  @override
+  String get p6Owned => 'Access verified';
+
+  @override
+  String get p6Options => 'Profession choices';
+
+  @override
+  String get p6OpenReport => 'Open activity report';
+
+  @override
+  String get p6TemplateUpdate => 'Review template update';
 }

@@ -1212,4 +1212,134 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get editorChoiceReplaceHint =>
       'Cambiar las opciones crea un campo nuevo. Los registros anteriores conservan sus opciones originales.';
+
+  @override
+  String get p6Standard => 'CPD estándar';
+
+  @override
+  String get p6Custom => 'CPD personalizado';
+
+  @override
+  String get p6Templates => 'Plantillas profesionales';
+
+  @override
+  String get p6StandardDetail => 'Registro gratuito con los campos estándar.';
+
+  @override
+  String get p6CustomDetail =>
+      'Diseña un formulario con el editor y la biblioteca.';
+
+  @override
+  String get p6TemplateDetail =>
+      'Explora formularios e informes investigados para tu profesión.';
+
+  @override
+  String get p6Create => 'Crear profesión';
+
+  @override
+  String get p6First => 'Crea tu primera profesión';
+
+  @override
+  String get p6Name => 'Nombre de la profesión';
+
+  @override
+  String get p6CustomScope =>
+      'Campos personalizados permite diseñar formularios en todas las profesiones.';
+
+  @override
+  String get p6TemplateScope =>
+      'Incluye los campos, la disposición y las opciones de informe. Para cambiar definiciones se necesitan Campos personalizados.';
+
+  @override
+  String get p6ChooseTemplate => 'Elegir esta plantilla';
+
+  @override
+  String get p6TryArrangement => 'Probar los controles de diseño';
+
+  @override
+  String get p6Layout => 'Organizar campos de registro';
+
+  @override
+  String get p6RestoreField => 'Reincorporar un campo';
+
+  @override
+  String get p6ReportFields => 'Campos del informe';
+
+  @override
+  String get p6ReportHint =>
+      'El informe y el formulario se configuran por separado.';
+
+  @override
+  String get p6RestoreDefaults => 'Restaurar los valores de la plantilla';
+
+  @override
+  String get p6ResetHint =>
+      'Se restauran el formulario y el informe. Los valores históricos se conservan.';
+
+  @override
+  String get p6Compatible => 'Campos obligatorios disponibles';
+
+  @override
+  String get p6Optional => 'Cambió el contenido opcional';
+
+  @override
+  String get p6Incomplete => 'Informe de actividades incompleto';
+
+  @override
+  String get p6CompatibilityHint =>
+      'Restablece e incluye los campos indicados. Puedes generar un registro incompleto.';
+
+  @override
+  String get p6Resume => 'Continuar borrador';
+
+  @override
+  String get p6Discard => 'Descartar borrador';
+
+  @override
+  String get p6DraftHint => 'El borrador solo se aplica al guardarlo.';
+
+  @override
+  String get p6Store => 'Tienda de prueba';
+
+  @override
+  String get p6StoreHint => 'Compra simulada sin cobro.';
+
+  @override
+  String get p6Checkout => 'Iniciar compra simulada';
+
+  @override
+  String get p6Pending => 'Compra pendiente';
+
+  @override
+  String get p6Complete => 'Simular finalización';
+
+  @override
+  String get p6CancelPurchase => 'Simular cancelación';
+
+  @override
+  String get p6Cancelled => 'Compra cancelada';
+
+  @override
+  String get p6Restore => 'Restaurar compra simulada';
+
+  @override
+  String get p6Legacy => 'Verificar comprador original simulado';
+
+  @override
+  String get p6Offline => 'Tienda no disponible';
+
+  @override
+  String get p6UseOffline => 'Simular fallo de la tienda';
+
+  @override
+  String get p6Owned => 'Acceso verificado';
+
+  @override
+  String get p6Options => 'Opciones de profesión';
+
+  @override
+  String get p6OpenReport => 'Abrir informe de actividades';
+
+  @override
+  String get p6TemplateUpdate => 'Revisar actualización';
 }

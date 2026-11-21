@@ -127,6 +127,14 @@ class SqliteRecordingRepository {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  Future<void> removeHostValue(String namespace, String key) async {
+    await _db.delete(
+      'host_state',
+      where: 'namespace = ? AND key = ?',
+      whereArgs: [namespace, key],
+    );
+  }
+
   Future<List<RecordingCollection>> loadCollections() async {
     final rows = await _db.query('collections', orderBy: 'rowid');
     return rows.map(_decodeCollection).toList();
@@ -274,12 +282,13 @@ class SqliteRecordingRepository {
     );
   }
 
-  Future<LayoutRevision> saveLayoutDraft(LayoutDraft draft) => reviseLayout(
+  Future<LayoutRevision> saveLayoutDraft(LayoutDraft draft) => _reviseLayout(
     draft.collectionId,
     draft.fields,
     expectedVersion: draft.baseVersion,
     headings: draft.headings,
     includeExisting: draft.includeExisting,
+    reinstated: draft.reinstated,
     maxActiveFields: draft.maxActiveFields,
   );
 
@@ -304,6 +313,7 @@ class SqliteRecordingRepository {
     Iterable<LayoutField> fields, {
     required int expectedVersion,
     Iterable<String> includeExisting = const [],
+    Set<String> reinstated = const {},
     Iterable<SectionHeading>? headings,
     int? maxActiveFields,
     String? templateId,
@@ -329,10 +339,19 @@ class SqliteRecordingRepository {
     final previousIds = revisions.last.fields.map((field) => field.id).toSet();
     for (final field in revision.fields) {
       final previous = historic[field.id];
-      if (previous != null &&
-          (!previousIds.contains(field.id) ||
-              revision.includeExisting.contains(field.id) ||
-              !previous.canReviseAs(field))) {
+      if (previous == null) {
+        if (reinstated.contains(field.id)) {
+          throw ArgumentError('Cannot reinstate an unknown field.');
+        }
+        continue;
+      }
+      final restoring = !previousIds.contains(field.id);
+      if (revision.includeExisting.contains(field.id) ||
+          !previous.canReviseAs(field) ||
+          (restoring &&
+              (!reinstated.contains(field.id) ||
+                  jsonEncode(previous.definition.toJson()) !=
+                      jsonEncode(field.definition.toJson())))) {
         throw ArgumentError(
           'Use a new field ID for a replacement or historical addition.',
         );

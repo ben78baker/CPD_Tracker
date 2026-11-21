@@ -1211,4 +1211,134 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get editorChoiceReplaceHint =>
       'Mudar as opções cria um novo campo. Os registos anteriores mantêm as opções originais.';
+
+  @override
+  String get p6Standard => 'CPD padrão';
+
+  @override
+  String get p6Custom => 'CPD personalizado';
+
+  @override
+  String get p6Templates => 'Modelos profissionais';
+
+  @override
+  String get p6StandardDetail => 'Registo gratuito com os campos padrão.';
+
+  @override
+  String get p6CustomDetail =>
+      'Crie um formulário com o editor e a biblioteca.';
+
+  @override
+  String get p6TemplateDetail =>
+      'Explore formulários e relatórios pesquisados para a sua profissão.';
+
+  @override
+  String get p6Create => 'Criar profissão';
+
+  @override
+  String get p6First => 'Crie a primeira profissão';
+
+  @override
+  String get p6Name => 'Nome da profissão';
+
+  @override
+  String get p6CustomScope =>
+      'Campos personalizados permite editar formulários em todas as profissões.';
+
+  @override
+  String get p6TemplateScope =>
+      'Inclui os campos fornecidos, a disposição e as opções de relatório. Alterar definições exige Campos personalizados.';
+
+  @override
+  String get p6ChooseTemplate => 'Escolher este modelo';
+
+  @override
+  String get p6TryArrangement => 'Experimentar os controlos da disposição';
+
+  @override
+  String get p6Layout => 'Organizar campos de registo';
+
+  @override
+  String get p6RestoreField => 'Repor um campo fornecido';
+
+  @override
+  String get p6ReportFields => 'Campos no relatório';
+
+  @override
+  String get p6ReportHint =>
+      'O relatório e o registo são configurados em separado.';
+
+  @override
+  String get p6RestoreDefaults => 'Repor valores do modelo';
+
+  @override
+  String get p6ResetHint =>
+      'Repõe o formulário e o relatório. Os valores antigos são preservados.';
+
+  @override
+  String get p6Compatible => 'Campos obrigatórios disponíveis';
+
+  @override
+  String get p6Optional => 'Conteúdo opcional alterado';
+
+  @override
+  String get p6Incomplete => 'Relatório de atividades incompleto';
+
+  @override
+  String get p6CompatibilityHint =>
+      'Reponha e inclua os campos indicados. Ainda pode gerar um registo incompleto.';
+
+  @override
+  String get p6Resume => 'Retomar rascunho';
+
+  @override
+  String get p6Discard => 'Descartar rascunho';
+
+  @override
+  String get p6DraftHint => 'O rascunho só é aplicado ao guardar.';
+
+  @override
+  String get p6Store => 'Loja de ensaio';
+
+  @override
+  String get p6StoreHint => 'Compra simulada, sem pagamento.';
+
+  @override
+  String get p6Checkout => 'Iniciar compra simulada';
+
+  @override
+  String get p6Pending => 'Compra pendente';
+
+  @override
+  String get p6Complete => 'Simular conclusão';
+
+  @override
+  String get p6CancelPurchase => 'Simular cancelamento';
+
+  @override
+  String get p6Cancelled => 'Compra cancelada';
+
+  @override
+  String get p6Restore => 'Restaurar compra simulada';
+
+  @override
+  String get p6Legacy => 'Verificar comprador original simulado';
+
+  @override
+  String get p6Offline => 'Loja indisponível';
+
+  @override
+  String get p6UseOffline => 'Simular indisponibilidade';
+
+  @override
+  String get p6Owned => 'Acesso verificado';
+
+  @override
+  String get p6Options => 'Opções de profissão';
+
+  @override
+  String get p6OpenReport => 'Abrir relatório de atividades';
+
+  @override
+  String get p6TemplateUpdate => 'Rever atualização do modelo';
 }
