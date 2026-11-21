@@ -35,6 +35,7 @@ Future<void> main() async {
   );
   try {
     await _abandon();
+    await _damagedSnapshotBlocksImport();
     await _interruptedFence();
     await _competingHandoffs();
     await _active();
@@ -86,6 +87,43 @@ Future<void> _abandon() async {
     );
   } finally {
     await root.delete(recursive: true);
+  }
+}
+
+Future<void> _damagedSnapshotBlocksImport() async {
+  late CpdMigrationCoordinator attempt;
+  attempt = await openSyntheticRehearsal(RehearsalSample.standard, (
+    report,
+  ) async {
+    if (report.phase == MigrationPhase.staging) {
+      await File(
+        p.join(attempt.snapshot.directory.path, 'manifest.fingerprint'),
+      ).writeAsString('interrupted recovery manifest', flush: true);
+    }
+  });
+  try {
+    final result = await attempt.rehearse();
+    _check(
+      result.phase == MigrationPhase.failed,
+      'Reject a damaged recovery copy',
+    );
+    _check(
+      !await attempt.startup.database.exists(),
+      'Import never opened SQLite',
+    );
+    _check(
+      await attempt.snapshot.directory.exists(),
+      'Keep the damaged recovery copy for review',
+    );
+    _check(
+      await File(
+        p.join(attempt.documents.path, 'attachments', 'notes.txt'),
+      ).exists(),
+      'Keep legacy evidence',
+    );
+    debugPrintSynchronously('CPD_PHASE8_PRE_MIGRATION_PASS');
+  } finally {
+    await attempt.workspace.parent.delete(recursive: true);
   }
 }
 

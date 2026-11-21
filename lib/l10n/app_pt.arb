@@ -565,5 +565,20 @@
   "p7aAttribution": "Gerado com CPD Progress Tracker",
   "reportHindiRequiresShaping": "Este PDF contém texto em devanágari e precisa de um motor de composição compatível. Os registos e o idioma do relatório foram guardados.",
   "reportHours": "{count,plural, =1{{count} hora} other{{count} horas}}",
-  "reportMinutes": "{count,plural, =1{{count} minuto} other{{count} minutos}}"
+  "reportMinutes": "{count,plural, =1{{count} minuto} other{{count} minutos}}",
+  "p8Title": "Cópia de segurança e restauro",
+  "p8Private": "As cópias não são encriptadas e podem incluir informação privada. Guarde-as num local de confiança.",
+  "p8Includes": "Inclui registos ativos e eliminados, profissões, definições, esquemas, regras de relatório e comprovativos originais. Restaure as compras separadamente na loja de aplicações.",
+  "p8Create": "Criar cópia de segurança",
+  "p8Choose": "Escolher cópia para verificar",
+  "p8Verified": "Cópia verificada",
+  "p8Originals": "Ficheiros de comprovativos originais",
+  "p8Share": "Partilhar cópia",
+  "p8Restore": "Preparar substituição",
+  "p8Confirm": "Esta cópia substituiria o histórico de registos. Os dados atuais serão mantidos numa cópia de recuperação verificada.",
+  "p8Restored": "Cópia de restauro verificada e pronta para revisão. Os registos atuais continuam disponíveis.",
+  "p8Failed": "Não foi possível verificar a cópia ou o restauro. Os registos atuais continuam disponíveis.",
+  "p8LowSpace": "Não há espaço suficiente para uma cópia segura.",
+  "p8Unsupported": "O formato desta cópia é mais recente ou não é suportado.",
+  "p8Portable": "Cópia de segurança portátil"
 }

@@ -5,6 +5,7 @@ import 'package:cpd_tracker/cpd_compatibility/cpd_data_store.dart'
     show cpdProfessionLabel;
 import 'package:cpd_tracker/recording_engine_storage/managed_attachment_files.dart';
 import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
+import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_pilot.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
 import 'package:cpd_tracker/l10n/app_localizations.dart';
@@ -35,6 +36,7 @@ ProfessionCreationStore phase6Store(SqliteRecordingRepository repository) =>
       repository,
       templates: {(nursingPilot.id, 1): nursingPilot},
       reportRules: {(nursingPilot.id, 1): nursingReportRules},
+      bundles: {(nursingPilot.id, 1): nursingBundle},
     );
 
 void main() {

@@ -1488,4 +1488,54 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get p8Title => 'Backup and restore';
+
+  @override
+  String get p8Private =>
+      'Backups are unencrypted and may contain private information. Save them somewhere you trust.';
+
+  @override
+  String get p8Includes =>
+      'Includes active and deleted records, professions, settings, layouts, reporting rules and original evidence. Restore purchases separately through the app store.';
+
+  @override
+  String get p8Create => 'Create backup';
+
+  @override
+  String get p8Choose => 'Choose backup to verify';
+
+  @override
+  String get p8Verified => 'Backup verified';
+
+  @override
+  String get p8Originals => 'Original evidence files';
+
+  @override
+  String get p8Share => 'Share backup';
+
+  @override
+  String get p8Restore => 'Prepare replacement';
+
+  @override
+  String get p8Confirm =>
+      'This backup would replace your current recording history. Your current data will be kept in a verified recovery copy.';
+
+  @override
+  String get p8Restored =>
+      'Restore copy verified and ready for review. Your current records remain available.';
+
+  @override
+  String get p8Failed =>
+      'Backup or restore could not be verified. Your current records remain available.';
+
+  @override
+  String get p8LowSpace => 'There is not enough space for a safe copy.';
+
+  @override
+  String get p8Unsupported => 'This backup format is newer or unsupported.';
+
+  @override
+  String get p8Portable => 'Portable backup';
 }

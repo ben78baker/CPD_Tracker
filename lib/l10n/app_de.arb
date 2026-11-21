@@ -565,5 +565,20 @@
   "p7aAttribution": "Erstellt mit CPD Progress Tracker",
   "reportHindiRequiresShaping": "Dieses PDF enthält Devanagari-Text und benötigt eine geeignete Schriftdarstellung. Ihre Einträge und die Berichtssprache bleiben gespeichert.",
   "reportHours": "{count,plural, =1{{count} Stunde} other{{count} Stunden}}",
-  "reportMinutes": "{count,plural, =1{{count} Minute} other{{count} Minuten}}"
+  "reportMinutes": "{count,plural, =1{{count} Minute} other{{count} Minuten}}",
+  "p8Title": "Sicherung und Wiederherstellung",
+  "p8Private": "Sicherungen sind unverschlüsselt und können vertrauliche Daten enthalten. Speichern Sie sie an einem sicheren Ort.",
+  "p8Includes": "Enthält aktive und gelöschte Einträge, Berufe, Einstellungen, Layouts, Berichtsregeln und Originalbelege. Stellen Sie Käufe separat über den App-Store wieder her.",
+  "p8Create": "Sicherung erstellen",
+  "p8Choose": "Sicherung zur Prüfung auswählen",
+  "p8Verified": "Sicherung geprüft",
+  "p8Originals": "Originalbelege",
+  "p8Share": "Sicherung teilen",
+  "p8Restore": "Ersatz vorbereiten",
+  "p8Confirm": "Diese Sicherung würde Ihren aktuellen Datenbestand ersetzen. Ihre aktuellen Daten bleiben in einer geprüften Wiederherstellungskopie erhalten.",
+  "p8Restored": "Wiederherstellungskopie geprüft und zur Kontrolle bereit. Ihre aktuellen Einträge bleiben verfügbar.",
+  "p8Failed": "Sicherung oder Wiederherstellung konnte nicht geprüft werden. Ihre aktuellen Einträge bleiben verfügbar.",
+  "p8LowSpace": "Für eine sichere Kopie fehlt Speicherplatz.",
+  "p8Unsupported": "Dieses Sicherungsformat ist neuer oder wird nicht unterstützt.",
+  "p8Portable": "Portable Sicherung"
 }

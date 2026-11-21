@@ -1495,4 +1495,55 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get p8Title => 'Sicherung und Wiederherstellung';
+
+  @override
+  String get p8Private =>
+      'Sicherungen sind unverschlüsselt und können vertrauliche Daten enthalten. Speichern Sie sie an einem sicheren Ort.';
+
+  @override
+  String get p8Includes =>
+      'Enthält aktive und gelöschte Einträge, Berufe, Einstellungen, Layouts, Berichtsregeln und Originalbelege. Stellen Sie Käufe separat über den App-Store wieder her.';
+
+  @override
+  String get p8Create => 'Sicherung erstellen';
+
+  @override
+  String get p8Choose => 'Sicherung zur Prüfung auswählen';
+
+  @override
+  String get p8Verified => 'Sicherung geprüft';
+
+  @override
+  String get p8Originals => 'Originalbelege';
+
+  @override
+  String get p8Share => 'Sicherung teilen';
+
+  @override
+  String get p8Restore => 'Ersatz vorbereiten';
+
+  @override
+  String get p8Confirm =>
+      'Diese Sicherung würde Ihren aktuellen Datenbestand ersetzen. Ihre aktuellen Daten bleiben in einer geprüften Wiederherstellungskopie erhalten.';
+
+  @override
+  String get p8Restored =>
+      'Wiederherstellungskopie geprüft und zur Kontrolle bereit. Ihre aktuellen Einträge bleiben verfügbar.';
+
+  @override
+  String get p8Failed =>
+      'Sicherung oder Wiederherstellung konnte nicht geprüft werden. Ihre aktuellen Einträge bleiben verfügbar.';
+
+  @override
+  String get p8LowSpace => 'Für eine sichere Kopie fehlt Speicherplatz.';
+
+  @override
+  String get p8Unsupported =>
+      'Dieses Sicherungsformat ist neuer oder wird nicht unterstützt.';
+
+  @override
+  String get p8Portable => 'Portable Sicherung';
 }

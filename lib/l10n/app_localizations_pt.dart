@@ -1494,4 +1494,55 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get p8Title => 'Cópia de segurança e restauro';
+
+  @override
+  String get p8Private =>
+      'As cópias não são encriptadas e podem incluir informação privada. Guarde-as num local de confiança.';
+
+  @override
+  String get p8Includes =>
+      'Inclui registos ativos e eliminados, profissões, definições, esquemas, regras de relatório e comprovativos originais. Restaure as compras separadamente na loja de aplicações.';
+
+  @override
+  String get p8Create => 'Criar cópia de segurança';
+
+  @override
+  String get p8Choose => 'Escolher cópia para verificar';
+
+  @override
+  String get p8Verified => 'Cópia verificada';
+
+  @override
+  String get p8Originals => 'Ficheiros de comprovativos originais';
+
+  @override
+  String get p8Share => 'Partilhar cópia';
+
+  @override
+  String get p8Restore => 'Preparar substituição';
+
+  @override
+  String get p8Confirm =>
+      'Esta cópia substituiria o histórico de registos. Os dados atuais serão mantidos numa cópia de recuperação verificada.';
+
+  @override
+  String get p8Restored =>
+      'Cópia de restauro verificada e pronta para revisão. Os registos atuais continuam disponíveis.';
+
+  @override
+  String get p8Failed =>
+      'Não foi possível verificar a cópia ou o restauro. Os registos atuais continuam disponíveis.';
+
+  @override
+  String get p8LowSpace => 'Não há espaço suficiente para uma cópia segura.';
+
+  @override
+  String get p8Unsupported =>
+      'O formato desta cópia é mais recente ou não é suportado.';
+
+  @override
+  String get p8Portable => 'Cópia de segurança portátil';
 }

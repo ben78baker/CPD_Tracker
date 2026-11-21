@@ -565,5 +565,20 @@
   "p7aAttribution": "Generado con CPD Progress Tracker",
   "reportHindiRequiresShaping": "Este PDF contiene texto en devanagari y necesita un motor de composición compatible. Se han guardado los registros y el idioma del informe.",
   "reportHours": "{count,plural, =1{{count} hora} other{{count} horas}}",
-  "reportMinutes": "{count,plural, =1{{count} minuto} other{{count} minutos}}"
+  "reportMinutes": "{count,plural, =1{{count} minuto} other{{count} minutos}}",
+  "p8Title": "Copia de seguridad y restauración",
+  "p8Private": "Las copias no están cifradas y pueden contener información privada. Guárdalas en un lugar seguro.",
+  "p8Includes": "Incluye registros activos y eliminados, profesiones, ajustes, diseños, reglas de informes y evidencias originales. Restaura las compras por separado en la tienda de aplicaciones.",
+  "p8Create": "Crear copia de seguridad",
+  "p8Choose": "Elegir copia para verificar",
+  "p8Verified": "Copia verificada",
+  "p8Originals": "Archivos de evidencia originales",
+  "p8Share": "Compartir copia",
+  "p8Restore": "Preparar reemplazo",
+  "p8Confirm": "Esta copia reemplazaría tu historial de registros. Tus datos actuales se conservarán en una copia de recuperación verificada.",
+  "p8Restored": "Copia de restauración verificada y lista para revisión. Tus registros actuales siguen disponibles.",
+  "p8Failed": "No se pudo verificar la copia o la restauración. Tus registros actuales siguen disponibles.",
+  "p8LowSpace": "No hay espacio para una copia segura.",
+  "p8Unsupported": "El formato de esta copia es más reciente o no es compatible.",
+  "p8Portable": "Copia portátil"
 }

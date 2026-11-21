@@ -1495,4 +1495,55 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get p8Title => 'Copia de seguridad y restauración';
+
+  @override
+  String get p8Private =>
+      'Las copias no están cifradas y pueden contener información privada. Guárdalas en un lugar seguro.';
+
+  @override
+  String get p8Includes =>
+      'Incluye registros activos y eliminados, profesiones, ajustes, diseños, reglas de informes y evidencias originales. Restaura las compras por separado en la tienda de aplicaciones.';
+
+  @override
+  String get p8Create => 'Crear copia de seguridad';
+
+  @override
+  String get p8Choose => 'Elegir copia para verificar';
+
+  @override
+  String get p8Verified => 'Copia verificada';
+
+  @override
+  String get p8Originals => 'Archivos de evidencia originales';
+
+  @override
+  String get p8Share => 'Compartir copia';
+
+  @override
+  String get p8Restore => 'Preparar reemplazo';
+
+  @override
+  String get p8Confirm =>
+      'Esta copia reemplazaría tu historial de registros. Tus datos actuales se conservarán en una copia de recuperación verificada.';
+
+  @override
+  String get p8Restored =>
+      'Copia de restauración verificada y lista para revisión. Tus registros actuales siguen disponibles.';
+
+  @override
+  String get p8Failed =>
+      'No se pudo verificar la copia o la restauración. Tus registros actuales siguen disponibles.';
+
+  @override
+  String get p8LowSpace => 'No hay espacio para una copia segura.';
+
+  @override
+  String get p8Unsupported =>
+      'El formato de esta copia es más reciente o no es compatible.';
+
+  @override
+  String get p8Portable => 'Copia portátil';
 }

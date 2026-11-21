@@ -1501,4 +1501,55 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get p8Title => 'Sauvegarde et restauration';
+
+  @override
+  String get p8Private =>
+      'Les sauvegardes ne sont pas chiffrées et peuvent contenir des données privées. Conservez-les dans un endroit sûr.';
+
+  @override
+  String get p8Includes =>
+      'Inclut les fiches actives et supprimées, les professions, les réglages, les présentations, les règles de rapport et les justificatifs originaux. Restaurez les achats séparément via la boutique d’applications.';
+
+  @override
+  String get p8Create => 'Créer une sauvegarde';
+
+  @override
+  String get p8Choose => 'Choisir la sauvegarde à vérifier';
+
+  @override
+  String get p8Verified => 'Sauvegarde vérifiée';
+
+  @override
+  String get p8Originals => 'Justificatifs originaux';
+
+  @override
+  String get p8Share => 'Partager la sauvegarde';
+
+  @override
+  String get p8Restore => 'Préparer le remplacement';
+
+  @override
+  String get p8Confirm =>
+      'Cette sauvegarde remplacerait votre historique. Vos données actuelles seront conservées dans une copie de récupération vérifiée.';
+
+  @override
+  String get p8Restored =>
+      'Copie de restauration vérifiée et prête à être examinée. Vos fiches actuelles restent disponibles.';
+
+  @override
+  String get p8Failed =>
+      'Impossible de vérifier la sauvegarde ou la restauration. Vos fiches actuelles restent disponibles.';
+
+  @override
+  String get p8LowSpace => 'Espace insuffisant pour créer une copie sûre.';
+
+  @override
+  String get p8Unsupported =>
+      'Le format de cette sauvegarde est plus récent ou non pris en charge.';
+
+  @override
+  String get p8Portable => 'Sauvegarde portable';
 }

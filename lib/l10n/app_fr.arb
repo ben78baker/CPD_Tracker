@@ -565,5 +565,20 @@
   "p7aAttribution": "Créé avec CPD Progress Tracker",
   "reportHindiRequiresShaping": "Ce PDF contient du texte devanagari et nécessite un moteur de composition compatible. Vos enregistrements et la langue du rapport sont conservés.",
   "reportHours": "{count,plural, =1{{count} heure} other{{count} heures}}",
-  "reportMinutes": "{count,plural, =1{{count} minute} other{{count} minutes}}"
+  "reportMinutes": "{count,plural, =1{{count} minute} other{{count} minutes}}",
+  "p8Title": "Sauvegarde et restauration",
+  "p8Private": "Les sauvegardes ne sont pas chiffrées et peuvent contenir des données privées. Conservez-les dans un endroit sûr.",
+  "p8Includes": "Inclut les fiches actives et supprimées, les professions, les réglages, les présentations, les règles de rapport et les justificatifs originaux. Restaurez les achats séparément via la boutique d’applications.",
+  "p8Create": "Créer une sauvegarde",
+  "p8Choose": "Choisir la sauvegarde à vérifier",
+  "p8Verified": "Sauvegarde vérifiée",
+  "p8Originals": "Justificatifs originaux",
+  "p8Share": "Partager la sauvegarde",
+  "p8Restore": "Préparer le remplacement",
+  "p8Confirm": "Cette sauvegarde remplacerait votre historique. Vos données actuelles seront conservées dans une copie de récupération vérifiée.",
+  "p8Restored": "Copie de restauration vérifiée et prête à être examinée. Vos fiches actuelles restent disponibles.",
+  "p8Failed": "Impossible de vérifier la sauvegarde ou la restauration. Vos fiches actuelles restent disponibles.",
+  "p8LowSpace": "Espace insuffisant pour créer une copie sûre.",
+  "p8Unsupported": "Le format de cette sauvegarde est plus récent ou non pris en charge.",
+  "p8Portable": "Sauvegarde portable"
 }

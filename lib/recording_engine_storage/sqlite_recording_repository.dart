@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -8,7 +10,10 @@ import '../recording_engine/import_plan.dart';
 import '../recording_engine/layout_draft.dart';
 import '../recording_engine/models.dart';
 
+import 'portable_archive.dart';
+
 part 'sqlite_recording_import.dart';
+part 'sqlite_recording_backup.dart';
 
 /// The native driver closed the handle after SQLite ran out of writable
 /// pages. Reopen the same path after capacity is available.
@@ -71,6 +76,21 @@ class SqliteRecordingRepository {
   }
 
   Future<void> close() => _connection.close();
+
+  /// Explicitly require durable native SQLite transactions in a protected
+  /// workspace. DELETE mode is available on the minimum supported platforms.
+  Future<void> configureProtectedWrites() async {
+    final db = _connection;
+    final mode = await db.rawQuery('PRAGMA journal_mode = DELETE');
+    await db.execute('PRAGMA synchronous = FULL');
+    final level = await db.rawQuery('PRAGMA synchronous');
+    if (mode.single.values.single != 'delete' ||
+        level.single.values.single != 2) {
+      throw StateError(
+        'The recording database could not enable durable writes.',
+      );
+    }
+  }
 
   /// Apply host metadata and recording mutations in one SQL transaction.
   /// Use the scoped repository only inside the callback and let errors escape.

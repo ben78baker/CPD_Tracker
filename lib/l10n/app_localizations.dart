@@ -2763,6 +2763,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count,plural, =1{{count} minute} other{{count} minutes}}'**
   String reportMinutes(int count);
+
+  /// No description provided for @p8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup and restore'**
+  String get p8Title;
+
+  /// No description provided for @p8Private.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups are unencrypted and may contain private information. Save them somewhere you trust.'**
+  String get p8Private;
+
+  /// No description provided for @p8Includes.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes active and deleted records, professions, settings, layouts, reporting rules and original evidence. Restore purchases separately through the app store.'**
+  String get p8Includes;
+
+  /// No description provided for @p8Create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create backup'**
+  String get p8Create;
+
+  /// No description provided for @p8Choose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose backup to verify'**
+  String get p8Choose;
+
+  /// No description provided for @p8Verified.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup verified'**
+  String get p8Verified;
+
+  /// No description provided for @p8Originals.
+  ///
+  /// In en, this message translates to:
+  /// **'Original evidence files'**
+  String get p8Originals;
+
+  /// No description provided for @p8Share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share backup'**
+  String get p8Share;
+
+  /// No description provided for @p8Restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepare replacement'**
+  String get p8Restore;
+
+  /// No description provided for @p8Confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup would replace your current recording history. Your current data will be kept in a verified recovery copy.'**
+  String get p8Confirm;
+
+  /// No description provided for @p8Restored.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore copy verified and ready for review. Your current records remain available.'**
+  String get p8Restored;
+
+  /// No description provided for @p8Failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup or restore could not be verified. Your current records remain available.'**
+  String get p8Failed;
+
+  /// No description provided for @p8LowSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'There is not enough space for a safe copy.'**
+  String get p8LowSpace;
+
+  /// No description provided for @p8Unsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup format is newer or unsupported.'**
+  String get p8Unsupported;
+
+  /// No description provided for @p8Portable.
+  ///
+  /// In en, this message translates to:
+  /// **'Portable backup'**
+  String get p8Portable;
 }
 
 class _AppLocalizationsDelegate

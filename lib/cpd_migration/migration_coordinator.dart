@@ -355,6 +355,10 @@ final class CpdMigrationCoordinator {
       await _publish(
         MigrationReport(MigrationPhase.staging, sourceId: sourceId),
       );
+      if (await snapshot.verifyAgainstSource(await readLegacy(), documents) !=
+          fingerprint) {
+        throw StateError('The recovery copy changed before import.');
+      }
       db = await SqliteRecordingRepository.open(databasePath);
       final migration = SyntheticCpdMigration(db, documents);
       final plan = await migration.plan(values);

@@ -1,3 +1,5 @@
+import 'historical_bundles.dart';
+import 'template_bundle.dart';
 import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
@@ -84,18 +86,22 @@ class ProfessionCreationStore {
     this.repository, {
     required Map<(String, int), TemplateVersion> templates,
     required Map<(String, int), SchemeReportRules> reportRules,
+    Map<(String, int), ProfessionTemplateBundle> bundles = const {},
   }) : templates = Map.unmodifiable(templates),
-       reportRules = Map.unmodifiable(reportRules);
+       reportRules = Map.unmodifiable(reportRules),
+       bundles = Map.unmodifiable(bundles);
 
   final SqliteRecordingRepository repository;
   final Map<(String, int), TemplateVersion> templates;
   final Map<(String, int), SchemeReportRules> reportRules;
 
+  final Map<(String, int), ProfessionTemplateBundle> bundles;
+
   static const _uuid = Uuid();
   static const draftsNamespace = 'cpd.creation.drafts';
   static const _receipts = 'cpd.creation.receipts';
   static const _settings = 'cpd.creation.settings';
-  static const _grants = 'cpd.creation.grants';
+  static const grantsNamespace = 'cpd.creation.grants';
   static const _reports = 'cpd.creation.reports';
   static const customProduct = 'custom-fields';
 
@@ -128,7 +134,7 @@ class ProfessionCreationStore {
 
   Future<CreationAccess> access() => _access(repository);
   Future<CreationAccess> _access(SqliteRecordingRepository tx) async {
-    final state = await tx.loadHostState(_grants);
+    final state = await tx.loadHostState(grantsNamespace);
     return CreationAccess(
       customFields: state[customProduct] == PurchaseState.verified.name,
       legacy: state['legacy'] == PurchaseState.verified.name,
@@ -143,7 +149,7 @@ class ProfessionCreationStore {
   }
 
   Future<Map<String, String>> purchaseStates() =>
-      repository.loadHostState(_grants);
+      repository.loadHostState(grantsNamespace);
 
   /// The rehearsal store's persisted attempts and grants are independent of
   /// creation requests. A repeated or older callback cannot undo a grant.
@@ -153,14 +159,14 @@ class ProfessionCreationStore {
     String? attempt,
   }) => repository.transaction((tx) async {
     _checkProduct(product);
-    final ledger = await tx.loadHostState(_grants);
+    final ledger = await tx.loadHostState(grantsNamespace);
     if (ledger[product] == PurchaseState.verified.name) return;
     if (attempt != null && ledger['attempt:$product'] != attempt) return;
     if (ledger[product] == PurchaseState.cancelled.name &&
         state == PurchaseState.pending) {
       return;
     }
-    await tx.saveHostValue(_grants, product, state.name);
+    await tx.saveHostValue(grantsNamespace, product, state.name);
   });
 
   Future<void> startSimulatedPurchase(String product) =>
@@ -169,13 +175,17 @@ class ProfessionCreationStore {
         if ((await tx.loadHostState(_settings))['offline'] == 'true') {
           throw StateError('The rehearsal store is unavailable.');
         }
-        final previous = (await tx.loadHostState(_grants))[product];
+        final previous = (await tx.loadHostState(grantsNamespace))[product];
         if (previous == PurchaseState.verified.name ||
             previous == PurchaseState.pending.name) {
           return;
         }
-        await tx.saveHostValue(_grants, 'attempt:$product', _uuid.v4());
-        await tx.saveHostValue(_grants, product, PurchaseState.pending.name);
+        await tx.saveHostValue(grantsNamespace, 'attempt:$product', _uuid.v4());
+        await tx.saveHostValue(
+          grantsNamespace,
+          product,
+          PurchaseState.pending.name,
+        );
       });
 
   void _checkProduct(String product) {
@@ -185,8 +195,11 @@ class ProfessionCreationStore {
     }
   }
 
-  Future<void> verifySimulatedOriginalPurchase() =>
-      repository.saveHostValue(_grants, 'legacy', PurchaseState.verified.name);
+  Future<void> verifySimulatedOriginalPurchase() => repository.saveHostValue(
+    grantsNamespace,
+    'legacy',
+    PurchaseState.verified.name,
+  );
 
   List<ProfessionDraft> _decodeDrafts(Map<String, String> rows) => rows.values
       .map(
@@ -445,6 +458,9 @@ class ProfessionCreationStore {
       final pinned = await tx.loadTemplate(recipe.id, recipe.version);
       if (pinned == null) {
         await tx.saveTemplate(recipe, maxActiveFields: cpdActiveFieldLimit);
+      }
+      if (bundles[(recipe.id, recipe.version)] case final bundle?) {
+        await const HistoricalCpdBundles().retain(tx, bundle);
       }
       final collection = await tx.createCollection(
         cpdProfessionLabel(draft.name),
