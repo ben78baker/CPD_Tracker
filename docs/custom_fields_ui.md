@@ -1,10 +1,10 @@
 # Custom Fields UI specification
 
-Updated 21 November 2026 · UI specification and internal Phase 5 implementation.
+Updated 21 November 2026 · UI specification, approved Phase 5 foundations and revised Phase 6 design.
 
 ## 1. Agreed scope
 
-**Edit Fields** is a visual editor for one profession tile. It uses the same field shapes, ordering and presentation principles as the actual CPD entry form. Users can configure and reorder fields, add a field from scratch or from the searchable **Field Library**, and save the result as a new layout revision. The editor and library are part of Custom Fields.
+**Edit Fields** is a visual editor for one profession tile. It uses the same field shapes, ordering and presentation principles as the actual CPD entry form. Users can configure and reorder fields, add a field from scratch or from the searchable **Field Library**, and save the result as a new layout revision. The shared editor supports app-wide Custom Fields access and scoped customisation of an owned profession template.
 
 Each profession can have **20 active record fields**, including active standard fields. A centrally configured rule governs the editor, the save operation and any resulting template layout. A field available only to future records still counts as active. Retired historical fields, the profession heading and report-branding assets sit outside the count. Replacing or reactivating a field is evaluated against the resulting active layout.
 
@@ -15,13 +15,13 @@ Retain stable field identities, canonical activity date and credited duration, a
 | Access | Result |
 |---|---|
 | Standard free app | Continue using the standard record form, editing record values and using existing evidence, search and export functions. |
-| Individual profession template · £3.99 initial UK price | One-time, non-consumable ownership of that complete predefined layout, reusable across profession tiles. Users can edit record values on it. Structural editing requires Custom Fields. |
-| Custom Fields · £12.99 initial UK price | One-time, non-consumable access to the full editor and Field Library on all current and future profession tiles, including editing independent copies of owned templates. |
+| Individual profession template · £3.99 initial UK price | One-time, non-consumable ownership of the complete predefined layout, with structural customisation of independent copies of that template across profession tiles. |
+| Custom Fields · £12.99 initial UK price | One-time, non-consumable access to the full editor and Field Library on all current and future profession tiles, including Custom CPD creation from the standard fields. Predefined templates are purchased individually. |
 | Verified original paid-app customer | Permanent Custom Fields access at no charge. Predefined profession templates are purchased individually. |
 
-Store purchases are associated with the relevant store account. Display store-provided localised prices in the eventual shop and entitlement flows. Each tile retains its own applied layout and history. Ownership of a template and entitlement to edit a layout are independent.
+Store purchases are associated with the relevant store account. Display store-provided localised prices in the eventual shop and entitlement flows. Each tile retains its own applied layout and history. Template ownership grants editing rights to placements of that template. App-wide Custom Fields supplies general editing independently of template ownership.
 
-Open **Edit Fields** from the profession tile overflow, the **View Records** page menu, and the individual **View Record** page menu once that screen exists. Resolve the same stable profession identity from each route. Keep the main home menu free of this action. On a locked tile, explain the Custom Fields entitlement and provide a path to purchase, restore or check legacy access when those flows exist. Template-only owners retain the fixed layout and can continue editing values. Refresh a verified entitlement on return where needed, while keeping regular record work available if the store is temporarily unavailable.
+Open **Edit Fields** from the profession tile overflow, the **View Records** page menu, and the individual **View Record** page menu once that screen exists. Resolve the same stable profession identity from each route. The Home menu uses **Add Profession** to open creation. Where structural editing requires access, explain the applicable scope and provide a path to purchase, restore or check legacy access when those flows exist. Refresh verified entitlements as needed and keep regular record work available during store outages.
 
 Per-profession company logos and report branding remain a separate premium capability for anyone with at least one owned template, purchased Custom Fields or a verified legacy Custom Fields grant. The logo and inclusion preference are stored per profession, consume no field slots, and apply to eligible standard and evidence PDF exports through the separate branding design.
 
@@ -125,7 +125,7 @@ From preview, continue to the same configuration, applicability and insertion st
 | Stable library ID and version; label and aliases; input type; description and help; validation defaults; predefined choice IDs and labels; category; profession/scheme applicability; source reference and verification date where relevant. | Independent stable field ID, profession association, type and effective configuration, order, requiredness, applicability and retirement metadata. Keep optional provenance back to the library definition and version. |
 | A definition update changes the default for a future insertion. | Insertion copies the supported settings. Existing instances and their historical values retain their configuration unless the user explicitly changes them. |
 
-Eligible fields originating from profession-template research can appear normally in the library for everyone with Custom Fields. Do not require purchase of the original profession template to use those fields, or block users from building a similar layout themselves. The template purchase provides the complete managed layout, template updates and any separately approved scheme-specific reporting associated with it. Adding a field does not grant those benefits or certify that a record, export or portfolio satisfies a scheme. Label regulator-specific choices and validation so the user knows where they apply. [Scheme and source index](../research/cpd_templates/profession_index.md)
+Eligible fields originating from profession-template research can appear normally in the library for everyone with Custom Fields. The Phase 6 proposal is to offer the same reusable fields inside an owned template’s scoped editor. In either case the field is inserted as an independent instance. Template ownership covers the complete managed layout, scoped editing, template updates and any separately approved scheme-specific reporting associated with that template. Using a library field confers no scheme standing or template ownership. Label regulator-specific choices and validation so the user knows where they apply. [Scheme and source index](../research/cpd_templates/profession_index.md)
 
 ## 5. Drafts, historical records and save
 
@@ -154,7 +154,7 @@ Requiredness must not block an unrelated edit to an older record because a newly
 
 ## 7. Architectural implications
 
-The [Phase 4 implementation](../research/cpd_templates/international/phase4_recording_configuration.md) supplies the generic model and storage operations. These requirements guide Phase 5 UI work and host integration.
+The [Phase 4 implementation](../research/cpd_templates/international/phase4_recording_configuration.md) supplies the generic model and storage operations. Phase 5 supplied the editor and preview components for Phase 6 host integration.
 
 - Keep **library definition IDs**, **field instance IDs**, **choice IDs**, **profession IDs** and **layout revision IDs** independent. A title, category, array position or option label cannot serve as identity. Choice renames and reordering preserve selections. Retired choices remain resolvable in past records and exports.
 - Store field type and effective instance metadata with the relevant revision. Preserve optional library and template version provenance so catalogue changes and template updates do not overwrite local copies. Define compatibility for unknown types and metadata from a newer catalogue.
@@ -169,7 +169,7 @@ The [Phase 4 implementation](../research/cpd_templates/international/phase4_reco
 | Design approval | Confirm the positions and names of controls, supported type rollout, library taxonomy and scope, canonical-field presentation and historical workflows. Review sample layouts against the existing free entry form. |
 | Phase 4 · Engine foundation completed | Stable identities, revision resolution, catalogue provenance, choice retirement, atomic layout validation and historical export projections. The internal preview exercises two synthetic forms. Separate branding metadata remains a host concern. |
 | Phase 5 · Internal editor and preview | Rehearse the form-like draft editor, library, historical record presentation and an isolated template preview. Verify purchase-independent access in the rehearsal and keep production navigation separate. |
-| Phase 6 · Researched catalogue and authoring, separately authorised | Review each profession specification. Bundle one approved version with its translated metadata, sample values and report context. Verify the actual form and sample report from the same version. |
+| Phase 6 · Shared creation and researched catalogue, separately authorised | Rehearse both entry points, the three creation paths, scoped entitlements, recovery and preview parity using one approved pilot template version. [Phase 6 plan and acceptance criteria](../research/cpd_templates/international/phase6_profession_creation_plan.md) |
 | Premium release, separately authorised | Surface the public preview from the catalogue regardless of ownership. Connect confirmation, purchase and restore to the CPD host. Integrate reporting and branding on their own schedules. |
 
 ### Decisions for approval
@@ -190,3 +190,48 @@ Use the shared record renderer to show the complete versioned form as it appears
 The preview session lives in memory and discards edits on exit. The preview route receives bounded template metadata, a recipe snapshot, synthetic values/evidence labels and a read-only report provider. It receives no record-writing, installation or entitlement mutation interface. Its values do not appear in records, targets, statistics, search or the evidence store.
 
 Future purchase, restore and activation are separate CPD-host actions. The host checks ownership before creating a versioned layout for a profession. Access to preview content, reusable library fields or the generic renderer does not change ownership. Verify preview parity against authorised adoption and repeat the check with each official template revision. Use generated preview content from the installed recipe rather than maintained product screenshots. [Phase 5 implementation report](../research/cpd_templates/international/phase5_visual_field_editor.md)
+
+## 9. Onboarding and shared profession creation
+
+### Page 1 · Welcome and preferences
+
+Keep the existing branded welcome, language, app colour, optional personal details and start-of-week preferences. Move profession naming to Page 2. **Continue** validates and saves the preferences, then opens the shared profession creation page. Keep the chosen colour and language in effect throughout the flow. Preserve saved selections after Back or relaunch and refill the welcome page from them. If a preference write fails, keep the current inputs and offer Retry. Continue only when the preferences step has been saved.
+
+### Page 2 · Create your first profession
+
+Reuse this same page from Home’s **Add Profession** action. Render three selectable tiles in this order. The names are provisional.
+
+| Choice | Shared behaviour |
+|---|---|
+| **Standard CPD** | Name the profession, confirm and start recording with the original free CPD fields. Keep this route visually prominent and available without the store, an entitlement check or the field editor. |
+| **Custom CPD** | Explain app-wide Custom Fields access and any one-time purchase before configuring a layout. Check existing access, including the permanent grant for qualifying original paid-app customers. Use the shared naming step, visual editor, custom-field tools and searchable Field Library. Begin with the standard CPD bindings, then let the user customise the draft and confirm creation. |
+| **Profession Templates** | Browse the shared catalogue and open the interactive preview without a purchase. Show the form, controlled choices, completed records, generated example PDF, template version and regulatory review date. After choosing a template, use shared naming and confirmation. An existing verified owner can use it directly. A completed template purchase gives the user the option to customise this copy with the same editor. Users can also use the supplied layout as-is or go back to the three choices. |
+
+```text
+First launch  →  Welcome and preferences  →  Continue  ──┐
+                                                        ├─ Shared profession creation
+Existing user →  Home → Add Profession  ────────────────┘       │
+                                                                 ├─ Standard CPD → Name
+                                                                 ├─ Custom CPD → Access notice → Name
+                                                                 │              → Verify access or purchase → Edit Fields
+                                                                 └─ Profession Templates → Browse ↔ Preview
+                                                                                          → Choose → Name
+                                                                                          → Verify access or purchase
+                                                                                          → Use as-is or Edit Fields
+
+Each path → Confirm creation → Saved profession
+                               ├─ First profession → Home with the new tile
+                               └─ Added profession → Return to existing Home and refresh the tiles
+```
+
+Use one naming form, validator, confirmation and error treatment for all paths and entry points. Check blank names and existing names with the current CPD normalisation and case-insensitive matching. For a deleted name, offer recovery through the existing deleted-profession path. Keep naming and layout changes in a draft until the user confirms creation. Confirm before discarding a changed draft. In a draft for a new profession the editor’s save returns the layout to the creation flow.
+
+### Back, interruptions and completion
+
+- Back from a template preview returns to the same catalogue position. Back from a creation path can return to the three choices without a purchase. Back from the choices returns to saved welcome preferences in onboarding or to Home for an existing user.
+- A cancelled purchase leaves the user in context. For a pending purchase, display the pending status and make Restore or Check status available when appropriate. On a store outage, explain the temporary issue and offer Retry and a return to the choices. Standard CPD stays available throughout.
+- Confirmed purchases belong to the store account independently of the draft. If a purchase finishes after the user leaves, surface the entitlement on return and wait for a new explicit creation confirmation. Never silently create a profession or repeat a purchase.
+- Onboarding completes only after the first profession and its layout are durably created or an earlier successful creation has been recovered. Welcome preferences, previews, pending purchases and cancelled creation leave onboarding incomplete. Honour existing onboarding completion through updates and migration, including for users with no current tiles.
+- Use the same accent tokens, spacing, controls and copy across both entry points. Support all eight app colours and six app locales, readable wrapping and scrolling at large text sizes, accessible tile names, visible focus and status feedback, generous touch targets and keyboard/Back navigation. Test the supported minimum platforms as release gates.
+
+[Architecture and recovery contract](../research/cpd_templates/international/architecture_implications.md#10-shared-profession-creation-and-onboarding) · [Phase 6 rehearsal and acceptance criteria](../research/cpd_templates/international/phase6_profession_creation_plan.md)

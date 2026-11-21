@@ -26,6 +26,7 @@
 - [Phase 3B authority and recovery](international/phase3b_migration_readiness.md) · startup decisions, rehearsal screens and physical-device procedure.
 - [Phase 4 recording configuration](international/phase4_recording_configuration.md) · typed fields, immutable templates, configurable layouts, library fixtures and native verification.
 - [Phase 5 visual editor and template previews](international/phase5_visual_field_editor.md) · draft editing, library, historical records, pre-purchase preview and authoring rehearsal.
+- [Phase 6 onboarding and profession creation plan](international/phase6_profession_creation_plan.md) · shared flow, store and creation recovery, implementation order and acceptance criteria.
 - [Open questions and validation](international/validation_plan.md).
 - [Custom Fields UI specification](../../docs/custom_fields_ui.md) · the agreed editor and Field Library design.
 
@@ -33,6 +34,6 @@
 
 Use the named scheme and jurisdiction as the unit of research. Distinguish activity, portfolio and renewal requirements. Document whether users can keep an independent record, when another system is required and what an export actually does. Preserve the canonical activity date and credited duration, and count standard fields within the maximum of 20 active fields. Historical values and evidence must survive later layout and migration changes.
 
-The fixed product assumptions are a free base app, £3.99 per template and £12.99 for Custom Fields, both one-time purchases. Templates may be reused across tiles and remain structurally fixed without the relevant editing entitlement. Verified original paid customers receive Custom Fields free. The Field Library and per-profession logos follow the approved premium design. These assumptions give no evidence of demand.
+The product assumptions are a free base app, £3.99 per template and £12.99 for app-wide Custom Fields, both one-time purchases. A template purchase includes structural editing of independent copies of that template across profession tiles. Custom Fields covers general structural editing and creating a Custom CPD layout. Verified original paid customers receive Custom Fields free. The Field Library and per-profession logos follow the approved premium design. These assumptions give no evidence of demand. [Current entitlement rules](../../docs/custom_fields_ui.md#commercial-and-navigation-rules)
 
 The detailed set spans the UK and devolved jurisdictions, Ireland, Australia and NSW, New Zealand, Ontario, California, Texas, Singapore, Hong Kong and Malta. Dutch BIG nursing and Queensland RPEQ received introductory checks. Authenticated portals, many official form layouts, current device behaviour and paid conversion remain unverified. Review each specification before development or publication.

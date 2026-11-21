@@ -99,6 +99,8 @@ The editor remains an internal page. Current attachment controls use synthetic e
 
 ## Release gates and Phase 6
 
+Phase 5 is approved. The [current Phase 6 plan](phase6_profession_creation_plan.md) adds the two-stage onboarding and shared creation flow, scoped template customisation, and a rehearsal for purchase and profession recovery. The following release checks continue to apply.
+
 1. Authorise the initial profession-template field specifications and each sample dataset. Have practitioners compare the free app, editable copy and complete pre-purchase experience, including representative exports.
 2. Agree the presentation and rollout of numeric, choice and evidence options. Resolve rule versioning, official versus supporting report outputs, review cadence and localised product content before bundling any commercial template.
 3. Verify real devices with VoiceOver, TalkBack, larger accessibility font settings and hardware keyboards. Confirm export readability, field insertion focus, colour/contrast and drag on older supported devices.
