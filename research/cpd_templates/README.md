@@ -25,6 +25,7 @@
 - [Phase 3A migration readiness](international/phase3a_migration_readiness.md) · disabled orchestration, recovery retention, performance and native validation.
 - [Phase 3B authority and recovery](international/phase3b_migration_readiness.md) · startup decisions, rehearsal screens and physical-device procedure.
 - [Phase 4 recording configuration](international/phase4_recording_configuration.md) · typed fields, immutable templates, configurable layouts, library fixtures and native verification.
+- [Phase 5 visual editor and template previews](international/phase5_visual_field_editor.md) · draft editing, library, historical records, pre-purchase preview and authoring rehearsal.
 - [Open questions and validation](international/validation_plan.md).
 - [Custom Fields UI specification](../../docs/custom_fields_ui.md) · the agreed editor and Field Library design.
 

@@ -1,6 +1,6 @@
 # Custom Fields UI specification
 
-Updated 20 November 2026 · Design specification for later development.
+Updated 21 November 2026 · UI specification and internal Phase 5 implementation.
 
 ## 1. Agreed scope
 
@@ -8,7 +8,7 @@ Updated 20 November 2026 · Design specification for later development.
 
 Each profession can have **20 active record fields**, including active standard fields. A centrally configured rule governs the editor, the save operation and any resulting template layout. A field available only to future records still counts as active. Retired historical fields, the profession heading and report-branding assets sit outside the count. Replacing or reactivating a field is evaluated against the resulting active layout.
 
-Retain stable field identities, canonical activity date and credited duration, and access to historical values and evidence. Edits are pending until Save. The proposed interactions and implementation phases below require separate development authorisation.
+Retain stable field identities, canonical activity date and credited duration, and access to historical values and evidence. Edits are pending until Save. Public navigation, purchasing and release work require separate authorisation.
 
 ### Commercial and navigation rules
 
@@ -67,7 +67,7 @@ Put **+ Add Field** in the top-right area. On smaller phones, place it at the ri
 
 Use a dedicated drag handle to lift and move the **whole tile**. Only the handle starts a drag. The tile’s menu and preview keep their own gestures. Recommend vertical movement with a visible insertion position and edge auto-scroll. After dropping or using a move action, keep focus on the moved tile, announce its new position and update the visual order immediately. Apply changes to the pending revision.
 
-The canonical activity date and credited duration retain their reporting, filtering and total semantics. They cannot be deleted or converted into unrelated types. Where display labels or placement are configurable, preserve the canonical binding, distinguish it from extra dates or durations, and keep the controls usable. Shared presentation may follow the app’s existing date and duration conventions. Defer per-field fonts, arbitrary colours and typography controls.
+The canonical activity date and credited duration retain their reporting, filtering and total semantics. The standard form also depends on bindings for title, details and evidence. Title and details supply activity text, with at least one present in the free workflow. Evidence supplies the existing evidence and export paths. These five fields can be moved and relabelled with safe presentation changes. Their identities, types, requiredness and standard behaviour are protected. Extra template or custom fields can be removed from the active layout while historical values remain available. Shared date and duration presentation follows the app’s conventions. Defer per-field fonts, arbitrary colours and typography controls.
 
 ## 3. Add Field workflow
 
@@ -94,9 +94,9 @@ The first modal has two primary options, **Create Custom Field** and **Field Lib
 
 | Status | Types and behaviours |
 |---|---|
-| Established planning baseline | Short text, long text, date, duration, photograph and file attachment. Reuse existing date, duration and evidence semantics. This is the minimum design baseline from earlier planning. |
-| Engine capabilities awaiting UI approval | Single and multiple selection with stable option IDs, exact decimal quantities with units, integers, Booleans and HTTP or HTTPS links. Decimal credits and elapsed minutes have separate meanings. CPD subset durations may need an additional host rule. |
-| Later research candidates | Hierarchical competency vocabularies, evidence eligibility metadata, times and timestamps, structured location and objective links. Keep signatures, declarations and verification at the appropriate portfolio level unless separately specified. |
+| Available in the rehearsal editor | Short and long text, whole and exact decimal numbers, dates, duration, single and multiple choices, yes/no and checkbox, web links, file attachments and photographs, plus section headings. File and photo examples use synthetic evidence only. |
+| Further review | Locale-aware dates and decimal input already use the shared presenter. Decimal credits and elapsed minutes have separate meanings. CPD subset durations need a host rule. Decide the public type rollout after device and practitioner checks. |
+| Later research candidates | Time and timestamps, structured location, informational blocks, hierarchical competency vocabularies, evidence eligibility metadata and objective links. Keep signatures, declarations and verification at the appropriate portfolio level unless separately specified. |
 
 Publish a library definition only when its type, validation and choices are supported on that build. Use neutral, scheme-specific explanatory copy for available definitions. Exact release sequencing is an approval decision. [Profession research and priorities](../research/cpd_templates/field_type_recommendations.md)
 
@@ -168,8 +168,9 @@ The [Phase 4 implementation](../research/cpd_templates/international/phase4_reco
 |---|---|
 | Design approval | Confirm the positions and names of controls, supported type rollout, library taxonomy and scope, canonical-field presentation and historical workflows. Review sample layouts against the existing free entry form. |
 | Phase 4 · Engine foundation completed | Stable identities, revision resolution, catalogue provenance, choice retirement, atomic layout validation and historical export projections. The internal preview exercises two synthetic forms. Separate branding metadata remains a host concern. |
-| Phase 5 · Editor and Field Library, when authorised | Build the form-like editor, reorder and accessibility paths, field configuration, historical prompts and a reviewed searchable catalogue. Verify draft, save and failure recovery. |
-| Premium release, separately authorised | Integrate store entitlements, templates and branding on their own schedules. Review each researched template specification before development or publication. Verify restore, offline behaviour and export continuity. |
+| Phase 5 · Internal editor and preview | Rehearse the form-like draft editor, library, historical record presentation and an isolated template preview. Verify purchase-independent access in the rehearsal and keep production navigation separate. |
+| Phase 6 · Researched catalogue and authoring, separately authorised | Review each profession specification. Bundle one approved version with its translated metadata, sample values and report context. Verify the actual form and sample report from the same version. |
+| Premium release, separately authorised | Surface the public preview from the catalogue regardless of ownership. Connect confirmation, purchase and restore to the CPD host. Integrate reporting and branding on their own schedules. |
 
 ### Decisions for approval
 
@@ -179,3 +180,13 @@ The [Phase 4 implementation](../research/cpd_templates/international/phase4_reco
 - Compact-screen modal transitions, default insertion position and whether preview controls are static samples or use a safe sandbox.
 - Duplicate-label policy and cross-launch draft recovery.
 - Placement and recency of access messaging, exact destructive confirmation wording and handling of historical choices in exported reports.
+
+## 8. Pre-purchase profession template previews
+
+Offer **Preview** from each profession-template detail page. Viewing a preview is available before purchase. Show the intended profession, country, professional body and scheme; features and limitations; customisation options; current template version; and the date the regulatory requirements were last reviewed.
+
+Use the shared record renderer to show the complete versioned form as it appears after purchase. Users can enter temporary sample values, inspect choice lists, open representative completed records, and view an example PDF report. Provide labelled example evidence without opening a camera, gallery, document picker or upload flow. Present the example report as a sample of the selected template version. Use the production report pipeline with a synthetic input source when the scheme reporting implementation is ready.
+
+The preview session lives in memory and discards edits on exit. The preview route receives bounded template metadata, a recipe snapshot, synthetic values/evidence labels and a read-only report provider. It receives no record-writing, installation or entitlement mutation interface. Its values do not appear in records, targets, statistics, search or the evidence store.
+
+Future purchase, restore and activation are separate CPD-host actions. The host checks ownership before creating a versioned layout for a profession. Access to preview content, reusable library fields or the generic renderer does not change ownership. Verify preview parity against authorised adoption and repeat the check with each official template revision. Use generated preview content from the installed recipe rather than maintained product screenshots. [Phase 5 implementation report](../research/cpd_templates/international/phase5_visual_field_editor.md)

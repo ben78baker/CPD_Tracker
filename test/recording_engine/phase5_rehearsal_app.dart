@@ -87,7 +87,9 @@ class _RehearsalState extends State<_Rehearsal> {
     );
   }
 
-  void _refresh() => setState(() => _view = _load(_selected));
+  void _refresh() => setState(() {
+    _view = _load(_selected);
+  });
 
   Future<void> _editor(_CollectionView contents) async {
     final result = await Navigator.of(context).push(
