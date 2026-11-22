@@ -88,9 +88,13 @@ class BackupEncryption {
           'Destination already exists.',
         );
       }
-      return File(staged).rename(destination.path);
+      return await File(staged).rename(destination.path);
     } finally {
-      await temporary.delete(recursive: true);
+      try {
+        await temporary.delete(recursive: true);
+      } on PathNotFoundException {
+        // A disposable cache directory may already have been reclaimed.
+      }
     }
   }
 
