@@ -27,6 +27,7 @@ class SqliteRecordingBackup {
   final VerifyBackupHost? verifyHost;
   final DatabaseFactory? factory;
   static const _archive = PortableArchive();
+  static const _wireSchema = 4;
   static const _lineLimit = 16 * 1024 * 1024;
   static const _temporaryReserve = 4 * 1024 * 1024;
 
@@ -116,7 +117,7 @@ class SqliteRecordingBackup {
         files: files,
         destination: destination,
         created: created ?? DateTime.now(),
-        schema: SqliteRecordingRepository.schemaVersion,
+        schema: _wireSchema,
         available: available,
         collection: collection,
         expectedDigests: fingerprints,
@@ -177,6 +178,9 @@ class SqliteRecordingBackup {
         factory: factory,
       );
       try {
+        // A scoped candidate is sealed as a standalone file before the user
+        // confirms. Some system SQLite builds enable WAL on open by default.
+        if (collection) await repo.configureProtectedWrites();
         await repo.transaction((tx) async {
           await _restoreRows(tx, payload, verified, staged.originals);
           await _verifyGraph(tx._db);
@@ -325,30 +329,43 @@ class SqliteRecordingBackup {
         checkDefinition(field);
       }
     }
-    // A field can be retired or introduced retrospectively. Check against
-    // the collection's immutable history, rather than the current layout.
     await for (final collection in _pages(db, 'collections')) {
       final id = collection['id'] as String;
       final layouts = await SqliteRecordingRepository._layouts(db, id);
-      final fieldsById = <String, List<LayoutField>>{};
+      if (layouts.last.version != collection['layout_version']) _badRows();
+      final history = <String, LayoutField>{};
       for (final layout in layouts) {
         for (final field in layout.fields) {
           checkDefinition(field);
-          fieldsById.putIfAbsent(field.id, () => []).add(field);
+          final earlier = history[field.id];
+          if (earlier != null &&
+              (layout.includeExisting.contains(field.id) ||
+                  !earlier.canReviseAs(field))) {
+            _badRows();
+          }
+          history[field.id] = field;
         }
       }
+      final effective = <int, Map<String, LayoutField>>{};
       for (final table in ['record_values', 'attachment_links']) {
         await for (final row in _pages(db, table, collection: id)) {
-          final fields = fieldsById[row['field_id']] ?? [];
+          final revision = row['backup_layout_version'] as int;
+          final fields = effective.putIfAbsent(
+            revision,
+            () => {
+              for (final field in resolveFields(revision, layouts))
+                field.id: field,
+            },
+          );
+          final field = fields[row['field_id']];
+          if (field == null) _badRows();
           if (table == 'attachment_links') {
-            if (!fields.any(
-              (f) => f.definition.kind == FieldKind.attachments,
-            )) {
-              _badRows();
-            }
-          } else {
-            final value = jsonDecode(row['payload'] as String);
-            if (!fields.any((f) => _acceptsBackupValue(f, value))) _badRows();
+            if (field.definition.kind != FieldKind.attachments) _badRows();
+          } else if (!_acceptsBackupValue(
+            field,
+            jsonDecode(row['payload'] as String),
+          )) {
+            _badRows();
           }
         }
       }
@@ -379,7 +396,7 @@ class SqliteRecordingBackup {
   }
 
   static void _requireSchema(BackupInspection inspection) {
-    if (inspection.schema != SqliteRecordingRepository.schemaVersion) {
+    if (inspection.schema != _wireSchema) {
       throw const BackupException(
         BackupProblem.version,
         'Unsupported recording schema.',
@@ -452,7 +469,9 @@ Stream<Map<String, Object?>> _pages(
   var cursor = 0;
   while (true) {
     final rows = await db.rawQuery(
-      'SELECT t.rowid AS backup_rowid, t.* FROM $table t '
+      'SELECT t.rowid AS backup_rowid, t.*'
+      '${collection == null ? '' : ', r.layout_version AS backup_layout_version'} '
+      'FROM $table t '
       '${collection == null ? '' : 'JOIN records r ON r.id = t.record_id '}'
       'WHERE t.rowid > ? ${collection == null ? '' : 'AND r.collection_id = ? '}'
       'ORDER BY t.rowid LIMIT 32',

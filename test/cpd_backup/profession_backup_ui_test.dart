@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cpd_tracker/cpd_backup/backup_cache.dart';
 import 'package:cpd_tracker/cpd_backup/profession_backup_page.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
 import 'package:cpd_tracker/l10n/app_localizations.dart';
@@ -9,6 +10,7 @@ import 'package:cpd_tracker/theme/app_accent.dart';
 import 'package:cpd_tracker/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 class _UnusedRepository implements SqliteRecordingRepository {
   @override
@@ -16,6 +18,69 @@ class _UnusedRepository implements SqliteRecordingRepository {
 }
 
 void main() {
+  testWidgets('password cancellation removes the owned picker copy', (
+    tester,
+  ) async {
+    final scratch = Directory.systemTemp.createTempSync(
+      'backup_password_widget_',
+    );
+    addTearDown(() => scratch.deleteSync(recursive: true));
+    final file = File(p.join(scratch.path, 'copy'))
+      ..writeAsStringSync('RCEBAK01');
+    final store = ProfessionCreationStore(
+      _UnusedRepository(),
+      templates: {},
+      reportRules: {},
+    );
+    final backup = ProfessionBackupActions(
+      backups: SqliteCollectionBackup(available: (_) async => 0),
+      temporary: scratch,
+      originals: ManagedAttachmentFiles(scratch),
+      pick: () async => BackupInputFile(file, cacheRoot: scratch),
+      share: (_, _) async {},
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: AppTheme.forAccent(AppAccent.purple),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => backup.open(context, store),
+              child: const Text('Open review'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open review'));
+    await tester.pumpAndSettle();
+    final warning = find.textContaining(
+      'A forgotten password cannot be recovered',
+    );
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Choose backup to verify'));
+      for (var i = 0; i < 100 && warning.evaluate().isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+    });
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(warning, findsOneWidget);
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Cancel'));
+      for (var i = 0; i < 100 && file.existsSync(); i++) {
+        await tester.pump(const Duration(milliseconds: 20));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+    });
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(file.existsSync(), isFalse);
+    expect(find.text('Restore as new profession'), findsNothing);
+  });
+
   testWidgets('restore entry fits all locales and colours at large text size', (
     tester,
   ) async {

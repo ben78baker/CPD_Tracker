@@ -11,6 +11,7 @@ import '../recording_engine_storage/portable_archive.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
 import '../widgets/branded_headers.dart';
 import '../widgets/tactile_button.dart';
+import 'backup_cache.dart';
 
 /// Explicitly supplied by the rehearsal composition root.
 class ProfessionBackupActions {
@@ -25,7 +26,7 @@ class ProfessionBackupActions {
   final SqliteCollectionBackup backups;
   final Directory temporary;
   final ManagedAttachmentFiles originals;
-  final Future<File?> Function() pick;
+  final Future<BackupInputFile?> Function() pick;
   final Future<void> Function(File, Rect) share;
 
   Future<CollectionImportResult?> open(
@@ -105,12 +106,17 @@ class _ProfessionBackupPageState extends State<_ProfessionBackupPage> {
   );
 
   Future<void> _prepare() => _run(() async {
-    _export = await widget.actions.backups.create(
+    final output = await widget.actions.backups.create(
       repository: widget.store.repository,
       collectionId: widget.collectionId!,
       originals: widget.actions.originals.root,
       temporary: widget.actions.temporary,
     );
+    if (mounted) {
+      _export = output;
+    } else {
+      await output.dispose();
+    }
   });
 
   Future<void> _share(Rect anchor) => _run(() async {
@@ -129,23 +135,36 @@ class _ProfessionBackupPageState extends State<_ProfessionBackupPage> {
   });
 
   Future<void> _choose() => _run(() async {
-    final source = await widget.actions.pick();
-    if (source == null || !mounted) return;
-    final encrypted = await SqliteCollectionBackup.encryption.isEncrypted(
-      source,
-    );
-    if (!mounted) return;
-    final password = encrypted ? await _password(create: false) : null;
-    if (encrypted && password == null) return;
-    await _review?.dispose();
-    _review = null;
-    _conflict = null;
-    _review = await widget.actions.backups.inspect(
-      source: source,
-      temporary: widget.actions.temporary,
-      password: password,
-    );
-    if (mounted) _name.text = _review!.summary.label;
+    final input = await widget.actions.pick();
+    if (input == null) return;
+    try {
+      if (!mounted) return;
+      final previous = _review;
+      _review = null;
+      _conflict = null;
+      _name.clear();
+      await previous?.dispose();
+
+      final encrypted = await SqliteCollectionBackup.encryption.isEncrypted(
+        input.file,
+      );
+      if (!mounted) return;
+      final password = encrypted ? await _password(create: false) : null;
+      if (encrypted && password == null) return;
+      final review = await widget.actions.backups.inspect(
+        source: input.file,
+        temporary: widget.actions.temporary,
+        password: password,
+      );
+      if (mounted) {
+        _review = review;
+        _name.text = review.summary.label;
+      } else {
+        await review.dispose();
+      }
+    } finally {
+      await input.dispose();
+    }
   });
 
   Future<void> _restore() => _run(() async {

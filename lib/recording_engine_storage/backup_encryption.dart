@@ -21,7 +21,15 @@ class BackupEncryption {
   Future<bool> isEncrypted(File source) async {
     final reader = await source.open();
     try {
-      return _matches(await reader.read(_magic.length));
+      final bytes = await reader.read(_magic.length);
+      if (_matches(bytes)) return true;
+      if (RegExp(r'^RCEBAK[0-9]{2}$').hasMatch(String.fromCharCodes(bytes))) {
+        throw const BackupException(
+          BackupProblem.version,
+          'Unsupported encrypted backup version.',
+        );
+      }
+      return false;
     } finally {
       await reader.close();
     }

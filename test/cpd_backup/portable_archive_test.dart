@@ -23,6 +23,20 @@ void main() {
 
   tearDown(() => root.delete(recursive: true));
 
+  test('future archive framing is distinguished from bad content', () async {
+    await backup.writeAsString('RECBAK02');
+    await expectLater(
+      archive.inspect(backup),
+      throwsA(
+        isA<BackupException>().having(
+          (error) => error.problem,
+          'problem',
+          BackupProblem.version,
+        ),
+      ),
+    );
+  });
+
   Future<BackupInspection> create() => archive.write(
     files: {PortableArchive.rows: rows, 'evidence/photo': rows},
     destination: backup,

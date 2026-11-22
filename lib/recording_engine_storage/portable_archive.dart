@@ -208,7 +208,16 @@ class PortableArchive {
     final reader = await source.open();
     try {
       final magic = await reader.read(8);
-      if (ascii.decode(magic, allowInvalid: true) != _magic) _invalid();
+      final framing = ascii.decode(magic, allowInvalid: true);
+      if (framing != _magic) {
+        if (RegExp(r'^RECBAK[0-9]{2}$').hasMatch(framing)) {
+          throw const BackupException(
+            BackupProblem.version,
+            'Unsupported backup framing version.',
+          );
+        }
+        _invalid();
+      }
       final lengthBytes = await reader.read(4);
       if (lengthBytes.length != 4) _invalid();
       final length = ByteData.sublistView(lengthBytes).getUint32(0);

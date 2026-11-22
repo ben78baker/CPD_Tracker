@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cpd_tracker/cpd_backup/backup_cache.dart';
 import 'package:cpd_tracker/cpd_backup/cpd_collection_backup.dart';
 import 'package:cpd_tracker/cpd_backup/profession_backup_page.dart';
 import 'package:cpd_tracker/cpd_migration/device_storage_capacity.dart';
@@ -25,11 +26,15 @@ Future<void> main() async {
       'profession-backup-rehearsal',
     ),
   ).create(recursive: true);
-  final cache = Directory(
-    p.join((await getTemporaryDirectory()).path, 'profession-backups'),
-  );
-  if (await cache.exists()) await cache.delete(recursive: true);
-  await cache.create(recursive: true);
+  final platformCache = await getTemporaryDirectory();
+  final cache = Directory(p.join(platformCache.path, 'profession-backups'));
+  await resetBackupScratch(cache);
+  // This disposable app has no unrelated picker operations. Android creates
+  // timestamped private copies under this plugin-owned cache directory.
+  final pickerCache = Platform.isAndroid
+      ? Directory(p.join(platformCache.path, 'file_picker'))
+      : Directory.systemTemp;
+  if (Platform.isAndroid) await resetBackupScratch(pickerCache);
   final workspace = RecordingWorkspace(root);
   await workspace.originals.create();
   final files = ManagedAttachmentFiles(
@@ -43,17 +48,34 @@ Future<void> main() async {
     pick: () async {
       final result = await FilePicker.platform.pickFiles();
       final path = result?.files.single.path;
-      return path == null ? null : File(path);
+      return path == null
+          ? null
+          : BackupInputFile(
+              File(path),
+              cacheRoot: pickerCache,
+              nestedCache: Platform.isAndroid,
+            );
     },
     share: (file, origin) async {
-      await SharePlus.instance.share(
+      final result = await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path, mimeType: 'application/octet-stream')],
           sharePositionOrigin: origin,
         ),
       );
+      if (Platform.isAndroid && result.status == ShareResultStatus.dismissed) {
+        await _clearAndroidHandoff(platformCache, p.basename(file.path));
+      }
     },
   );
+  if (Platform.isAndroid) {
+    for (final name in [
+      'Profession.recordingbackup',
+      'Protected.recordingbackup',
+    ]) {
+      await _clearAndroidHandoff(platformCache, name);
+    }
+  }
   runApp(
     Phase6App(
       phase7: true,
@@ -74,4 +96,12 @@ Future<void> main() async {
       },
     ),
   );
+}
+
+Future<void> _clearAndroidHandoff(Directory cache, String name) {
+  final owner = Directory(p.join(cache.path, 'share_plus'));
+  return BackupInputFile(
+    File(p.join(owner.path, name)),
+    cacheRoot: owner,
+  ).dispose();
 }

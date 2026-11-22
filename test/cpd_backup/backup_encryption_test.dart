@@ -7,6 +7,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
+  test('a future encrypted envelope reports an unsupported version', () async {
+    final root = await Directory.systemTemp.createTemp('future_envelope_');
+    addTearDown(() => root.delete(recursive: true));
+    final file = await File(
+      p.join(root.path, 'archive'),
+    ).writeAsString('RCEBAK02');
+    await expectLater(
+      const BackupEncryption().isEncrypted(file),
+      throwsA(
+        isA<BackupException>().having(
+          (error) => error.problem,
+          'problem',
+          BackupProblem.version,
+        ),
+      ),
+    );
+  });
+
   test(
     'encrypted multi-block archive authenticates the header, order and EOF',
     () async {

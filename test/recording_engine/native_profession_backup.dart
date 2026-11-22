@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cpd_tracker/cpd_backup/cpd_collection_backup.dart';
@@ -6,6 +7,7 @@ import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_creation/scheme_period_store.dart';
 import 'package:cpd_tracker/cpd_migration/device_storage_capacity.dart';
 import 'package:cpd_tracker/recording_engine/models.dart';
+import 'package:cpd_tracker/recording_engine/record_export.dart';
 import 'package:cpd_tracker/recording_engine_storage/managed_attachment_files.dart';
 import 'package:cpd_tracker/recording_engine_storage/original_directory_sync.dart';
 import 'package:cpd_tracker/recording_engine_storage/portable_archive.dart';
@@ -15,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import 'equipment_fixture.dart';
 import 'phase6_rehearsal_app.dart' show phase6Store;
 import 'phase7_rehearsal_app.dart' show seedPhase7;
 
@@ -61,6 +64,7 @@ Future<void> main() async {
       await _signal(documents, 'PB_CROSS_PASS');
       return;
     }
+    await _verifyHistoricalChoices(root);
     await _run(root, documents);
     await _signal(documents, 'PB_NATIVE_PASS');
   } catch (error, stack) {
@@ -141,18 +145,23 @@ Future<void> _run(Directory root, Directory documents) async {
       'missing and damaged originals declared',
     );
     await _expectFailure(draft.fileForSharing, BackupProblem.integrity);
-    await _expectStatus(
-      await service.restore(
-        review: await service.inspect(
-          source: await draft.fileForSharing(acceptUnavailable: true),
-          temporary: root,
-        ),
-        repository: src,
-        originals: originals,
-        label: 'Renamed original',
-      ),
-      CollectionImportStatus.existing,
+    final duplicate = await service.inspect(
+      source: await draft.fileForSharing(acceptUnavailable: true),
+      temporary: root,
     );
+    try {
+      await _expectStatus(
+        await service.restore(
+          review: duplicate,
+          repository: src,
+          originals: originals,
+          label: 'Renamed original',
+        ),
+        CollectionImportStatus.existing,
+      );
+    } finally {
+      await duplicate.dispose();
+    }
     final plain = File(p.join(documents.path, 'pb-out-plain.recordingbackup'));
     final locked = File(
       p.join(documents.path, 'pb-out-locked.recordingbackup'),
@@ -172,16 +181,18 @@ Future<void> _run(Directory root, Directory documents) async {
     final data = await bad.open(mode: FileMode.append);
     await data.writeByte(0);
     await data.close();
+    final rejected = await Directory(p.join(root.path, 'rejected')).create();
     await _expectFailure(
       () => service.inspect(
         source: locked,
-        temporary: root,
+        temporary: rejected,
         password: 'incorrect passphrase',
       ),
       BackupProblem.authentication,
     );
     await _expectFailure(
-      () => service.inspect(source: bad, temporary: root, password: password),
+      () =>
+          service.inspect(source: bad, temporary: rejected, password: password),
       BackupProblem.authentication,
     );
     final damaged = await plain.copy(p.join(root.path, 'bad-plain'));
@@ -190,9 +201,19 @@ Future<void> _run(Directory root, Directory documents) async {
     await change.writeByte(1);
     await change.close();
     await _expectFailure(
-      () => service.inspect(source: damaged, temporary: root),
+      () => service.inspect(source: damaged, temporary: rejected),
       BackupProblem.integrity,
     );
+
+    _check(
+      await rejected.list().isEmpty,
+      'failed verification leaves no scratch data',
+    );
+    _check(
+      (await dest.loadCollections()).isEmpty,
+      'invalid input made no live profession',
+    );
+    await _verifyCpdSettings(plain, root, service);
 
     timer.reset();
     await _verifyRestoration(
@@ -214,6 +235,266 @@ Future<void> _run(Directory root, Directory documents) async {
   } finally {
     await src.close();
     await dest.close();
+  }
+}
+
+Future<void> _verifyCpdSettings(
+  File valid,
+  Directory root,
+  SqliteCollectionBackup service,
+) async {
+  const archive = PortableArchive();
+  final header = await archive.inspect(valid);
+  final scoped = await root.createTemp('cpd-allowlist-');
+  try {
+    await archive.extract(
+      valid,
+      scoped,
+      available: availableDeviceStorage,
+      expectedSeal: header.seal,
+    );
+    final inputs = {
+      for (final item in header.entries)
+        item.path: File(p.join(scoped.path, item.path)),
+    };
+    final rows = inputs[PortableArchive.rows]!;
+    final original = await rows.readAsLines();
+    final scratch = await scoped.createTemp('rejected-');
+    for (final mode in [
+      'forge-grant',
+      'bad-report-field',
+      'bad-attachment-link',
+    ]) {
+      final changed = original.map((line) {
+        final item = jsonDecode(line) as List;
+        final row = item[1] as Map<String, dynamic>;
+        if (mode == 'bad-report-field' &&
+            item[0] == 'host_state' &&
+            row['namespace'] == 'cpd.creation.reports') {
+          row['value'] = jsonEncode(['unlisted-field']);
+        }
+        if (mode == 'bad-attachment-link' && item[0] == 'attachment_links') {
+          row['attachment_id'] = 'unlisted-attachment';
+        }
+        return jsonEncode(item);
+      });
+      await rows.writeAsString(
+        '${[
+          if (mode == 'forge-grant') jsonEncode([
+              'host_state',
+              {'namespace': 'cpd.creation.grants', 'key': 'legacy', 'value': 'verified'},
+            ]),
+          ...changed,
+        ].join('\n')}\n',
+      );
+      final invalid = File(p.join(scoped.path, mode));
+      await archive.write(
+        files: inputs,
+        destination: invalid,
+        created: header.created,
+        schema: header.schema,
+        collection: header.collection,
+        available: availableDeviceStorage,
+      );
+      await _expectFailure(
+        () => service.inspect(source: invalid, temporary: scratch),
+        BackupProblem.integrity,
+      );
+      _check(
+        await scratch.list().isEmpty,
+        'semantic rejection leaves no private staging',
+      );
+    }
+  } finally {
+    await scoped.delete(recursive: true);
+  }
+}
+
+Future<void> _verifyHistoricalChoices(Directory root) async {
+  final source = await _workspace(root, 'history-source');
+  final destination = await _workspace(root, 'history-target');
+  final db = await _open(source);
+  final live = await _open(destination);
+  final service = SqliteCollectionBackup(available: availableDeviceStorage);
+  final folder = await root.createTemp('history-verification-');
+  try {
+    final first = equipmentTemplate(1);
+    final later = equipmentTemplate(2);
+    final collection = await db.createCollection(
+      'Historic choices',
+      fields: first.fields,
+    );
+    await db.createRecord(collection.id, {
+      'asset': 'Before',
+      'result': 'monitor',
+    }, expectedLayoutVersion: 1);
+    await db.reviseLayout(collection.id, later.fields, expectedVersion: 1);
+    final second = await db.createRecord(collection.id, {
+      'asset': 'After',
+      'result': 'pass',
+    }, expectedLayoutVersion: 2);
+    final exported = await service.create(
+      repository: db,
+      collectionId: collection.id,
+      originals: source.originals,
+      temporary: folder,
+    );
+    try {
+      const archive = PortableArchive();
+      final valid = await exported.fileForSharing();
+      final header = await archive.inspect(valid);
+      final data = await folder.createTemp('rows-');
+      await archive.extract(
+        valid,
+        data,
+        available: availableDeviceStorage,
+        expectedSeal: header.seal,
+      );
+      final rows = File(p.join(data.path, PortableArchive.rows));
+      final originalRows = await rows.readAsLines();
+
+      // Each invalid variant has a correctly recomputed archive SHA-256.
+      // Failure therefore proves semantic verification, independent of hashes.
+      for (final (name, table) in [
+        ('wrong-choice', 'record_values'),
+        ('wrong-definition', 'definitions'),
+        ('wrong-layout', 'layouts'),
+      ]) {
+        await rows.writeAsString(
+          '${originalRows.map((line) {
+            final decoded = jsonDecode(line) as List;
+            final row = decoded[1] as Map<String, dynamic>;
+            if (decoded[0] == table) {
+              if (table == 'record_values' && row['record_id'] == second.id && row['field_id'] == 'result') {
+                row['payload'] = jsonEncode('monitor');
+              }
+              if (table == 'definitions' && row['id'] == 'result' && row['version'] == 2) {
+                final field = jsonDecode(row['payload'] as String) as Map;
+                row['payload'] = jsonEncode({...field, 'id': 'unexpected'});
+              }
+              if (table == 'layouts' && row['version'] == 2) {
+                row['include_existing'] = jsonEncode(['result']);
+              }
+            }
+            return jsonEncode(decoded);
+          }).join('\n')}\n',
+        );
+        final invalid = File(p.join(folder.path, name));
+        await archive.write(
+          files: {PortableArchive.rows: rows},
+          destination: invalid,
+          created: header.created,
+          schema: header.schema,
+          collection: header.collection,
+          available: availableDeviceStorage,
+        );
+        await _expectFailure(
+          () => service.inspect(source: invalid, temporary: folder),
+          BackupProblem.integrity,
+        );
+      }
+      final future = File(p.join(folder.path, 'future'));
+      await archive.write(
+        files: {PortableArchive.rows: rows},
+        destination: future,
+        created: header.created,
+        schema: 99,
+        collection: header.collection,
+        available: availableDeviceStorage,
+      );
+      await _expectFailure(
+        () => service.inspect(source: future, temporary: folder),
+        BackupProblem.version,
+      );
+
+      final review = await service.inspect(source: valid, temporary: folder);
+      try {
+        final stage = await folder
+            .list()
+            .where(
+              (path) => p.basename(path.path).startsWith('collection-review-'),
+            )
+            .single;
+        final sidecar = File(
+          p.join(stage.path, 'candidate', 'recording.sqlite-wal'),
+        );
+        await sidecar.writeAsString('unexpected WAL');
+        await _expectFailure(
+          () => service.restore(
+            review: review,
+            repository: live,
+            originals: _files(destination),
+            label: 'Attempt',
+          ),
+          BackupProblem.integrity,
+        );
+        await sidecar.delete();
+        final backing = File(
+          p.join(stage.path, 'candidate', 'recording.sqlite'),
+        );
+        final edit = await SqliteRecordingRepository.open(backing.path);
+        try {
+          await edit.updateCollection(
+            collection.id,
+            label: 'Modified after review',
+          );
+        } finally {
+          await edit.close();
+        }
+        await _expectFailure(
+          () => service.restore(
+            review: review,
+            repository: live,
+            originals: _files(destination),
+            label: 'Attempt',
+          ),
+          BackupProblem.integrity,
+        );
+        _check(
+          (await live.loadCollections()).isEmpty,
+          'changed candidate never reached live data',
+        );
+      } finally {
+        await review.dispose();
+      }
+
+      final good = await service.inspect(source: valid, temporary: folder);
+      try {
+        final result = await service.restore(
+          review: good,
+          repository: live,
+          originals: _files(destination),
+          label: 'Restored history',
+        );
+        _check(
+          result.status == CollectionImportStatus.added,
+          'valid historical archive',
+        );
+        final history = await live.loadLayouts(result.collection!.id);
+        final restored = await live.loadRecords(result.collection!.id);
+        final historical = restored.singleWhere(
+          (row) => row.layoutVersion == 1,
+        );
+        final field = resolveFields(
+          1,
+          history,
+        ).singleWhere((field) => field.id == 'result');
+        _check(
+          historical.values[field.id] == 'monitor' &&
+              field.definition.choices['monitor'] == 'Monitor',
+          'historical controlled choice kept its original meaning',
+        );
+      } finally {
+        await good.dispose();
+      }
+    } finally {
+      await exported.dispose();
+    }
+    debugPrintSynchronously('PB_HARDENING_PASS');
+  } finally {
+    await db.close();
+    await live.close();
+    await folder.delete(recursive: true);
   }
 }
 
@@ -338,6 +619,19 @@ Future<void> _verifyRestoration(
     _check(
       (await db.loadRecords(collection.id)).isNotEmpty,
       'historical records accessible',
+    );
+    final restoredHistory = await db.loadLayouts(collection.id);
+    final export = [
+      for (final row in await db.loadRecords(collection.id))
+        ...recordExportRows(
+          row,
+          resolveFields(row.layoutVersion, restoredHistory),
+        ),
+    ];
+    _check(
+      export.any((row) => row[5] == FieldKind.duration.name) &&
+          export.any((row) => row[5] == FieldKind.attachments.name),
+      'ordinary export projection stays accessible without a grant',
     );
     _check(
       await backupDigest(file) == sourceBytes,

@@ -92,12 +92,13 @@ class CollectionBackupReview {
     this._workspace,
     this._sourceId,
     this._lineage,
+    this._databaseDigest,
     this.summary,
   );
 
   final Directory _folder;
   final RecordingWorkspace _workspace;
-  final String _sourceId, _lineage;
+  final String _sourceId, _lineage, _databaseDigest;
   final CollectionBackupSummary summary;
 
   Future<void> dispose() => _folder.delete(recursive: true);
@@ -230,32 +231,32 @@ class SqliteCollectionBackup {
         Directory(p.join(folder.path, 'candidate')),
         collection: true,
       );
-      final db = await SqliteRecordingRepository.open(
-        workspace.databasePath,
-        factory: factory,
-      );
+      final db = await _openCandidate(workspace.databasePath);
+      late CollectionBackupSummary summary;
       try {
-        final collection = (await db.loadCollections()).single;
-        if (collection.id != id) _badRows();
-        final graph = await _CollectionGraph.read(db, collection);
+        final collections = await db.loadCollections();
+        if (collections.length != 1 || collections.single.id != id) _badRows();
+        final graph = await _CollectionGraph.read(db, collections.single);
         await _verifyScope(
           db,
           graph,
           inspection.originals,
           workspace.originals,
         );
-        final summary = await _summary(db, collection.id, inspection.created);
-        await decrypted?.delete();
-        return CollectionBackupReview._(
-          folder,
-          workspace,
-          collection.id,
-          lineage as String,
-          summary,
-        );
+        summary = await _summary(db, collections.single.id, inspection.created);
       } finally {
         await db.close();
       }
+      await decrypted?.delete();
+      final database = File(workspace.databasePath);
+      return CollectionBackupReview._(
+        folder,
+        workspace,
+        id as String,
+        lineage as String,
+        await _candidateDigest(database),
+        summary,
+      );
     } catch (_) {
       await folder.delete(recursive: true);
       rethrow;
@@ -275,10 +276,14 @@ class SqliteCollectionBackup {
     if (originals.syncDirectory == null) {
       throw ArgumentError('Restore requires durable original publication.');
     }
-    final source = await SqliteRecordingRepository.open(
-      review._workspace.databasePath,
-      factory: factory,
-    );
+    final candidate = File(review._workspace.databasePath);
+    if (await _candidateDigest(candidate) != review._databaseDigest) {
+      throw const BackupException(
+        BackupProblem.integrity,
+        'The verified restore candidate changed.',
+      );
+    }
+    final source = await _openCandidate(candidate.path);
     var stagedFiles = false;
     final planned = <String, RecordingAttachment>{};
     final id = SqliteRecordingRepository._uuid.v4();
@@ -355,14 +360,16 @@ class SqliteCollectionBackup {
         );
       });
     } finally {
-      await source.close();
-      if (stagedFiles) {
-        // If COMMIT returned an ambiguous I/O error, preserve files until the
-        // database can prove that this attempt did not commit.
-        try {
-          await _discardUncommitted(repository, originals.root, id);
-        } on Object {
-          // The exclusive cold-start pass can retry when storage is readable.
+      try {
+        await source.close();
+      } finally {
+        if (stagedFiles) {
+          // Preserve files if COMMIT returned an ambiguous I/O error.
+          try {
+            await _discardUncommitted(repository, originals.root, id);
+          } on Object {
+            // The exclusive cold-start pass retries when storage is readable.
+          }
         }
       }
     }
@@ -758,6 +765,35 @@ class SqliteCollectionBackup {
       if (current != null && current != setting.value) _badRows();
       await target.saveHostValue(setting.namespace, setting.key, setting.value);
     }
+  }
+
+  Future<SqliteRecordingRepository> _openCandidate(String path) async =>
+      SqliteRecordingRepository._(
+        await (factory ?? databaseFactory).openDatabase(
+          path,
+          options: OpenDatabaseOptions(readOnly: true, singleInstance: false),
+        ),
+      );
+
+  static Future<String> _candidateDigest(File file) async {
+    if (await FileSystemEntity.type(file.path, followLinks: false) !=
+        FileSystemEntityType.file) {
+      _badRows();
+    }
+    // A verified candidate is a closed, standalone database. Never read newer
+    // pages from an unexpected SQLite sidecar after confirmation.
+    for (final suffix in ['-wal', '-journal']) {
+      final sidecar = File('${file.path}$suffix');
+      final type = await FileSystemEntity.type(
+        sidecar.path,
+        followLinks: false,
+      );
+      if (type == FileSystemEntityType.notFound) continue;
+      if (type != FileSystemEntityType.file || await sidecar.length() != 0) {
+        _badRows();
+      }
+    }
+    return backupDigest(file);
   }
 
   Future<String?> _fingerprint(SqliteRecordingRepository db, String id) async {
