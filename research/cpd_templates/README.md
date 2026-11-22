@@ -33,6 +33,7 @@
 - [Phase 7B reporting completion and compatibility](international/phase7b_implementation_report.md) · recipient traceability, stress and blank-page checks, offline shaping, simulator incident and minimum-OS findings.
 - [Phase 8 portable backup and write recovery rehearsal](international/phase8_backup_and_recovery.md) · whole-store format, historical scheme rules, recovery evidence and migration protections.
 - [Profession backup and restore assessment](international/phase8_profession_backup_assessment.md) · current product direction, proposed restore protocol, policy wording and release decisions.
+- [Profession backup implementation rehearsal](international/phase8_profession_backup_implementation.md) · scoped restore, password protection, native verification and release gates.
 - [Open questions and validation](international/validation_plan.md).
 - [Custom Fields UI specification](../../docs/custom_fields_ui.md) · the agreed editor and Field Library design.
 
