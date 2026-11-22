@@ -1636,4 +1636,51 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get pbFailed =>
       'La sauvegarde ou la restauration a échoué. Vos fiches existantes restent accessibles.';
+
+  @override
+  String get trialStart => 'Démarrer un essai gratuit de 7 jours';
+
+  @override
+  String get trialStarted => 'Votre essai de 7 jours a commencé.';
+
+  @override
+  String trialRemaining(String remaining) {
+    return 'Durée restante de l’essai : $remaining';
+  }
+
+  @override
+  String get trialThreeDays => 'Il reste trois jours ou moins à votre essai.';
+
+  @override
+  String get trialOneDay => 'Il reste un jour ou moins à votre essai.';
+
+  @override
+  String get trialEnded => 'Essai terminé — Acheter le modèle';
+
+  @override
+  String get trialBuy => 'Acheter le modèle';
+
+  @override
+  String get trialTerms =>
+      'L’essai dure 168 heures. Il est gratuit, ne nécessite aucune information de paiement, ne se renouvelle pas et ne devient pas un achat. Vos activités, justificatifs et rapports historiques restent accessibles. Achetez le modèle ou continuez dans une profession DPC standard gratuite.';
+
+  @override
+  String get trialUnavailable =>
+      'Le statut de l’essai est indisponible. Vos activités et les fonctions gratuites restent accessibles.';
+
+  @override
+  String get trialSaveBlocked =>
+      'L’accès à ce modèle est terminé. Vos modifications sont toujours présentes. Achetez le modèle ou restaurez un achat avant d’enregistrer.';
+
+  @override
+  String get trialStandard => 'Continuer avec le DPC standard';
+
+  @override
+  String get trialHistorical => 'Rapport historique du dispositif';
+
+  @override
+  String get trialAddEvidence => 'Ajouter un justificatif';
+
+  @override
+  String get trialRehearsal => 'Essai interne';
 }

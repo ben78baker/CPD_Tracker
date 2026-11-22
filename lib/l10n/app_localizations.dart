@@ -3003,6 +3003,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backup or restore could not be completed. Your existing records are still available.'**
   String get pbFailed;
+
+  /// No description provided for @trialStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start 7-Day Free Trial'**
+  String get trialStart;
+
+  /// No description provided for @trialStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your 7-day trial has started.'**
+  String get trialStarted;
+
+  /// No description provided for @trialRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial time remaining: {remaining}'**
+  String trialRemaining(String remaining);
+
+  /// No description provided for @trialThreeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Three days or less remain in your trial.'**
+  String get trialThreeDays;
+
+  /// No description provided for @trialOneDay.
+  ///
+  /// In en, this message translates to:
+  /// **'One day or less remains in your trial.'**
+  String get trialOneDay;
+
+  /// No description provided for @trialEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial Ended — Purchase Template'**
+  String get trialEnded;
+
+  /// No description provided for @trialBuy.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase Template'**
+  String get trialBuy;
+
+  /// No description provided for @trialTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'The trial lasts 168 hours. It is free and requires no payment details. It never renews or becomes a purchase. Your records, evidence and historical reports stay available. Buy the template to resume editing or continue in a free Standard CPD profession.'**
+  String get trialTerms;
+
+  /// No description provided for @trialUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial status is unavailable. Your records and free CPD features are available.'**
+  String get trialUnavailable;
+
+  /// No description provided for @trialSaveBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Template access has ended. Your changes are still here. Buy the template or restore a purchase before saving.'**
+  String get trialSaveBlocked;
+
+  /// No description provided for @trialStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Standard CPD'**
+  String get trialStandard;
+
+  /// No description provided for @trialHistorical.
+  ///
+  /// In en, this message translates to:
+  /// **'Historical scheme report'**
+  String get trialHistorical;
+
+  /// No description provided for @trialAddEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Add evidence'**
+  String get trialAddEvidence;
+
+  /// No description provided for @trialRehearsal.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal trial rehearsal'**
+  String get trialRehearsal;
 }
 
 class _AppLocalizationsDelegate

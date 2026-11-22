@@ -30,34 +30,38 @@ class SchemePeriodStore {
     );
   }
 
-  Future<void> select(String collectionId, SchemePeriod period) =>
-      repository.transaction((tx) async {
-        final collection = await tx.loadCollection(collectionId);
-        final history = await tx.loadLayouts(collectionId);
-        if (collection == null ||
-            collection.deleted ||
-            !history.any(
-              (layout) =>
-                  layout.templateId == period.templateId &&
-                  layout.templateVersion == period.templateVersion,
-            )) {
-          throw StateError(
-            'The period must belong to a template adopted by this profession.',
-          );
-        }
-        final periodNamespace = namespace(collectionId);
-        final state = await tx.loadHostState(periodNamespace);
-        final key = 'period:${period.id}';
-        final data = jsonEncode(period.toJson());
-        if (state[key] case final previous?) {
-          if (previous != data) {
-            throw StateError('A retained period is immutable.');
-          }
-        } else {
-          await tx.saveHostValue(periodNamespace, key, data);
-        }
-        await tx.saveHostValue(periodNamespace, 'selected', period.id);
-      });
+  Future<void> select(
+    String collectionId,
+    SchemePeriod period, {
+    Future<void> Function(SqliteRecordingRepository)? canChange,
+  }) => repository.transaction((tx) async {
+    final collection = await tx.loadCollection(collectionId);
+    final history = await tx.loadLayouts(collectionId);
+    if (collection == null ||
+        collection.deleted ||
+        !history.any(
+          (layout) =>
+              layout.templateId == period.templateId &&
+              layout.templateVersion == period.templateVersion,
+        )) {
+      throw StateError(
+        'The period must belong to a template adopted by this profession.',
+      );
+    }
+    final periodNamespace = namespace(collectionId);
+    final state = await tx.loadHostState(periodNamespace);
+    final key = 'period:${period.id}';
+    final data = jsonEncode(period.toJson());
+    if (state[key] case final previous?) {
+      if (previous != data) {
+        throw StateError('A retained period is immutable.');
+      }
+    } else {
+      await tx.saveHostValue(periodNamespace, key, data);
+    }
+    await tx.saveHostValue(periodNamespace, 'selected', period.id);
+    await canChange?.call(tx);
+  });
 }
 
 typedef SchemeEvidence = ({String name, bool available, String? url});

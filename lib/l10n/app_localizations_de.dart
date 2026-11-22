@@ -1630,4 +1630,51 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get pbFailed =>
       'Sicherung oder Wiederherstellung fehlgeschlagen. Ihre vorhandenen Einträge bleiben verfügbar.';
+
+  @override
+  String get trialStart => 'Kostenlosen 7-Tage-Test starten';
+
+  @override
+  String get trialStarted => 'Ihr 7-Tage-Test hat begonnen.';
+
+  @override
+  String trialRemaining(String remaining) {
+    return 'Verbleibende Testzeit: $remaining';
+  }
+
+  @override
+  String get trialThreeDays => 'Der Test endet in höchstens drei Tagen.';
+
+  @override
+  String get trialOneDay => 'Der Test endet in höchstens einem Tag.';
+
+  @override
+  String get trialEnded => 'Test beendet – Vorlage kaufen';
+
+  @override
+  String get trialBuy => 'Vorlage kaufen';
+
+  @override
+  String get trialTerms =>
+      'Der Test dauert 168 Stunden. Er ist kostenlos, erfordert keine Zahlungsdaten, verlängert sich nicht und führt zu keinem Kauf. Einträge, Nachweise und bisherige Berichte bleiben verfügbar. Kaufen Sie die Vorlage oder erfassen Sie weiter in einem kostenlosen Standard-CPD-Beruf.';
+
+  @override
+  String get trialUnavailable =>
+      'Der Teststatus ist nicht verfügbar. Ihre Einträge und die kostenlosen CPD-Funktionen bleiben verfügbar.';
+
+  @override
+  String get trialSaveBlocked =>
+      'Ihr Vorlagenzugriff ist beendet. Ihre Änderungen sind noch vorhanden. Kaufen Sie die Vorlage oder stellen Sie den Kauf wieder her.';
+
+  @override
+  String get trialStandard => 'Mit Standard-CPD fortfahren';
+
+  @override
+  String get trialHistorical => 'Historischer Bericht zum CPD-Programm';
+
+  @override
+  String get trialAddEvidence => 'Nachweis hinzufügen';
+
+  @override
+  String get trialRehearsal => 'Interner Testlauf';
 }

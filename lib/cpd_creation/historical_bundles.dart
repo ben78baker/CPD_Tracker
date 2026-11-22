@@ -40,6 +40,22 @@ class HistoricalCpdBundles {
     return data == null ? null : ProfessionTemplateBundle.decode(data);
   }
 
+  /// An archive without a chosen period can use a unique retained ruleset.
+  /// Multiple retained rules require the period's explicit historical pin.
+  Future<ProfessionTemplateBundle?> readOnlyRecipeVersion(
+    SqliteRecordingRepository tx,
+    String id,
+    int version,
+  ) async {
+    final prefix = '$id:$version:';
+    final matches = (await tx.loadHostState(
+      namespace,
+    )).entries.where((entry) => entry.key.startsWith(prefix)).toList();
+    return matches.length == 1
+        ? ProfessionTemplateBundle.decode(matches.single.value)
+        : null;
+  }
+
   Future<void> verify(SqliteRecordingRepository tx) async {
     final byRecipe = <(String, int), Set<int>>{};
     for (final entry in (await tx.loadHostState(namespace)).entries) {

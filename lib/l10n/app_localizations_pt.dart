@@ -1629,4 +1629,51 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get pbFailed =>
       'Não foi possível concluir a cópia ou a restauração. Seus registros continuam disponíveis.';
+
+  @override
+  String get trialStart => 'Iniciar teste gratuito de 7 dias';
+
+  @override
+  String get trialStarted => 'O seu teste de 7 dias começou.';
+
+  @override
+  String trialRemaining(String remaining) {
+    return 'Tempo restante do teste: $remaining';
+  }
+
+  @override
+  String get trialThreeDays => 'Restam três dias ou menos de teste.';
+
+  @override
+  String get trialOneDay => 'Resta um dia ou menos de teste.';
+
+  @override
+  String get trialEnded => 'Teste terminado — Comprar modelo';
+
+  @override
+  String get trialBuy => 'Comprar modelo';
+
+  @override
+  String get trialTerms =>
+      'O teste dura 168 horas. É gratuito, não exige dados de pagamento, não se renova e não se transforma numa compra. Os seus registos, comprovativos e relatórios históricos continuam disponíveis. Compre o modelo ou continue numa profissão de DPC padrão gratuita.';
+
+  @override
+  String get trialUnavailable =>
+      'O estado do teste está indisponível. Os seus registos e as funções gratuitas continuam disponíveis.';
+
+  @override
+  String get trialSaveBlocked =>
+      'O acesso a este modelo terminou. As alterações continuam aqui. Compre o modelo ou restaure uma compra antes de guardar.';
+
+  @override
+  String get trialStandard => 'Continuar com DPC padrão';
+
+  @override
+  String get trialHistorical => 'Relatório histórico do programa';
+
+  @override
+  String get trialAddEvidence => 'Adicionar comprovativo';
+
+  @override
+  String get trialRehearsal => 'Teste interno';
 }

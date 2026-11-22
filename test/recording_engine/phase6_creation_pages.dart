@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 
 import 'phase5_fixtures.dart';
 import 'phase7_rehearsal_pages.dart';
+import 'phase9_trial_panel.dart';
 
 class ProfessionCreationPage extends StatefulWidget {
   const ProfessionCreationPage({
@@ -70,6 +71,7 @@ class _ProfessionCreationPageState extends State<ProfessionCreationPage> {
         final chosen = await Navigator.of(context).push<bool>(
           MaterialPageRoute(
             builder: (_) => _PilotCatalogue(
+              store: widget.store,
               phase7: widget.phase7,
               reportLanguage: reportLanguage,
             ),
@@ -269,10 +271,22 @@ class DraftChoices extends StatelessWidget {
   }
 }
 
-class _PilotCatalogue extends StatelessWidget {
-  const _PilotCatalogue({required this.phase7, required this.reportLanguage});
+class _PilotCatalogue extends StatefulWidget {
+  const _PilotCatalogue({
+    required this.store,
+    required this.phase7,
+    required this.reportLanguage,
+  });
+  final ProfessionCreationStore store;
   final ReportLanguage reportLanguage;
   final bool phase7;
+
+  @override
+  State<_PilotCatalogue> createState() => _PilotCatalogueState();
+}
+
+class _PilotCatalogueState extends State<_PilotCatalogue> {
+  int _revision = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -283,10 +297,11 @@ class _PilotCatalogue extends StatelessWidget {
       appBar: AppBar(title: Text(s.p6Templates)),
       body: BoundedList(
         children: [
+          if (widget.store.trialsEnabled) Text(s.trialRehearsal),
           FormSectionTile(
             label: recipe.localizedLabel(language),
             icon: Icons.medical_services_outlined,
-            supportingText: phase7
+            supportingText: widget.phase7
                 ? nursingBundle.label(
                     "description",
                     recipe.localizedDescription(language),
@@ -299,22 +314,36 @@ class _PilotCatalogue extends StatelessWidget {
                 Text(s.p6TemplateScope),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => nursingPilotPreview(
-                        context,
-                        phase7: phase7,
-                        reportLanguage: reportLanguage,
+                  onPressed: () async {
+                    final chosen = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute(
+                        builder: (previewContext) => nursingPilotPreview(
+                          previewContext,
+                          phase7: widget.phase7,
+                          reportLanguage: widget.reportLanguage,
+                          footer: widget.store.trialsEnabled
+                              ? _trialPanel(previewContext)
+                              : null,
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                    if (!context.mounted) return;
+                    if (chosen == true) {
+                      Navigator.pop(context, true);
+                    } else if (widget.store.trialsEnabled) {
+                      setState(() => _revision++);
+                    }
+                  },
                   icon: const Icon(Icons.visibility_outlined),
                   label: Text(s.editorPreview),
                 ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(s.p6ChooseTemplate),
-                ),
+                if (widget.store.trialsEnabled)
+                  _trialPanel(context, key: ValueKey(_revision))
+                else
+                  FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text(s.p6ChooseTemplate),
+                  ),
               ],
             ),
           ),
@@ -322,12 +351,35 @@ class _PilotCatalogue extends StatelessWidget {
       ),
     );
   }
+
+  Widget _trialPanel(BuildContext context, {Key? key}) => TemplateTrialPanel(
+    key: key,
+    store: widget.store,
+    templateId: nursingPilot.id,
+    purchase: () =>
+        openTemplateCheckout(context, widget.store, nursingPilot.id),
+    onUse: () => Navigator.pop(context, true),
+  );
+}
+
+Future<void> openTemplateCheckout(
+  BuildContext context,
+  ProfessionCreationStore store,
+  String templateId,
+) async {
+  await Navigator.of(context).push<bool>(
+    MaterialPageRoute(
+      builder: (_) =>
+          RehearsalCheckout(store: store, product: 'template:$templateId'),
+    ),
+  );
 }
 
 TemplatePreviewPage nursingPilotPreview(
   BuildContext context, {
   bool phase7 = false,
   ReportLanguage reportLanguage = ReportLanguage.app,
+  Widget? footer,
 }) {
   final s = editorStrings(context);
   final base = nursingPilot;
@@ -353,6 +405,7 @@ TemplatePreviewPage nursingPilotPreview(
     templateVersion: recipe.version,
   );
   return TemplatePreviewPage(
+    footer: footer,
     template: recipe,
     profession: nursingBundle.profession,
     country: nursingBundle.country,
@@ -723,6 +776,8 @@ class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
           },
         );
       }
+    } on TemplateAccessException {
+      if (mounted) setState(() => _problem = s.trialSaveBlocked);
     } on Object {
       if (mounted) _showError(context);
     } finally {

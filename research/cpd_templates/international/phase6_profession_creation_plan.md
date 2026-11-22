@@ -52,6 +52,10 @@ Automatically persist creation and field-edit drafts locally. Preserve the base 
 | Localisation and accessibility | Rehearse English, German, Spanish, French, Hindi and Portuguese across all eight app colours using automated checks, including narrow screens and large text. Check translated and user-entered names, text wrapping, touch targets, focus and error announcements, keyboard and system Back, VoiceOver and TalkBack, scrolling, drag and accessible reorder actions. Run representative native cases on both platforms and track minimum-version and physical-device gaps explicitly. |
 | Regression and isolation | Run the existing Flutter suite, static analysis, CPD parity and migration/recovery suites. Verify no production activation, no changes to signing or release settings, no preview access to production data and no user data conversion. Exercise realistic recovery checkpoints and preserve the established release gates. |
 
+## Phase 9 addition to the creation flow
+
+Both first-run and existing-user creation get the same catalogue and preview trial controls. Trial activation is a distinct action and is never inferred from browsing or copied into a creation draft. Starting the trial does not complete onboarding or create a profession. Keep the free Standard CPD choice and back navigation accessible while the store or trial authority is unavailable. Apply the same confirmation and idempotent commit when the user creates the first or an additional trial placement. [Phase 9 trial states and acceptance checks](phase9_template_trials.md)
+
 ## Definitive Phase 6 approval conditions
 
 - Rehearse the approved tile names and retain free Standard CPD. Use simulated store access without prices.

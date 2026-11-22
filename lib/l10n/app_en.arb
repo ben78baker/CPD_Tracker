@@ -636,5 +636,26 @@
   "pbOpenExisting": "Open existing profession",
   "pbBackupSaved": "The backup was verified. Save or share it to keep an external copy.",
   "pbPremiumLocked": "Your records are available. Verify template ownership to add new records with this layout.",
-  "pbFailed": "Backup or restore could not be completed. Your existing records are still available."
+  "pbFailed": "Backup or restore could not be completed. Your existing records are still available.",
+  "trialStart": "Start 7-Day Free Trial",
+  "trialStarted": "Your 7-day trial has started.",
+  "trialRemaining": "Trial time remaining: {remaining}",
+  "trialThreeDays": "Three days or less remain in your trial.",
+  "trialOneDay": "One day or less remains in your trial.",
+  "trialEnded": "Trial Ended — Purchase Template",
+  "trialBuy": "Purchase Template",
+  "trialTerms": "The trial lasts 168 hours. It is free and requires no payment details. It never renews or becomes a purchase. Your records, evidence and historical reports stay available. Buy the template to resume editing or continue in a free Standard CPD profession.",
+  "trialUnavailable": "Trial status is unavailable. Your records and free CPD features are available.",
+  "trialSaveBlocked": "Template access has ended. Your changes are still here. Buy the template or restore a purchase before saving.",
+  "trialStandard": "Continue with Standard CPD",
+  "trialHistorical": "Historical scheme report",
+  "trialAddEvidence": "Add evidence",
+  "trialRehearsal": "Internal trial rehearsal",
+  "@trialRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "String"
+      }
+    }
+  }
 }

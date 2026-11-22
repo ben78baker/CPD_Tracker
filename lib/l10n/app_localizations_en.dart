@@ -1622,4 +1622,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pbFailed =>
       'Backup or restore could not be completed. Your existing records are still available.';
+
+  @override
+  String get trialStart => 'Start 7-Day Free Trial';
+
+  @override
+  String get trialStarted => 'Your 7-day trial has started.';
+
+  @override
+  String trialRemaining(String remaining) {
+    return 'Trial time remaining: $remaining';
+  }
+
+  @override
+  String get trialThreeDays => 'Three days or less remain in your trial.';
+
+  @override
+  String get trialOneDay => 'One day or less remains in your trial.';
+
+  @override
+  String get trialEnded => 'Trial Ended — Purchase Template';
+
+  @override
+  String get trialBuy => 'Purchase Template';
+
+  @override
+  String get trialTerms =>
+      'The trial lasts 168 hours. It is free and requires no payment details. It never renews or becomes a purchase. Your records, evidence and historical reports stay available. Buy the template to resume editing or continue in a free Standard CPD profession.';
+
+  @override
+  String get trialUnavailable =>
+      'Trial status is unavailable. Your records and free CPD features are available.';
+
+  @override
+  String get trialSaveBlocked =>
+      'Template access has ended. Your changes are still here. Buy the template or restore a purchase before saving.';
+
+  @override
+  String get trialStandard => 'Continue with Standard CPD';
+
+  @override
+  String get trialHistorical => 'Historical scheme report';
+
+  @override
+  String get trialAddEvidence => 'Add evidence';
+
+  @override
+  String get trialRehearsal => 'Internal trial rehearsal';
 }

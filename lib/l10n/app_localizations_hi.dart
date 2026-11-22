@@ -1608,4 +1608,51 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get pbFailed =>
       'बैकअप या बहाली पूरी नहीं हुई। आपके मौजूदा रिकॉर्ड उपलब्ध हैं।';
+
+  @override
+  String get trialStart => '7 दिन का मुफ़्त परीक्षण शुरू करें';
+
+  @override
+  String get trialStarted => 'आपका 7 दिन का परीक्षण शुरू हो गया है।';
+
+  @override
+  String trialRemaining(String remaining) {
+    return 'परीक्षण का शेष समय: $remaining';
+  }
+
+  @override
+  String get trialThreeDays => 'परीक्षण के तीन दिन या उससे कम बचे हैं।';
+
+  @override
+  String get trialOneDay => 'परीक्षण का एक दिन या उससे कम बचा है।';
+
+  @override
+  String get trialEnded => 'परीक्षण समाप्त — टेम्पलेट खरीदें';
+
+  @override
+  String get trialBuy => 'टेम्पलेट खरीदें';
+
+  @override
+  String get trialTerms =>
+      'मुफ़्त परीक्षण 168 घंटे चलता है। इसके लिए भुगतान विवरण की ज़रूरत नहीं है और यह अपने आप नवीनीकृत नहीं होता या खरीद में नहीं बदलता। आपके रिकॉर्ड, साक्ष्य और पिछली रिपोर्ट उपलब्ध रहती हैं। टेम्पलेट खरीदें या मुफ़्त मानक CPD प्रोफ़ेशन में रिकॉर्ड बनाना जारी रखें।';
+
+  @override
+  String get trialUnavailable =>
+      'परीक्षण की स्थिति उपलब्ध नहीं है। आपके रिकॉर्ड और मुफ़्त CPD सुविधाएँ उपलब्ध हैं।';
+
+  @override
+  String get trialSaveBlocked =>
+      'इस टेम्पलेट की पहुँच समाप्त हो गई है। आपके बदलाव अभी मौजूद हैं। सहेजने से पहले टेम्पलेट खरीदें या खरीद बहाल करें।';
+
+  @override
+  String get trialStandard => 'मानक CPD के साथ जारी रखें';
+
+  @override
+  String get trialHistorical => 'योजना की पिछली रिपोर्ट';
+
+  @override
+  String get trialAddEvidence => 'साक्ष्य जोड़ें';
+
+  @override
+  String get trialRehearsal => 'आंतरिक परीक्षण';
 }

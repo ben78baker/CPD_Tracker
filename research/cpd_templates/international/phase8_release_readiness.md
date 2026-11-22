@@ -46,6 +46,8 @@ Safeguards and test probes are in `d1c172b`. [Format and fixture retention contr
 - Reconsider time-based trials only with separate authorisation and clear store-specific terms. Free sample previews already support evaluation without starting a timed entitlement or risking real records.
 - Revisit deferred commercial experiments and report formats once evidence supports demand. Any issue affecting a capability already offered to users remains in A or B.
 
+Phase 9 implements the isolated trials rehearsal. Live trials remain in C for a release that excludes them. If included, verified one-time enforcement, storefront disclosures, separate trial and purchase restoration, historical access and signed physical testing become B release gates for that scope. They introduce no dependency for the already-scoped migration rehearsal in A. [Phase 9 release conditions](phase9_template_trials.md)
+
 ## Store verification protocol for a later approved test
 
 **Current result.** No legitimate paid transaction or original paid-app grant was restored in this review. The branch uses rehearsal fixtures and has no live StoreKit or Play Billing purchase implementation or approved store test catalogues. The tests establish that archives cannot grant access and that historical data remains usable when verification is unavailable. Production readiness still requires the following signed/store tests.

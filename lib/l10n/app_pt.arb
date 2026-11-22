@@ -605,5 +605,19 @@
   "pbOpenExisting": "Abrir profissão existente",
   "pbBackupSaved": "A cópia foi verificada. Salve ou compartilhe para manter uma cópia externa.",
   "pbPremiumLocked": "Seus registros estão disponíveis. Verifique a compra do modelo para adicionar registros com este layout.",
-  "pbFailed": "Não foi possível concluir a cópia ou a restauração. Seus registros continuam disponíveis."
+  "pbFailed": "Não foi possível concluir a cópia ou a restauração. Seus registros continuam disponíveis.",
+  "trialStart": "Iniciar teste gratuito de 7 dias",
+  "trialStarted": "O seu teste de 7 dias começou.",
+  "trialRemaining": "Tempo restante do teste: {remaining}",
+  "trialThreeDays": "Restam três dias ou menos de teste.",
+  "trialOneDay": "Resta um dia ou menos de teste.",
+  "trialEnded": "Teste terminado — Comprar modelo",
+  "trialBuy": "Comprar modelo",
+  "trialTerms": "O teste dura 168 horas. É gratuito, não exige dados de pagamento, não se renova e não se transforma numa compra. Os seus registos, comprovativos e relatórios históricos continuam disponíveis. Compre o modelo ou continue numa profissão de DPC padrão gratuita.",
+  "trialUnavailable": "O estado do teste está indisponível. Os seus registos e as funções gratuitas continuam disponíveis.",
+  "trialSaveBlocked": "O acesso a este modelo terminou. As alterações continuam aqui. Compre o modelo ou restaure uma compra antes de guardar.",
+  "trialStandard": "Continuar com DPC padrão",
+  "trialHistorical": "Relatório histórico do programa",
+  "trialAddEvidence": "Adicionar comprovativo",
+  "trialRehearsal": "Teste interno"
 }

@@ -13,18 +13,28 @@ class CreationAccess {
     this.customFields = false,
     this.legacy = false,
     Iterable<String> templates = const [],
-  }) : templates = Set.unmodifiable(templates);
+    Iterable<String> activeTrials = const [],
+  }) : templates = Set.unmodifiable(templates),
+       activeTrials = Set.unmodifiable(activeTrials);
 
   final bool customFields;
   final bool legacy;
   final Set<String> templates;
+  final Set<String> activeTrials;
   bool get canCustomiseFields => customFields || legacy;
+
+  bool hasTemplateAccess(String? id) =>
+      templates.contains(id) || activeTrials.contains(id);
 
   bool allows(ProfessionKind kind, String? templateId) => switch (kind) {
     ProfessionKind.standard => true,
     ProfessionKind.custom => canCustomiseFields,
-    ProfessionKind.template => templates.contains(templateId),
+    ProfessionKind.template => hasTemplateAccess(templateId),
   };
+}
+
+class TemplateAccessException implements Exception {
+  const TemplateAccessException();
 }
 
 class ReportSelection {

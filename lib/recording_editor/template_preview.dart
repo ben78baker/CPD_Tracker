@@ -104,6 +104,7 @@ class TemplatePreviewPage extends StatelessWidget {
     this.onReportError,
     this.sampleAttachmentLabel,
     this.arrangementPreview,
+    this.footer,
   }) : examples = List.unmodifiable(examples),
        featuresAndLimits = List.unmodifiable(featuresAndLimits) {
     final fields = {for (final field in template.fields) field.id: field};
@@ -134,6 +135,7 @@ class TemplatePreviewPage extends StatelessWidget {
   final String? sampleAttachmentLabel;
   final Widget Function(BuildContext, Object)? onReportError;
   final WidgetBuilder? arrangementPreview;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +174,10 @@ class TemplatePreviewPage extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(item),
             ),
+          if (footer case final Widget actions) ...[
+            actions,
+            const SizedBox(height: 12),
+          ],
           FilledButton.icon(
             icon: const Icon(Icons.edit_note),
             label: Text(s.editorTry),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cpd_tracker/cpd_backup/profession_backup_page.dart';
@@ -9,6 +10,7 @@ import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_pilot.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
+import 'package:cpd_tracker/cpd_creation/template_trials.dart';
 import 'package:cpd_tracker/l10n/app_localizations.dart';
 import 'package:cpd_tracker/onboarding_page.dart';
 import 'package:cpd_tracker/recording_editor/record_form.dart';
@@ -31,14 +33,21 @@ import 'package:uuid/uuid.dart';
 
 import 'phase6_creation_pages.dart';
 import 'phase7_rehearsal_pages.dart';
+import 'phase9_record_tools.dart';
+import 'phase9_trial_panel.dart';
 
-ProfessionCreationStore phase6Store(SqliteRecordingRepository repository) =>
-    ProfessionCreationStore(
-      repository,
-      templates: {(nursingPilot.id, 1): nursingPilot},
-      reportRules: {(nursingPilot.id, 1): nursingReportRules},
-      bundles: {(nursingPilot.id, 1): nursingBundle},
-    );
+ProfessionCreationStore phase6Store(
+  SqliteRecordingRepository repository, {
+  TemplateTrialLedger? trialLedger,
+  TrialClock? trialClock,
+}) => ProfessionCreationStore(
+  repository,
+  templates: {(nursingPilot.id, 1): nursingPilot},
+  reportRules: {(nursingPilot.id, 1): nursingReportRules},
+  bundles: {(nursingPilot.id, 1): nursingBundle},
+  trialLedger: trialLedger,
+  trialClock: trialClock,
+);
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -270,18 +279,23 @@ class _HomeState extends State<_Home> {
       final enabled = await widget.store.canAddToLayout(history.last);
       if (!mounted) return;
       if (!enabled) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(editorStrings(context).pbPremiumLocked)),
-        );
+        if (widget.store.trialsEnabled) {
+          await _open(profession);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(editorStrings(context).pbPremiumLocked)),
+          );
+        }
         return;
       }
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => _SampleRecordPage(
+          builder: (_) => RehearsalRecordPage(
             store: widget.store,
             collection: profession.id,
             history: history,
             phase7: true,
+            originals: widget.originals,
           ),
         ),
       );
@@ -742,16 +756,28 @@ class _ProfessionPageState extends State<_ProfessionPage> {
   ]) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => _SampleRecordPage(
+        builder: (_) => RehearsalRecordPage(
           store: widget.store,
           collection: widget.profession.id,
           history: history,
           record: record,
           phase7: widget.phase7,
+          originals: widget.originals,
         ),
       ),
     );
     _refresh();
+  }
+
+  Future<void> _standard() async {
+    final draft = await widget.store.begin(ProfessionKind.standard);
+    if (!mounted) return;
+    final created = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ProfessionDraftPage(store: widget.store, draft: draft),
+      ),
+    );
+    if (created != null && mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -768,28 +794,54 @@ class _ProfessionPageState extends State<_ProfessionPage> {
           }
           final (history, records, access) = snapshot.requireData;
           final active = history.last;
-          final hasTemplate = access.templates.contains(active.templateId);
+          final templateId = active.templateId;
+          final hasTemplate = access.hasTemplateAccess(templateId);
+          final trialUi = widget.store.trialsEnabled;
+          final historical =
+              trialUi && templateId != null && records.isNotEmpty;
           return BoundedList(
             children: [
+              if (trialUi && templateId != null)
+                TemplateTrialPanel(
+                  store: widget.store,
+                  templateId: templateId,
+                  purchase: () =>
+                      openTemplateCheckout(context, widget.store, templateId),
+                  onStandard: _standard,
+                  onStatus: (status) {
+                    final enabled =
+                        status.active ||
+                        status.state == TemplateTrialState.owned;
+                    if (enabled != hasTemplate) _refresh();
+                  },
+                ),
               if (active.templateId == null || hasTemplate)
                 FilledButton(
                   onPressed: () => _record(history),
                   child: Text(s.editorNewRecord),
                 )
-              else
+              else if (!trialUi)
                 Text(s.pbPremiumLocked),
               if (hasTemplate ||
                   access.canCustomiseFields && active.templateId == null)
                 OutlinedButton(onPressed: _edit, child: Text(s.editFields)),
-              if (hasTemplate)
+              if (hasTemplate || historical)
                 OutlinedButton(
                   onPressed: () => _report(history, records, active.version),
-                  child: Text(s.p6OpenReport),
-                )
-              else
+                  child: Text(hasTemplate ? s.p6OpenReport : s.trialHistorical),
+                ),
+              if (!hasTemplate || trialUi)
                 OutlinedButton(
                   onPressed: () => _standardReport(history, records),
                   child: Text(s.editorExport),
+                ),
+              if (trialUi && records.isNotEmpty)
+                RehearsalExportActions(
+                  store: widget.store,
+                  profession: widget.profession,
+                  history: history,
+                  records: records,
+                  originals: widget.originals,
                 ),
               if (widget.search)
                 TextField(
@@ -816,7 +868,7 @@ class _ProfessionPageState extends State<_ProfessionPage> {
                           : '${s.editorExample} ${index + 1}',
                     ),
                     onTap: () => _record(history, record),
-                    trailing: !hasTemplate
+                    trailing: !hasTemplate && !historical
                         ? null
                         : IconButton(
                             tooltip: s.p6OpenReport,
@@ -834,26 +886,34 @@ class _ProfessionPageState extends State<_ProfessionPage> {
   }
 }
 
-class _SampleRecordPage extends StatefulWidget {
-  const _SampleRecordPage({
+class RehearsalRecordPage extends StatefulWidget {
+  const RehearsalRecordPage({
+    super.key,
     required this.store,
     required this.collection,
     required this.history,
     this.record,
     this.phase7 = false,
+    this.originals,
   });
   final bool phase7;
   final ProfessionCreationStore store;
   final String collection;
   final List<LayoutRevision> history;
   final RecordingRecord? record;
+  final ManagedAttachmentFiles? originals;
   @override
-  State<_SampleRecordPage> createState() => _SampleRecordPageState();
+  State<RehearsalRecordPage> createState() => _RehearsalRecordPageState();
 }
 
-class _SampleRecordPageState extends State<_SampleRecordPage> {
+class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
   late final _version =
       widget.record?.layoutVersion ?? widget.history.last.version;
+  late final _layout = widget.history.singleWhere(
+    (layout) => layout.version == _version,
+  );
+  late final _scoped = widget.store.trialsEnabled && _layout.templateId != null;
+  late bool _editable = !_scoped;
   late final _fields = resolveFields(_version, widget.history);
   late final _display = () {
     if (!widget.phase7) return _fields;
@@ -888,13 +948,18 @@ class _SampleRecordPageState extends State<_SampleRecordPage> {
   );
   final _changes = <String, Object?>{};
   final _sampleEvidence = const Uuid().v4();
+  late final _recordFiles = RehearsalRecordFiles(
+    widget.store.repository,
+    widget.originals,
+  );
+  late final _labels = _recordFiles.loadLabels(_fields, _values);
   bool _busy = false;
 
   Future<void> _save() async {
+    if (_recordFiles.picking) return;
     final s = editorStrings(context);
     setState(() => _busy = true);
     try {
-      final repository = widget.store.repository;
       final canonical = cpdFieldBindings(_fields);
       final title = _values[canonical['cpd.title']] as String?;
       final details = _values[canonical['cpd.details']] as String?;
@@ -910,7 +975,7 @@ class _SampleRecordPageState extends State<_SampleRecordPage> {
           ).isAfter(DateTime(now.year, now.month, now.day))) {
         throw ArgumentError('A valid activity date is required.');
       }
-      final attachments = [
+      final attachments = <RecordingAttachment>[
         if (_values.values.whereType<List>().any(
           (ids) => ids.contains(_sampleEvidence),
         ))
@@ -922,9 +987,10 @@ class _SampleRecordPageState extends State<_SampleRecordPage> {
           ),
       ];
       final duration = canonical['cpd.creditedDuration']!;
+      attachments.addAll(_recordFiles.linked(_fields, _values));
       if (widget.record case final record?) {
         if (_changes.containsKey(duration)) _changes[duration] ??= 0;
-        await repository.updateValues(
+        await widget.store.updateActivity(
           record.id,
           _changes,
           expectedVersion: record.version,
@@ -940,6 +1006,13 @@ class _SampleRecordPageState extends State<_SampleRecordPage> {
         );
       }
       if (mounted) Navigator.of(context).pop();
+    } on TemplateAccessException {
+      if (mounted) {
+        setState(() => _editable = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(s.trialSaveBlocked)));
+      }
     } on Object {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -952,39 +1025,91 @@ class _SampleRecordPageState extends State<_SampleRecordPage> {
   }
 
   @override
+  void dispose() {
+    if (widget.originals != null && widget.store.trialsEnabled) {
+      unawaited(_recordFiles.dispose());
+    }
+    super.dispose();
+  }
+
+  Future<void> _addAttachment(LayoutField field) async {
+    final attachment = await _recordFiles.pick(context, field);
+    if (!mounted || attachment == null) return;
+    _edit(field.id, [
+      ...?(_values[field.id] as List?)?.cast<String>(),
+      attachment,
+    ]);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = editorStrings(context);
     final ids = widget.history.last.fields.map((f) => f.id).toSet();
     final old = _display.where((field) => !ids.contains(field.id)).toList();
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.record == null ? s.editorNewRecord : s.editorExample,
-        ),
-      ),
-      body: BoundedList(
-        children: [
-          RecordingForm(
-            fields: _display.where((field) => ids.contains(field.id)).toList(),
+    final realEvidence = widget.store.trialsEnabled && widget.originals != null;
+    Widget form(List<LayoutField> fields, {bool historical = false}) =>
+        FutureBuilder(
+          future: realEvidence ? _labels : null,
+          builder: (_, snapshot) => RecordingForm(
+            fields: fields,
             values: _values,
-            sampleAttachmentId: _sampleEvidence,
-            onChanged: _edit,
+            sampleAttachmentId: !realEvidence && !historical
+                ? _sampleEvidence
+                : null,
+            attachmentLabels: {
+              ...?snapshot.data,
+              if (realEvidence) ..._recordFiles.pendingLabels,
+            },
+            addAttachment: realEvidence ? _addAttachment : null,
+            openAttachment: realEvidence
+                ? (id) => _recordFiles.open(context, id)
+                : null,
+            onChanged: _editable && !_busy ? _edit : null,
           ),
-          if (old.isNotEmpty) ...[
-            Text(s.editorHistorical),
-            RecordingForm(fields: old, values: _values, onChanged: _edit),
-          ],
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: FilledButton(
-            onPressed: _busy ? null : _save,
-            child: Text(s.save),
+        );
+    return PopScope(
+      canPop: !_busy,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.record == null ? s.editorNewRecord : s.editorExample,
           ),
         ),
+        body: BoundedList(
+          children: [
+            if (_scoped)
+              TemplateTrialPanel(
+                store: widget.store,
+                templateId: _layout.templateId!,
+                purchase: () => openTemplateCheckout(
+                  context,
+                  widget.store,
+                  _layout.templateId!,
+                ),
+                onStatus: (status) => setState(() {
+                  _editable =
+                      status.active || status.state == TemplateTrialState.owned;
+                }),
+              ),
+            form(_display.where((field) => ids.contains(field.id)).toList()),
+            if (old.isNotEmpty) ...[
+              Text(s.editorHistorical),
+              form(old, historical: true),
+            ],
+          ],
+        ),
+        bottomNavigationBar: !_editable
+            ? null
+            : SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: FilledButton(
+                    onPressed: _busy ? null : _save,
+                    child: Text(s.save),
+                  ),
+                ),
+              ),
       ),
     );
   }

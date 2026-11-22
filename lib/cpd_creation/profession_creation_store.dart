@@ -11,6 +11,7 @@ import '../recording_engine/layout_draft.dart';
 import '../recording_engine/models.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
 import 'creation_policy.dart';
+import 'template_trials.dart';
 
 class ProfessionDraft {
   ProfessionDraft({
@@ -87,15 +88,22 @@ class ProfessionCreationStore {
     required Map<(String, int), TemplateVersion> templates,
     required Map<(String, int), SchemeReportRules> reportRules,
     Map<(String, int), ProfessionTemplateBundle> bundles = const {},
+    this.trialLedger,
+    TrialClock? trialClock,
   }) : templates = Map.unmodifiable(templates),
        reportRules = Map.unmodifiable(reportRules),
-       bundles = Map.unmodifiable(bundles);
+       bundles = Map.unmodifiable(bundles),
+       _trialClock = trialClock ?? TrialClock();
 
   final SqliteRecordingRepository repository;
   final Map<(String, int), TemplateVersion> templates;
   final Map<(String, int), SchemeReportRules> reportRules;
 
   final Map<(String, int), ProfessionTemplateBundle> bundles;
+  final TemplateTrialLedger? trialLedger;
+  final TrialClock _trialClock;
+
+  bool get trialsEnabled => trialLedger != null;
 
   static const _uuid = Uuid();
   static const draftsNamespace = 'cpd.creation.drafts';
@@ -134,6 +142,23 @@ class ProfessionCreationStore {
 
   Future<CreationAccess> access() => _access(repository);
   Future<CreationAccess> _access(SqliteRecordingRepository tx) async {
+    final permanent = await _permanentAccess(tx);
+    if (!trialsEnabled) return permanent;
+    final active = <String>{};
+    for (final id in templates.keys.map((key) => key.$1).toSet()) {
+      if (!permanent.templates.contains(id) && (await _trial(id)).active) {
+        active.add(id);
+      }
+    }
+    return CreationAccess(
+      customFields: permanent.customFields,
+      legacy: permanent.legacy,
+      templates: permanent.templates,
+      activeTrials: active,
+    );
+  }
+
+  Future<CreationAccess> _permanentAccess(SqliteRecordingRepository tx) async {
     final state = await tx.loadHostState(grantsNamespace);
     return CreationAccess(
       customFields: state[customProduct] == PurchaseState.verified.name,
@@ -146,6 +171,36 @@ class ProfessionCreationStore {
           )
           .map((entry) => entry.key.substring(9)),
     );
+  }
+
+  Future<TemplateTrialStatus> trialStatus(String id) =>
+      _templateTrialStatus(repository, id);
+
+  Future<TemplateTrialStatus> startTrial(String id) =>
+      repository.transaction((tx) => _templateTrialStatus(tx, id, start: true));
+
+  Future<TemplateTrialStatus> _templateTrialStatus(
+    SqliteRecordingRepository tx,
+    String id, {
+    bool start = false,
+  }) async {
+    if ((await _permanentAccess(tx)).templates.contains(id)) {
+      return const TemplateTrialStatus(TemplateTrialState.owned);
+    }
+    return _trial(id, start: start);
+  }
+
+  Future<TemplateTrialStatus> _trial(String id, {bool start = false}) async {
+    final ledger = trialLedger;
+    if (ledger != null && templates.keys.any((key) => key.$1 == id)) {
+      try {
+        return await ledger.check(id, clock: _trialClock, start: start);
+      } on Object {
+        // Uncertain local trial history cannot grant access. Purchases,
+        // historical reports and the free routes have separate authority.
+      }
+    }
+    return const TemplateTrialStatus(TemplateTrialState.unavailable);
   }
 
   Future<Map<String, String>> purchaseStates() =>
@@ -359,7 +414,19 @@ class ProfessionCreationStore {
   /// Historical records can be read even when the store cannot verify ownership.
   Future<bool> canAddToLayout(LayoutRevision layout) async =>
       layout.templateId == null ||
-      (await access()).templates.contains(layout.templateId);
+      (await access()).hasTemplateAccess(layout.templateId);
+
+  Future<void> checkTrialTemplateAccess(
+    SqliteRecordingRepository tx,
+    String? templateId,
+  ) async {
+    if (trialsEnabled && templateId != null) {
+      final status = await _templateTrialStatus(tx, templateId);
+      if (!status.active && status.state != TemplateTrialState.owned) {
+        throw const TemplateAccessException();
+      }
+    }
+  }
 
   Future<RecordingRecord> createActivity(
     String collectionId,
@@ -368,29 +435,76 @@ class ProfessionCreationStore {
     Iterable<RecordingAttachment> newAttachments = const [],
   }) => repository.transaction((tx) async {
     final layout = (await tx.loadLayouts(collectionId)).last;
-    if (layout.templateId != null &&
-        !(await _access(tx)).templates.contains(layout.templateId)) {
-      throw StateError(
-        'Adding an activity requires verified template ownership.',
-      );
+    await checkTrialTemplateAccess(tx, layout.templateId);
+    if (!trialsEnabled &&
+        layout.templateId != null &&
+        !(await _permanentAccess(tx)).hasTemplateAccess(layout.templateId)) {
+      throw StateError('Template access is required.');
     }
-    return tx.createRecord(
+    final record = await tx.createRecord(
       collectionId,
       values,
       expectedLayoutVersion: expectedLayoutVersion,
       newAttachments: newAttachments,
     );
+    await checkTrialTemplateAccess(tx, layout.templateId);
+    return record;
+  });
+
+  Future<RecordingRecord> updateActivity(
+    String id,
+    Map<String, Object?> changes, {
+    required int expectedVersion,
+    Iterable<RecordingAttachment> newAttachments = const [],
+  }) => repository.transaction((tx) async {
+    String? templateId;
+    if (trialsEnabled) {
+      final record = await tx.loadRecord(id);
+      if (record == null) throw StateError('Activity unavailable.');
+      final layout = (await tx.loadLayouts(
+        record.collectionId,
+      )).singleWhere((layout) => layout.version == record.layoutVersion);
+      templateId = layout.templateId;
+      await checkTrialTemplateAccess(tx, templateId);
+    }
+    final updated = await tx.updateValues(
+      id,
+      changes,
+      expectedVersion: expectedVersion,
+      newAttachments: newAttachments,
+    );
+    await checkTrialTemplateAccess(tx, templateId);
+    return updated;
   });
 
   Future<SchemeReportRules> requireOwnedReport(LayoutRevision layout) async {
     final access = await this.access();
     final definition = reportRules[(layout.templateId, layout.templateVersion)];
-    if (definition == null || !access.templates.contains(layout.templateId)) {
+    if (definition == null || !access.hasTemplateAccess(layout.templateId)) {
       throw StateError(
         'The specialised report needs verified template ownership.',
       );
     }
     return definition;
+  }
+
+  /// Phase 9 retains scheme reporting for stored records after access ends.
+  /// Only a persisted layout can supply a historical report version.
+  Future<void> requireHistoricalReport(LayoutRevision layout) async {
+    if (!trialsEnabled) {
+      await requireOwnedReport(layout);
+      return;
+    }
+    final pin = (layout.templateId, layout.templateVersion);
+    final saved = await repository.loadLayouts(layout.collectionId);
+    if (pin.$1 == null ||
+        !saved.any(
+          (revision) =>
+              revision.version == layout.version &&
+              (revision.templateId, revision.templateVersion) == pin,
+        )) {
+      throw StateError('The historical report needs a stored template layout.');
+    }
   }
 
   Future<ReportSelection> reportAt(String collectionId, int version) =>
@@ -551,6 +665,7 @@ class ProfessionCreationStore {
       }
     }
     await tx.removeHostValue(draftsNamespace, requestId);
+    await checkTrialTemplateAccess(tx, draft.templateId);
     return collectionId;
   });
 
@@ -560,6 +675,9 @@ class ProfessionCreationStore {
     String? template,
   ) {
     if (!access.allows(kind, template)) {
+      if (trialsEnabled && kind == ProfessionKind.template) {
+        throw const TemplateAccessException();
+      }
       throw StateError('This configuration needs verified access.');
     }
   }

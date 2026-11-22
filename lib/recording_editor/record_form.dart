@@ -99,6 +99,8 @@ class RecordingFieldTile extends StatelessWidget {
     this.requireValue = false,
     this.sampleAttachmentId,
     this.attachmentLabels = const {},
+    this.addAttachment,
+    this.openAttachment,
   });
 
   final LayoutField field;
@@ -107,6 +109,8 @@ class RecordingFieldTile extends StatelessWidget {
   final bool requireValue;
   final String? sampleAttachmentId;
   final Map<String, String> attachmentLabels;
+  final VoidCallback? addAttachment;
+  final ValueChanged<String>? openAttachment;
 
   @override
   Widget build(BuildContext context) {
@@ -256,9 +260,16 @@ class RecordingFieldTile extends StatelessWidget {
           runSpacing: 4,
           children: [
             for (final id in attachments)
-              Chip(
+              InputChip(
                 avatar: Icon(type.icon, size: 18),
                 label: Text(attachmentLabels[id] ?? s.editorSampleFile),
+                onPressed: openAttachment == null
+                    ? null
+                    : () => openAttachment!(id),
+                isEnabled:
+                    enabled ||
+                    openAttachment != null ||
+                    sampleAttachmentId == null,
                 onDeleted: !enabled
                     ? null
                     : () {
@@ -268,7 +279,13 @@ class RecordingFieldTile extends StatelessWidget {
                         onChanged!(remaining.isEmpty ? null : remaining);
                       },
               ),
-            if (attachments.isEmpty ||
+            if (addAttachment != null)
+              OutlinedButton.icon(
+                onPressed: enabled ? addAttachment : null,
+                icon: Icon(type.icon),
+                label: Text(s.trialAddEvidence),
+              )
+            else if (attachments.isEmpty ||
                 (sampleAttachmentId != null &&
                     !attachments.contains(sampleAttachmentId)))
               OutlinedButton.icon(
@@ -354,6 +371,8 @@ class RecordingForm extends StatelessWidget {
     this.sampleAttachmentId,
     this.attachmentLabels = const {},
     this.requiredIds,
+    this.addAttachment,
+    this.openAttachment,
   });
 
   final List<LayoutField> fields;
@@ -363,6 +382,8 @@ class RecordingForm extends StatelessWidget {
   final String? sampleAttachmentId;
   final Map<String, String> attachmentLabels;
   final Set<String>? requiredIds;
+  final ValueChanged<LayoutField>? addAttachment;
+  final ValueChanged<String>? openAttachment;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -382,6 +403,10 @@ class RecordingForm extends StatelessWidget {
             requireValue: requiredIds?.contains(field.id) ?? field.required,
             sampleAttachmentId: sampleAttachmentId,
             attachmentLabels: attachmentLabels,
+            addAttachment: addAttachment == null
+                ? null
+                : () => addAttachment!(field),
+            openAttachment: openAttachment,
             onChanged: onChanged == null
                 ? null
                 : (value) => onChanged!(field.id, value),

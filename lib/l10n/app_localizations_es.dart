@@ -1630,4 +1630,51 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get pbFailed =>
       'No se pudo completar la copia o restauración. Tus registros existentes siguen disponibles.';
+
+  @override
+  String get trialStart => 'Iniciar prueba gratuita de 7 días';
+
+  @override
+  String get trialStarted => 'Tu prueba de 7 días ha comenzado.';
+
+  @override
+  String trialRemaining(String remaining) {
+    return 'Tiempo de prueba restante: $remaining';
+  }
+
+  @override
+  String get trialThreeDays => 'Quedan tres días o menos de prueba.';
+
+  @override
+  String get trialOneDay => 'Queda un día o menos de prueba.';
+
+  @override
+  String get trialEnded => 'Prueba finalizada — Comprar plantilla';
+
+  @override
+  String get trialBuy => 'Comprar plantilla';
+
+  @override
+  String get trialTerms =>
+      'La prueba dura 168 horas. Es gratuita, no requiere datos de pago, no se renueva ni se convierte en una compra. Tus registros, evidencias e informes históricos seguirán disponibles. Compra la plantilla o sigue registrando actividades en una profesión de CPD estándar gratuita.';
+
+  @override
+  String get trialUnavailable =>
+      'No se puede consultar el estado de la prueba. Tus registros y las funciones gratuitas siguen disponibles.';
+
+  @override
+  String get trialSaveBlocked =>
+      'Terminó el acceso a la plantilla. Tus cambios siguen aquí. Compra la plantilla o restaura una compra antes de guardar.';
+
+  @override
+  String get trialStandard => 'Continuar con CPD estándar';
+
+  @override
+  String get trialHistorical => 'Informe histórico del programa';
+
+  @override
+  String get trialAddEvidence => 'Añadir evidencia';
+
+  @override
+  String get trialRehearsal => 'Prueba interna';
 }

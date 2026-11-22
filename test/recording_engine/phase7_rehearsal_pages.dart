@@ -1,5 +1,6 @@
 import 'package:cpd_tracker/cpd_compatibility/report_locale.dart';
 import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
+import 'package:cpd_tracker/cpd_creation/historical_bundles.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_targets.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
@@ -292,6 +293,7 @@ Future<void> pickSchemePeriod(
       store: SchemePeriodStore(store.repository),
       collection: profession.id,
       bundle: bundle,
+      access: store,
     ),
   ),
 );
@@ -301,10 +303,12 @@ class _PeriodsPage extends StatefulWidget {
     required this.store,
     required this.collection,
     required this.bundle,
+    required this.access,
   });
   final SchemePeriodStore store;
   final String collection;
   final ProfessionTemplateBundle bundle;
+  final ProfessionCreationStore access;
 
   @override
   State<_PeriodsPage> createState() => _PeriodsPageState();
@@ -324,8 +328,20 @@ class _PeriodsPageState extends State<_PeriodsPage> {
   Future<void> _select(SchemePeriod period) async {
     setState(() => _busy = true);
     try {
-      await widget.store.select(widget.collection, period);
+      await widget.store.select(
+        widget.collection,
+        period,
+        canChange: (tx) =>
+            widget.access.checkTrialTemplateAccess(tx, period.templateId),
+      );
       if (mounted) Navigator.pop(context);
+    } on TemplateAccessException {
+      if (mounted) {
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(editorStrings(context).trialSaveBlocked)),
+        );
+      }
     } on Object {
       if (mounted) {
         setState(() => _busy = false);
@@ -611,26 +627,63 @@ Future<void> openSchemeReport(
     final active = history.singleWhere(
       (revision) => revision.version == version,
     );
-    final current = phase7Bundles[(active.templateId, active.templateVersion)]!;
-    await store.requireOwnedReport(active);
+    var current = phase7Bundles[(active.templateId, active.templateVersion)];
+    final historical = store.trialsEnabled && records.isNotEmpty;
+    if (historical) {
+      await store.requireHistoricalReport(active);
+      current = await const HistoricalCpdBundles().readOnlyRecipeVersion(
+        store.repository,
+        active.templateId!,
+        active.templateVersion!,
+      );
+    } else {
+      await store.requireOwnedReport(active);
+    }
     final periods = SchemePeriodStore(store.repository);
     var selection = await periods.load(profession.id);
-    if (selection.selected == null) {
+    if (selection.selected == null && !historical && current != null) {
       if (!context.mounted) return;
       await pickSchemePeriod(context, store, profession, current);
       selection = await periods.load(profession.id);
     }
-    if (selection.selected == null || !context.mounted) return;
-    final period = selection.periods.singleWhere(
-      (item) => item.id == selection.selected,
+    if (!context.mounted) return;
+    final period =
+        selection.periods
+            .where((item) => item.id == selection.selected)
+            .firstOrNull ??
+        (historical && current != null
+            ? _recordDatePeriod(current, records, history)
+            : null);
+    if (period == null) {
+      if (historical) throw StateError('No verified historical report period.');
+      return;
+    }
+    final retained = await const HistoricalCpdBundles().read(
+      store.repository,
+      period.templateId,
+      period.templateVersion,
+      period.ruleVersion,
     );
-    final bundle = phase7Bundles[(period.templateId, period.templateVersion)]!;
+    final installed =
+        phase7Bundles[(period.templateId, period.templateVersion)];
+    final bundle =
+        retained ??
+        (!historical && installed?.ruleVersion == period.ruleVersion
+            ? installed
+            : null);
+    if (bundle == null) {
+      throw StateError('The pinned historical rules are unavailable.');
+    }
     final baseline = history.firstWhere(
       (layout) =>
           layout.templateId == bundle.recipe.id &&
           layout.templateVersion == period.templateVersion,
     );
-    await store.requireOwnedReport(baseline);
+    if (historical) {
+      await store.requireHistoricalReport(baseline);
+    } else {
+      await store.requireOwnedReport(baseline);
+    }
     final reportSelection = await store.reportAt(profession.id, version);
     final result = await loadSchemeProgress(
       repository: store.repository,
@@ -698,12 +751,12 @@ Future<void> openSchemeReport(
           ),
           body: PdfPreview(
             initialPageFormat: PdfPageFormat.a4,
-            allowSharing: false,
+            allowSharing: store.trialsEnabled,
             allowPrinting: false,
             canChangePageFormat: false,
             canChangeOrientation: false,
             canDebug: false,
-            useActions: false,
+            useActions: store.trialsEnabled,
             onError: rehearsalReportError,
             build: (_) => buildSchemeReport(
               bundle: bundle,
@@ -730,6 +783,36 @@ Future<void> openSchemeReport(
       );
     }
   }
+}
+
+SchemePeriod? _recordDatePeriod(
+  ProfessionTemplateBundle bundle,
+  List<RecordingRecord> records,
+  List<LayoutRevision> history,
+) {
+  final days = <String>[];
+  for (final record in records.where((record) => !record.deleted)) {
+    final fields = cpdFieldBindings(
+      resolveFields(record.layoutVersion, history),
+    );
+    if (record.values[fields['cpd.activityDate']] case final String day
+        when isCalendarDay(day)) {
+      days.add(day);
+    }
+  }
+  if (days.isEmpty) return null;
+  days.sort();
+  return SchemePeriod(
+    id: 'historical-record-dates',
+    kind: PeriodKind.custom,
+    templateId: bundle.recipe.id,
+    templateVersion: bundle.recipe.version,
+    ruleVersion: bundle.ruleVersion,
+    start: days.first,
+    end: schemeDay(
+      DateTime.parse('${days.last}T00:00:00Z').add(const Duration(days: 1)),
+    ),
+  );
 }
 
 Future<({ReportLocale locale, String practitioner})?> pickPresentation(
