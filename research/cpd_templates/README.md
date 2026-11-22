@@ -34,6 +34,9 @@
 - [Phase 8 portable backup and write recovery rehearsal](international/phase8_backup_and_recovery.md) · whole-store format, historical scheme rules, recovery evidence and migration protections.
 - [Profession backup and restore assessment](international/phase8_profession_backup_assessment.md) · current product direction, proposed restore protocol, policy wording and release decisions.
 - [Profession backup implementation rehearsal](international/phase8_profession_backup_implementation.md) · scoped restore, password protection, native verification and release gates.
+- [Backup format compatibility](international/backup_format_compatibility.md) · versioned archive and encryption formats, historical data semantics and future reader obligations.
+- [Phases 1–8 release-readiness assessment](international/phase8_release_readiness.md) · verification results, release gates, and physical-device and purchase restoration plans.
+- [Legal review and acceptance plan](../../docs/custom_fields_ui.md#14-terms-privacy-and-release-readiness-review) · first-launch agreement, existing-user notices and Settings access. The draft legal copy is held for private review.
 - [Open questions and validation](international/validation_plan.md).
 - [Custom Fields UI specification](../../docs/custom_fields_ui.md) · the agreed editor and Field Library design.
 

@@ -22,8 +22,6 @@ Historical records and the standard export route are available without verified 
 
 ## Verification and release gates
 
-
-
 The full Flutter suite passed **253 tests**. Static analysis reported the same 13 existing warnings and informational findings, including findings in untracked marketing output. New tests exercise authenticated streaming across block boundaries, wrong passwords, edited headers, moved chunks, corrupted final tags and truncation. The restore entry fits 320-pixel width and 170% text scaling across all six locales and eight accents.
 
 The native suite ran against an iOS 18.5 simulator and Android API 24 and 34 emulators on an Apple M4 Pro, using separate debug application identifiers. It checked missing and damaged originals, a verified partial archive versus a corrupted one, storage-capacity rejection, synthetic rollback immediately before commit, immutable historical rules, preservation of a pre-existing unrelated tile, duplicate re-exports and repeat restore after permanent deletion. At restore it confirmed that the archived purchase state was absent and the CPD host refused new paid-layout activities. The external source digest remained unchanged. On Android API 34, the native UI smoke check opened backup from a profession tile and restore from Add Profession. It verified the partial-evidence confirmation, plaintext warning and password dialog with two secure input fields.
@@ -43,3 +41,7 @@ The fixture contains five records, two original files including an 8 MiB fixture
 Before public activation, qualify large evidence collections and many-record archives on physical devices, directory-commit behaviour after power loss, real storage exhaustion and system providers including iOS Files. Provider sharing and OS backup exclusions still need public-release qualification. Journal commitments protect ordinary writes and interrupted restore. Device loss, uninstall and irreversible storage damage require an accessible external backup. Exact iOS 15.6 availability and the signed upgrade matrix remain open, including production-signed API 24. Other release gates remain in effect, including physical accessibility, verified purchases, specialised sharing and reporting parity, offline complex-script PDF fidelity, migration protection and legal review of the published wording.
 
 Implementation and probes are in `227a958`, with the encrypted-file publication fix in `fce72dc`.
+
+## Follow-up safeguards
+
+The follow-up binds field and choice checks to each record's effective layout. It seals the privately rebuilt SQLite database before review and checks it again before committing the import. It rejects unexpected journal data, invalid report selections and attempts to supply an entitlement through host data. Owned picker copies are explicitly released on completion and cancellation. Exclusive cold start reconciles the rehearsal's staging paths without deleting an external source. Signed physical tests still need to qualify OS/provider cache ownership, low storage, device interruptions and exports. [Wire compatibility contract](backup_format_compatibility.md) · [Current test evidence and release gates](phase8_release_readiness.md)
