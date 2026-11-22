@@ -295,6 +295,7 @@ class RecordingAttachment {
     required this.kind,
     required this.locator,
     required this.name,
+    this.originalFingerprint,
   }) {
     if (id.trim().isEmpty ||
         name.trim().isEmpty ||
@@ -316,4 +317,5 @@ class RecordingAttachment {
   final AttachmentKind kind;
   final String locator;
   final String name;
+  final String? originalFingerprint;
 }

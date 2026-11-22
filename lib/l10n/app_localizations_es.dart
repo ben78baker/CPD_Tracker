@@ -1546,4 +1546,88 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get p8Portable => 'Copia portátil';
+
+  @override
+  String get pbHelp =>
+      'Guarda las copias fuera de la aplicación. Sin una copia, desinstalar la aplicación, perder el dispositivo o un fallo de almacenamiento puede borrar tus registros y archivos para siempre.';
+
+  @override
+  String get pbRestore => 'Restaurar desde una copia';
+
+  @override
+  String get pbAddRestored => 'Restaurar como nueva profesión';
+
+  @override
+  String get pbRecords => 'Registros';
+
+  @override
+  String get pbDeleted => 'Registros eliminados incluidos';
+
+  @override
+  String get pbAttachments => 'Archivos adjuntos';
+
+  @override
+  String get pbLinks => 'Enlaces';
+
+  @override
+  String get pbUnavailable => 'Evidencias no disponibles';
+
+  @override
+  String get pbDamaged => 'Archivo dañado';
+
+  @override
+  String get pbMissing => 'Archivo no encontrado';
+
+  @override
+  String get pbIncludeGaps => 'Continuar con evidencias no disponibles';
+
+  @override
+  String get pbPrivate =>
+      'Una copia sin cifrar puede contener información privada. Elige un lugar seguro fuera de la aplicación.';
+
+  @override
+  String get pbEncrypt => 'Proteger con contraseña';
+
+  @override
+  String get pbPassword => 'Contraseña de la copia';
+
+  @override
+  String get pbRepeat => 'Repetir contraseña';
+
+  @override
+  String get pbPasswordHelp =>
+      'Guarda esta contraseña en un lugar seguro. No se puede recuperar una contraseña olvidada.';
+
+  @override
+  String get pbAuthentication =>
+      'Contraseña incorrecta o copia cifrada dañada.';
+
+  @override
+  String get pbAuthMismatch =>
+      'Escribe la misma contraseña de al menos ocho caracteres.';
+
+  @override
+  String get pbExisting => 'Esta profesión ya existe.';
+
+  @override
+  String get pbDeletedExisting =>
+      'Esta profesión aparece en Profesiones eliminadas. Usa la opción de recuperación.';
+
+  @override
+  String get pbNameInUse => 'Elige otro nombre para la profesión.';
+
+  @override
+  String get pbOpenExisting => 'Abrir profesión existente';
+
+  @override
+  String get pbBackupSaved =>
+      'La copia se ha verificado. Guárdala o compártela para conservar una copia externa.';
+
+  @override
+  String get pbPremiumLocked =>
+      'Tus registros están disponibles. Verifica la compra de la plantilla para añadir registros con este diseño.';
+
+  @override
+  String get pbFailed =>
+      'No se pudo completar la copia o restauración. Tus registros existentes siguen disponibles.';
 }

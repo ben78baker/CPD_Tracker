@@ -14,6 +14,7 @@ class OnboardingPreferences {
     required this.initial,
     required this.save,
     required this.onContinue,
+    this.showBackupHelp = false,
   });
 
   final ValueNotifier<Locale?> locale;
@@ -21,6 +22,7 @@ class OnboardingPreferences {
   final Map<String, String> initial;
   final Future<void> Function(String key, String value) save;
   final VoidCallback onContinue;
+  final bool showBackupHelp;
 }
 
 class OnboardingPage extends StatefulWidget {
@@ -176,6 +178,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (widget.preferences?.showBackupHelp ?? false) ...[
+                          Text(loc.pbHelp),
+                          const SizedBox(height: 12),
+                        ],
                         FormSectionTile(
                           label: loc.language,
                           icon: Icons.language_rounded,

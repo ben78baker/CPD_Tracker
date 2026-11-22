@@ -1538,4 +1538,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get p8Portable => 'Portable backup';
+
+  @override
+  String get pbHelp =>
+      'Save backups outside the app. Without a backup, uninstalling the app, losing your device or storage failure may permanently remove your records and attachments.';
+
+  @override
+  String get pbRestore => 'Restore from Backup';
+
+  @override
+  String get pbAddRestored => 'Restore as new profession';
+
+  @override
+  String get pbRecords => 'Records';
+
+  @override
+  String get pbDeleted => 'Deleted records included';
+
+  @override
+  String get pbAttachments => 'Attachments';
+
+  @override
+  String get pbLinks => 'Link references';
+
+  @override
+  String get pbUnavailable => 'Unavailable evidence';
+
+  @override
+  String get pbDamaged => 'Damaged file';
+
+  @override
+  String get pbMissing => 'Missing file';
+
+  @override
+  String get pbIncludeGaps => 'Continue with unavailable evidence';
+
+  @override
+  String get pbPrivate =>
+      'An unencrypted backup may contain private records and evidence. Choose a secure location outside the app.';
+
+  @override
+  String get pbEncrypt => 'Protect with a password';
+
+  @override
+  String get pbPassword => 'Backup password';
+
+  @override
+  String get pbRepeat => 'Repeat password';
+
+  @override
+  String get pbPasswordHelp =>
+      'Keep this password somewhere safe. A forgotten password cannot be recovered.';
+
+  @override
+  String get pbAuthentication =>
+      'Incorrect password or damaged encrypted backup.';
+
+  @override
+  String get pbAuthMismatch =>
+      'Enter matching passwords of at least eight characters.';
+
+  @override
+  String get pbExisting => 'This profession already exists.';
+
+  @override
+  String get pbDeletedExisting =>
+      'This profession is in Deleted Professions. Use the existing recovery option.';
+
+  @override
+  String get pbNameInUse => 'Choose a different profession name.';
+
+  @override
+  String get pbOpenExisting => 'Open existing profession';
+
+  @override
+  String get pbBackupSaved =>
+      'The backup was verified. Save or share it to keep an external copy.';
+
+  @override
+  String get pbPremiumLocked =>
+      'Your records are available. Verify template ownership to add new records with this layout.';
+
+  @override
+  String get pbFailed =>
+      'Backup or restore could not be completed. Your existing records are still available.';
 }

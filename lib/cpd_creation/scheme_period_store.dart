@@ -12,12 +12,12 @@ class SchemePeriodStore {
   const SchemePeriodStore(this.repository);
   final SqliteRecordingRepository repository;
 
-  String _namespace(String id) => 'cpd.scheme.periods:$id';
+  static String namespace(String id) => 'cpd.scheme.periods:$id';
 
   Future<({String? selected, List<SchemePeriod> periods})> load(
     String collectionId,
   ) async {
-    final state = await repository.loadHostState(_namespace(collectionId));
+    final state = await repository.loadHostState(namespace(collectionId));
     return (
       selected: state['selected'],
       periods: [
@@ -45,8 +45,8 @@ class SchemePeriodStore {
             'The period must belong to a template adopted by this profession.',
           );
         }
-        final namespace = _namespace(collectionId);
-        final state = await tx.loadHostState(namespace);
+        final periodNamespace = namespace(collectionId);
+        final state = await tx.loadHostState(periodNamespace);
         final key = 'period:${period.id}';
         final data = jsonEncode(period.toJson());
         if (state[key] case final previous?) {
@@ -54,9 +54,9 @@ class SchemePeriodStore {
             throw StateError('A retained period is immutable.');
           }
         } else {
-          await tx.saveHostValue(namespace, key, data);
+          await tx.saveHostValue(periodNamespace, key, data);
         }
-        await tx.saveHostValue(namespace, 'selected', period.id);
+        await tx.saveHostValue(periodNamespace, 'selected', period.id);
       });
 }
 

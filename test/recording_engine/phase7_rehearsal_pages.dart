@@ -98,6 +98,7 @@ class RehearsalProfessionCard extends StatelessWidget {
     required this.onDelete,
     required this.onRefresh,
     this.originals,
+    this.onCreateBackup,
   });
 
   final ProfessionCreationStore store;
@@ -110,6 +111,7 @@ class RehearsalProfessionCard extends StatelessWidget {
       onDelete,
       onRefresh;
   final ManagedAttachmentFiles? originals;
+  final VoidCallback? onCreateBackup;
 
   Future<(ProfessionTemplateBundle?, SchemeProgress?, (int, String)?)>
   _load() async {
@@ -255,6 +257,7 @@ class RehearsalProfessionCard extends StatelessWidget {
       }
       return ProfessionCard(
         name: profession.label,
+        onCreateBackup: onCreateBackup,
         onAdd: onAdd,
         onScan: onScan,
         onView: onView,

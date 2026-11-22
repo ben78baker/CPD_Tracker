@@ -1525,4 +1525,87 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get p8Portable => 'पोर्टेबल बैकअप';
+
+  @override
+  String get pbHelp =>
+      'बैकअप ऐप के बाहर सहेजें। बैकअप के बिना ऐप हटाने, डिवाइस खोने या स्टोरेज खराब होने पर रिकॉर्ड और फ़ाइलें हमेशा के लिए मिट सकती हैं।';
+
+  @override
+  String get pbRestore => 'बैकअप से बहाल करें';
+
+  @override
+  String get pbAddRestored => 'नए पेशे के रूप में बहाल करें';
+
+  @override
+  String get pbRecords => 'रिकॉर्ड';
+
+  @override
+  String get pbDeleted => 'हटाए गए रिकॉर्ड शामिल हैं';
+
+  @override
+  String get pbAttachments => 'संलग्न फ़ाइलें';
+
+  @override
+  String get pbLinks => 'लिंक';
+
+  @override
+  String get pbUnavailable => 'अनुपलब्ध प्रमाण';
+
+  @override
+  String get pbDamaged => 'खराब फ़ाइल';
+
+  @override
+  String get pbMissing => 'गुम फ़ाइल';
+
+  @override
+  String get pbIncludeGaps => 'अनुपलब्ध प्रमाण के साथ आगे बढ़ें';
+
+  @override
+  String get pbPrivate =>
+      'बिना एन्क्रिप्शन वाले बैकअप में निजी जानकारी हो सकती है। ऐप के बाहर सुरक्षित जगह चुनें।';
+
+  @override
+  String get pbEncrypt => 'पासवर्ड से सुरक्षित करें';
+
+  @override
+  String get pbPassword => 'बैकअप का पासवर्ड';
+
+  @override
+  String get pbRepeat => 'पासवर्ड दोबारा लिखें';
+
+  @override
+  String get pbPasswordHelp =>
+      'इस पासवर्ड को सुरक्षित रखें। भूला हुआ पासवर्ड वापस नहीं पाया जा सकता।';
+
+  @override
+  String get pbAuthentication => 'गलत पासवर्ड या एन्क्रिप्टेड बैकअप खराब है।';
+
+  @override
+  String get pbAuthMismatch =>
+      'कम से कम आठ वर्णों वाला एक ही पासवर्ड दोनों जगह लिखें।';
+
+  @override
+  String get pbExisting => 'यह पेशा पहले से मौजूद है।';
+
+  @override
+  String get pbDeletedExisting =>
+      'यह पेशा हटाए गए पेशों में है। उसे वहाँ से बहाल करें।';
+
+  @override
+  String get pbNameInUse => 'पेशे के लिए कोई दूसरा नाम चुनें।';
+
+  @override
+  String get pbOpenExisting => 'मौजूदा पेशा खोलें';
+
+  @override
+  String get pbBackupSaved =>
+      'बैकअप की जाँच हो गई है। बाहरी प्रति रखने के लिए इसे सहेजें या साझा करें।';
+
+  @override
+  String get pbPremiumLocked =>
+      'आपके रिकॉर्ड उपलब्ध हैं। इस लेआउट में नए रिकॉर्ड जोड़ने के लिए टेम्पलेट की खरीद सत्यापित करें।';
+
+  @override
+  String get pbFailed =>
+      'बैकअप या बहाली पूरी नहीं हुई। आपके मौजूदा रिकॉर्ड उपलब्ध हैं।';
 }

@@ -102,7 +102,7 @@ class ProfessionCreationStore {
   static const _receipts = 'cpd.creation.receipts';
   static const _settings = 'cpd.creation.settings';
   static const grantsNamespace = 'cpd.creation.grants';
-  static const _reports = 'cpd.creation.reports';
+  static const reportsNamespace = 'cpd.creation.reports';
   static const customProduct = 'custom-fields';
 
   Future<Map<String, String>> settings() => repository.loadHostState(_settings);
@@ -351,6 +351,37 @@ class ProfessionCreationStore {
     return null;
   }
 
+  Future<bool> canUseNameInTransaction(
+    SqliteRecordingRepository tx,
+    String name,
+  ) async => await _checkName(tx, name) == null;
+
+  /// Historical records can be read even when the store cannot verify ownership.
+  Future<bool> canAddToLayout(LayoutRevision layout) async =>
+      layout.templateId == null ||
+      (await access()).templates.contains(layout.templateId);
+
+  Future<RecordingRecord> createActivity(
+    String collectionId,
+    Map<String, Object> values, {
+    required int expectedLayoutVersion,
+    Iterable<RecordingAttachment> newAttachments = const [],
+  }) => repository.transaction((tx) async {
+    final layout = (await tx.loadLayouts(collectionId)).last;
+    if (layout.templateId != null &&
+        !(await _access(tx)).templates.contains(layout.templateId)) {
+      throw StateError(
+        'Adding an activity requires verified template ownership.',
+      );
+    }
+    return tx.createRecord(
+      collectionId,
+      values,
+      expectedLayoutVersion: expectedLayoutVersion,
+      newAttachments: newAttachments,
+    );
+  });
+
   Future<SchemeReportRules> requireOwnedReport(LayoutRevision layout) async {
     final access = await this.access();
     final definition = reportRules[(layout.templateId, layout.templateVersion)];
@@ -370,7 +401,7 @@ class ProfessionCreationStore {
     String id,
     int version,
   ) async {
-    final raw = (await tx.loadHostState(_reports))['$id:$version'];
+    final raw = (await tx.loadHostState(reportsNamespace))['$id:$version'];
     return raw == null
         ? ReportSelection()
         : ReportSelection.fromJson(jsonDecode(raw) as List);
@@ -501,14 +532,14 @@ class ProfessionCreationStore {
       revision = saved.version;
       report = draft.report.remap(ids);
       await tx.saveHostValue(
-        _reports,
+        reportsNamespace,
         '$collectionId:${adoption.version}',
         '[]',
       );
     }
 
     await tx.saveHostValue(
-      _reports,
+      reportsNamespace,
       '$collectionId:$revision',
       jsonEncode(report.toJson()),
     );

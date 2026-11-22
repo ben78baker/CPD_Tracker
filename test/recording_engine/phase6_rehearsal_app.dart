@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cpd_tracker/cpd_backup/profession_backup_page.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_data_store.dart'
     show cpdProfessionLabel;
@@ -63,7 +64,9 @@ class Phase6App extends StatefulWidget {
     required this.open,
     this.phase7 = false,
     this.originals,
+    this.backups,
   });
+  final ProfessionBackupActions? backups;
   final bool phase7;
   final ManagedAttachmentFiles? originals;
   final Future<ProfessionCreationStore> Function() open;
@@ -133,6 +136,7 @@ class _Phase6AppState extends State<Phase6App> {
               accent: _accent,
               phase7: widget.phase7,
               originals: widget.originals,
+              backups: widget.backups,
             );
           },
         ),
@@ -148,7 +152,9 @@ class _Launch extends StatefulWidget {
     required this.accent,
     required this.phase7,
     this.originals,
+    this.backups,
   });
+  final ProfessionBackupActions? backups;
   final bool phase7;
   final ManagedAttachmentFiles? originals;
   final ProfessionCreationStore store;
@@ -187,12 +193,14 @@ class _LaunchState extends State<_Launch> {
             locale: widget.locale,
             accent: widget.accent,
             initial: saved,
+            showBackupHelp: widget.backups != null,
             save: widget.store.saveSetting,
             onContinue: () => _show(CreationStartup.resumeCreation),
           ),
         ),
         CreationStartup.resumeCreation => ProfessionCreationPage(
           first: true,
+          backups: widget.backups,
           phase7: widget.phase7,
           store: widget.store,
           onBack: () => _show(CreationStartup.welcome),
@@ -202,6 +210,7 @@ class _LaunchState extends State<_Launch> {
           store: widget.store,
           phase7: widget.phase7,
           originals: widget.originals,
+          backups: widget.backups,
         ),
       };
     },
@@ -226,7 +235,13 @@ class RetryPage extends StatelessWidget {
 }
 
 class _Home extends StatefulWidget {
-  const _Home({required this.store, required this.phase7, this.originals});
+  const _Home({
+    required this.store,
+    required this.phase7,
+    this.originals,
+    this.backups,
+  });
+  final ProfessionBackupActions? backups;
   final bool phase7;
   final ManagedAttachmentFiles? originals;
   final ProfessionCreationStore store;
@@ -252,7 +267,14 @@ class _HomeState extends State<_Home> {
   }) async {
     if (add) {
       final history = await widget.store.repository.loadLayouts(profession.id);
+      final enabled = await widget.store.canAddToLayout(history.last);
       if (!mounted) return;
+      if (!enabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(editorStrings(context).pbPremiumLocked)),
+        );
+        return;
+      }
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => _SampleRecordPage(
@@ -322,13 +344,62 @@ class _HomeState extends State<_Home> {
   }
 
   Future<void> _addProfession() async {
+    CollectionImportResult? conflict;
     await Navigator.of(context).push(
       MaterialPageRoute<String>(
         builder: (context) => ProfessionCreationPage(
           store: widget.store,
           phase7: widget.phase7,
+          backups: widget.backups,
           onCreated: (id) => Navigator.pop(context, id),
+          onBackupConflict: (result) {
+            conflict = result;
+            Navigator.pop(context);
+          },
         ),
+      ),
+    );
+    _refresh();
+    final existing = conflict;
+    if (!mounted || existing == null) return;
+    if (existing.status == CollectionImportStatus.existing) {
+      await _open(existing.collection!);
+    } else {
+      await _deletedProfessions();
+    }
+  }
+
+  Future<void> _deletedProfessions() async {
+    final all = await widget.store.repository.loadCollections();
+    final deleted = all.where((item) => item.deleted).toList();
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) {
+          final s = editorStrings(context);
+          return Scaffold(
+            appBar: AppBar(title: Text(s.deletedProfessionsTitle)),
+            body: BoundedList(
+              children: [
+                if (deleted.isEmpty) Text(s.noDeletedProfessions),
+                for (final item in deleted)
+                  ListTile(
+                    title: Text(item.label),
+                    trailing: TextButton(
+                      onPressed: () async {
+                        await widget.store.repository.updateCollection(
+                          item.id,
+                          deleted: false,
+                        );
+                        if (context.mounted) Navigator.pop(context);
+                      },
+                      child: Text(s.restore),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     );
     _refresh();
@@ -389,6 +460,13 @@ class _HomeState extends State<_Home> {
                 profession: profession,
                 originals: widget.originals,
                 onRefresh: _refresh,
+                onCreateBackup: widget.backups == null
+                    ? null
+                    : () => widget.backups!.open(
+                        context,
+                        widget.store,
+                        collectionId: profession.id,
+                      ),
                 onAdd: () => _open(profession, add: true),
                 onView: () => _open(profession),
                 onSearch: () => _open(profession, search: true),
@@ -433,6 +511,27 @@ class _HomeState extends State<_Home> {
             onMenuSelected: (action) {
               if (action == 'add_profession') {
                 _addProfession();
+              } else if (action == 'view_deleted' && widget.backups != null) {
+                _deletedProfessions();
+              } else if (action == 'settings' && widget.backups != null) {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (context) => Scaffold(
+                      appBar: AppBar(
+                        title: Text(editorStrings(context).settings),
+                      ),
+                      body: BoundedList(
+                        children: [
+                          Text(
+                            editorStrings(context).p8Title,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          Text(editorStrings(context).pbHelp),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
               } else {
                 _rehearsalAction();
               }
@@ -672,10 +771,13 @@ class _ProfessionPageState extends State<_ProfessionPage> {
           final hasTemplate = access.templates.contains(active.templateId);
           return BoundedList(
             children: [
-              FilledButton(
-                onPressed: () => _record(history),
-                child: Text(s.editorNewRecord),
-              ),
+              if (active.templateId == null || hasTemplate)
+                FilledButton(
+                  onPressed: () => _record(history),
+                  child: Text(s.editorNewRecord),
+                )
+              else
+                Text(s.pbPremiumLocked),
               if (hasTemplate ||
                   access.canCustomiseFields && active.templateId == null)
                 OutlinedButton(onPressed: _edit, child: Text(s.editFields)),
@@ -830,7 +932,7 @@ class _SampleRecordPageState extends State<_SampleRecordPage> {
         );
       } else {
         _values.putIfAbsent(duration, () => 0);
-        await repository.createRecord(
+        await widget.store.createActivity(
           widget.collection,
           _values,
           expectedLayoutVersion: _version,

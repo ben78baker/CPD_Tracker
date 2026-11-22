@@ -1552,4 +1552,88 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get p8Portable => 'Sauvegarde portable';
+
+  @override
+  String get pbHelp =>
+      'Conservez vos sauvegardes hors de l’application. Sans sauvegarde, une désinstallation, la perte de votre appareil ou une panne peut effacer définitivement vos fiches et justificatifs.';
+
+  @override
+  String get pbRestore => 'Restaurer une sauvegarde';
+
+  @override
+  String get pbAddRestored => 'Restaurer comme nouvelle profession';
+
+  @override
+  String get pbRecords => 'Fiches';
+
+  @override
+  String get pbDeleted => 'Fiches supprimées incluses';
+
+  @override
+  String get pbAttachments => 'Pièces jointes';
+
+  @override
+  String get pbLinks => 'Liens';
+
+  @override
+  String get pbUnavailable => 'Justificatifs indisponibles';
+
+  @override
+  String get pbDamaged => 'Fichier endommagé';
+
+  @override
+  String get pbMissing => 'Fichier manquant';
+
+  @override
+  String get pbIncludeGaps => 'Continuer avec des justificatifs indisponibles';
+
+  @override
+  String get pbPrivate =>
+      'Une sauvegarde non chiffrée peut contenir des données privées. Choisissez un emplacement sûr hors de l’application.';
+
+  @override
+  String get pbEncrypt => 'Protéger par mot de passe';
+
+  @override
+  String get pbPassword => 'Mot de passe de sauvegarde';
+
+  @override
+  String get pbRepeat => 'Répéter le mot de passe';
+
+  @override
+  String get pbPasswordHelp =>
+      'Conservez ce mot de passe en lieu sûr. Un mot de passe oublié ne peut pas être récupéré.';
+
+  @override
+  String get pbAuthentication =>
+      'Mot de passe incorrect ou sauvegarde chiffrée endommagée.';
+
+  @override
+  String get pbAuthMismatch =>
+      'Saisissez le même mot de passe de huit caractères au moins.';
+
+  @override
+  String get pbExisting => 'Cette profession existe déjà.';
+
+  @override
+  String get pbDeletedExisting =>
+      'Cette profession figure parmi les professions supprimées. Utilisez l’option de récupération.';
+
+  @override
+  String get pbNameInUse => 'Choisissez un autre nom de profession.';
+
+  @override
+  String get pbOpenExisting => 'Ouvrir la profession existante';
+
+  @override
+  String get pbBackupSaved =>
+      'La sauvegarde a été vérifiée. Enregistrez-la ou partagez-la pour conserver une copie externe.';
+
+  @override
+  String get pbPremiumLocked =>
+      'Vos fiches sont accessibles. Vérifiez votre achat pour ajouter des fiches avec ce modèle.';
+
+  @override
+  String get pbFailed =>
+      'La sauvegarde ou la restauration a échoué. Vos fiches existantes restent accessibles.';
 }

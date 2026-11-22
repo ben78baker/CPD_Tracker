@@ -10,10 +10,13 @@ import '../recording_engine/import_plan.dart';
 import '../recording_engine/layout_draft.dart';
 import '../recording_engine/models.dart';
 
+import 'backup_encryption.dart';
+import 'managed_attachment_files.dart';
 import 'portable_archive.dart';
 
 part 'sqlite_recording_import.dart';
 part 'sqlite_recording_backup.dart';
+part 'sqlite_collection_backup.dart';
 
 /// The native driver closed the handle after SQLite ran out of writable
 /// pages. Reopen the same path after capacity is available.
@@ -33,6 +36,7 @@ class SqliteRecordingRepository {
   static Future<SqliteRecordingRepository> open(
     String path, {
     DatabaseFactory? factory,
+    bool durableWrites = false,
   }) async {
     final db = await (factory ?? databaseFactory).openDatabase(
       path,
@@ -53,6 +57,7 @@ class SqliteRecordingRepository {
           }
         },
         onConfigure: (db) async {
+          if (durableWrites) await _configureDurableJournal(db);
           await db.execute('PRAGMA foreign_keys = ON');
           final result = await db.rawQuery('PRAGMA foreign_keys');
           if (result.single.values.single != 1) {
@@ -67,6 +72,23 @@ class SqliteRecordingRepository {
       ),
     );
     return SqliteRecordingRepository._(db);
+  }
+
+  static Future<void> _configureDurableJournal(Database db) async {
+    final rollback = await db.rawQuery('PRAGMA journal_mode = DELETE');
+    if (rollback.single.values.single == 'delete') {
+      await db.execute('PRAGMA synchronous = EXTRA');
+      final sync = await db.rawQuery('PRAGMA synchronous');
+      if (sync.single.values.single == 3) return;
+    }
+    // Some supported system SQLite builds clamp EXTRA to FULL. WAL/FULL
+    // retains commit durability without relying on a DELETE-mode directory sync.
+    final wal = await db.rawQuery('PRAGMA journal_mode = WAL');
+    await db.execute('PRAGMA synchronous = FULL');
+    final sync = await db.rawQuery('PRAGMA synchronous');
+    if (wal.single.values.single != 'wal' || sync.single.values.single != 2) {
+      throw StateError('Required native SQLite journalling is unavailable.');
+    }
   }
 
   Database get _connection {
@@ -775,6 +797,11 @@ class SqliteRecordingRepository {
     RecordingAttachment attachment,
   ) async {
     await db.insert('attachments', _attachmentRow(attachment));
+    if (attachment.originalFingerprint case final digest?) {
+      await SqliteRecordingRepository._(
+        db,
+      ).saveHostValue(_evidenceFingerprints, attachment.id, digest);
+    }
   }
 
   static Map<String, Object> _attachmentRow(RecordingAttachment attachment) => {

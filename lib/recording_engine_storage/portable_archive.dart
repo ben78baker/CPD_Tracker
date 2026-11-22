@@ -7,7 +7,14 @@ import 'package:path/path.dart' as p;
 
 typedef AvailableStorage = Future<int> Function(Directory directory);
 
-enum BackupProblem { format, version, integrity, capacity, destination }
+enum BackupProblem {
+  format,
+  version,
+  integrity,
+  capacity,
+  destination,
+  authentication,
+}
 
 class BackupException implements Exception {
   const BackupException(this.problem, this.message);
@@ -34,11 +41,18 @@ class BackupEntry {
 }
 
 class BackupInspection {
-  const BackupInspection._(this.created, this.schema, this.entries, this.seal);
+  const BackupInspection._(
+    this.created,
+    this.schema,
+    this.entries,
+    this.seal,
+    this.collection,
+  );
 
   final DateTime created;
   final int schema;
   final List<BackupEntry> entries;
+  final Map<String, dynamic>? collection;
 
   /// Binds a subsequent restore to exactly the manifest the user inspected.
   /// This is an integrity fingerprint, never a signature or an entitlement.
@@ -69,6 +83,8 @@ class PortableArchive {
     required DateTime created,
     required int schema,
     required AvailableStorage available,
+    Map<String, Object?>? collection,
+    Map<String, String> expectedDigests = const {},
   }) async {
     final parent = await destination.parent.resolveSymbolicLinks();
     final target = p.join(parent, p.basename(destination.path));
@@ -79,7 +95,15 @@ class PortableArchive {
       );
     }
     try {
-      return await _write(files, File(target), created, schema, available);
+      return await _write(
+        files,
+        File(target),
+        created,
+        schema,
+        available,
+        collection,
+        expectedDigests,
+      );
     } finally {
       _publishing.remove(target);
     }
@@ -91,6 +115,8 @@ class PortableArchive {
     DateTime created,
     int schema,
     AvailableStorage available,
+    Map<String, Object?>? collection,
+    Map<String, String> expectedDigests,
   ) async {
     _checkNames(files.keys);
     await _requireAbsent(destination);
@@ -102,13 +128,20 @@ class PortableArchive {
       }
       final size = await input.value.length();
       if (size > _totalLimit) _invalid();
-      entries.add(
-        BackupEntry(input.key, size, await backupDigest(input.value)),
-      );
+      final digest = await backupDigest(input.value);
+      if (expectedDigests[input.key] case final expected?
+          when expected != digest) {
+        throw const BackupException(
+          BackupProblem.integrity,
+          'Evidence changed during backup.',
+        );
+      }
+      entries.add(BackupEntry(input.key, size, digest));
     }
     final manifest = utf8.encode(
       jsonEncode({
-        'version': _version,
+        'version': collection == null ? _version : 2,
+        'collection': ?collection,
         'created': created.toUtc().toIso8601String(),
         'schema': schema,
         'entries': entries.map((entry) => entry.toJson()).toList(),
@@ -246,7 +279,10 @@ class PortableArchive {
   BackupInspection _parse(List<int> bytes) {
     try {
       final data = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-      if (data['version'] != _version) {
+      final scope = data['collection'];
+      final version = data['version'];
+      if (!((version == _version && scope == null) ||
+          (version == 2 && scope is Map<String, dynamic>))) {
         throw const BackupException(
           BackupProblem.version,
           'Unsupported archive version.',
@@ -275,6 +311,7 @@ class PortableArchive {
         schema,
         List.unmodifiable(entries),
         sha256.convert(bytes).toString(),
+        scope == null ? null : Map<String, dynamic>.unmodifiable(scope as Map),
       );
     } on BackupException {
       rethrow;

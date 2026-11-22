@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:cpd_tracker/cpd_backup/profession_backup_page.dart';
+import 'package:cpd_tracker/recording_engine_storage/sqlite_recording_repository.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
 import 'package:cpd_tracker/cpd_compatibility/report_locale.dart';
 import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
@@ -27,11 +29,15 @@ class ProfessionCreationPage extends StatefulWidget {
     this.first = false,
     this.onBack,
     this.phase7 = false,
+    this.backups,
+    this.onBackupConflict,
   });
   final ProfessionCreationStore store;
   final ValueChanged<String> onCreated;
   final bool first;
   final bool phase7;
+  final ProfessionBackupActions? backups;
+  final ValueChanged<CollectionImportResult>? onBackupConflict;
   final VoidCallback? onBack;
 
   @override
@@ -169,6 +175,26 @@ class _ProfessionCreationPageState extends State<ProfessionCreationPage> {
                     ),
                   ),
                 ),
+              ),
+            if (widget.backups case final backups?)
+              OutlinedButton.icon(
+                icon: const Icon(Icons.settings_backup_restore),
+                onPressed: _opening
+                    ? null
+                    : () async {
+                        final result = await backups.open(
+                          context,
+                          widget.store,
+                        );
+                        if (mounted && result?.collection != null) {
+                          if (result!.status == CollectionImportStatus.added) {
+                            widget.onCreated(result.collection!.id);
+                          } else {
+                            widget.onBackupConflict?.call(result);
+                          }
+                        }
+                      },
+                label: Text(s.pbRestore),
               ),
             FutureBuilder(
               future: _drafts,

@@ -2853,6 +2853,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Portable backup'**
   String get p8Portable;
+
+  /// No description provided for @pbHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Save backups outside the app. Without a backup, uninstalling the app, losing your device or storage failure may permanently remove your records and attachments.'**
+  String get pbHelp;
+
+  /// No description provided for @pbRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from Backup'**
+  String get pbRestore;
+
+  /// No description provided for @pbAddRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore as new profession'**
+  String get pbAddRestored;
+
+  /// No description provided for @pbRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Records'**
+  String get pbRecords;
+
+  /// No description provided for @pbDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted records included'**
+  String get pbDeleted;
+
+  /// No description provided for @pbAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments'**
+  String get pbAttachments;
+
+  /// No description provided for @pbLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Link references'**
+  String get pbLinks;
+
+  /// No description provided for @pbUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable evidence'**
+  String get pbUnavailable;
+
+  /// No description provided for @pbDamaged.
+  ///
+  /// In en, this message translates to:
+  /// **'Damaged file'**
+  String get pbDamaged;
+
+  /// No description provided for @pbMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing file'**
+  String get pbMissing;
+
+  /// No description provided for @pbIncludeGaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with unavailable evidence'**
+  String get pbIncludeGaps;
+
+  /// No description provided for @pbPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'An unencrypted backup may contain private records and evidence. Choose a secure location outside the app.'**
+  String get pbPrivate;
+
+  /// No description provided for @pbEncrypt.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect with a password'**
+  String get pbEncrypt;
+
+  /// No description provided for @pbPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup password'**
+  String get pbPassword;
+
+  /// No description provided for @pbRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat password'**
+  String get pbRepeat;
+
+  /// No description provided for @pbPasswordHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this password somewhere safe. A forgotten password cannot be recovered.'**
+  String get pbPasswordHelp;
+
+  /// No description provided for @pbAuthentication.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password or damaged encrypted backup.'**
+  String get pbAuthentication;
+
+  /// No description provided for @pbAuthMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter matching passwords of at least eight characters.'**
+  String get pbAuthMismatch;
+
+  /// No description provided for @pbExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'This profession already exists.'**
+  String get pbExisting;
+
+  /// No description provided for @pbDeletedExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'This profession is in Deleted Professions. Use the existing recovery option.'**
+  String get pbDeletedExisting;
+
+  /// No description provided for @pbNameInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a different profession name.'**
+  String get pbNameInUse;
+
+  /// No description provided for @pbOpenExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Open existing profession'**
+  String get pbOpenExisting;
+
+  /// No description provided for @pbBackupSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'The backup was verified. Save or share it to keep an external copy.'**
+  String get pbBackupSaved;
+
+  /// No description provided for @pbPremiumLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your records are available. Verify template ownership to add new records with this layout.'**
+  String get pbPremiumLocked;
+
+  /// No description provided for @pbFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup or restore could not be completed. Your existing records are still available.'**
+  String get pbFailed;
 }
 
 class _AppLocalizationsDelegate

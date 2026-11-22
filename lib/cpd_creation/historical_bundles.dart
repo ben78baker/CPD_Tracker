@@ -9,7 +9,7 @@ import 'template_bundle.dart';
 /// supplies the exact rules for historical reports on a different installation.
 class HistoricalCpdBundles {
   const HistoricalCpdBundles();
-  static const _namespace = 'cpd.scheme.bundle-history';
+  static const namespace = 'cpd.scheme.bundle-history';
 
   String _key(String id, int version, int rules) => '$id:$version:$rules';
 
@@ -23,11 +23,11 @@ class HistoricalCpdBundles {
       bundle.ruleVersion,
     );
     final encoded = bundle.encode();
-    final previous = (await tx.loadHostState(_namespace))[key];
+    final previous = (await tx.loadHostState(namespace))[key];
     if (previous != null && previous != encoded) {
       throw StateError('A retained reporting rule version is immutable.');
     }
-    await tx.saveHostValue(_namespace, key, encoded);
+    await tx.saveHostValue(namespace, key, encoded);
   }
 
   Future<ProfessionTemplateBundle?> read(
@@ -36,13 +36,13 @@ class HistoricalCpdBundles {
     int version,
     int rules,
   ) async {
-    final data = (await tx.loadHostState(_namespace))[_key(id, version, rules)];
+    final data = (await tx.loadHostState(namespace))[_key(id, version, rules)];
     return data == null ? null : ProfessionTemplateBundle.decode(data);
   }
 
   Future<void> verify(SqliteRecordingRepository tx) async {
     final byRecipe = <(String, int), Set<int>>{};
-    for (final entry in (await tx.loadHostState(_namespace)).entries) {
+    for (final entry in (await tx.loadHostState(namespace)).entries) {
       final bundle = ProfessionTemplateBundle.decode(entry.value);
       final recipe = bundle.recipe;
       final pin = (recipe.id, recipe.version);

@@ -37,6 +37,8 @@ class SqliteRecordingBackup {
     required Directory originals,
     required File destination,
     DateTime? created,
+    Map<String, Object?>? collection,
+    Map<String, String> evidenceDigests = const {},
   }) async {
     await requireBackupCapacity(
       destination.parent,
@@ -47,6 +49,7 @@ class SqliteRecordingBackup {
     try {
       final data = File(p.join(scratch.path, PortableArchive.rows));
       final files = <String, File>{PortableArchive.rows: data};
+      final fingerprints = <String, String>{};
       await repository.transaction((tx) async {
         await _verifyGraph(tx._db);
         await verifyHost?.call(tx);
@@ -76,6 +79,10 @@ class SqliteRecordingBackup {
                       attachment.locator,
                     );
                     assets[attachment.locator] = entry;
+                    if (evidenceDigests[attachment.locator]
+                        case final digest?) {
+                      fingerprints[entry] = digest;
+                    }
                   }
                 }
               }
@@ -111,6 +118,8 @@ class SqliteRecordingBackup {
         created: created ?? DateTime.now(),
         schema: SqliteRecordingRepository.schemaVersion,
         available: available,
+        collection: collection,
+        expectedDigests: fingerprints,
       );
     } finally {
       await scratch.delete(recursive: true);
@@ -120,6 +129,7 @@ class SqliteRecordingBackup {
   Future<BackupInspection> inspect(File source) async {
     final inspection = await _archive.inspect(source);
     _requireSchema(inspection);
+    _requireScope(inspection, collection: false);
     return inspection;
   }
 
@@ -129,8 +139,16 @@ class SqliteRecordingBackup {
     required File source,
     required BackupInspection inspection,
     required Directory destination,
+  }) => _restore(source, inspection, destination, collection: false);
+
+  Future<RecordingWorkspace> _restore(
+    File source,
+    BackupInspection inspection,
+    Directory destination, {
+    required bool collection,
   }) async {
     _requireSchema(inspection);
+    _requireScope(inspection, collection: collection);
     await _fresh(directory: destination);
     final rowBytes = inspection.entries.first.size;
     // Extraction, a second copy of evidence, database and rollback headroom.
@@ -347,6 +365,18 @@ class SqliteRecordingBackup {
       table != 'host_state' ||
       (includeHostRow?.call(row['namespace'] as String, row['key'] as String) ??
           true);
+
+  static void _requireScope(
+    BackupInspection inspection, {
+    required bool collection,
+  }) {
+    if ((inspection.collection != null) != collection) {
+      throw const BackupException(
+        BackupProblem.version,
+        'Incompatible backup scope.',
+      );
+    }
+  }
 
   static void _requireSchema(BackupInspection inspection) {
     if (inspection.schema != SqliteRecordingRepository.schemaVersion) {

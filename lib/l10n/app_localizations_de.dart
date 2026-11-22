@@ -1546,4 +1546,88 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get p8Portable => 'Portable Sicherung';
+
+  @override
+  String get pbHelp =>
+      'Speichern Sie Sicherungen außerhalb der App. Ohne Sicherung können Ihre Einträge und Belege bei einer Deinstallation, Verlust des Geräts oder einem Speicherfehler verloren gehen.';
+
+  @override
+  String get pbRestore => 'Aus Sicherung wiederherstellen';
+
+  @override
+  String get pbAddRestored => 'Als neuen Beruf wiederherstellen';
+
+  @override
+  String get pbRecords => 'Einträge';
+
+  @override
+  String get pbDeleted => 'Gelöschte Einträge enthalten';
+
+  @override
+  String get pbAttachments => 'Anhänge';
+
+  @override
+  String get pbLinks => 'Links';
+
+  @override
+  String get pbUnavailable => 'Nicht verfügbare Belege';
+
+  @override
+  String get pbDamaged => 'Beschädigte Datei';
+
+  @override
+  String get pbMissing => 'Fehlende Datei';
+
+  @override
+  String get pbIncludeGaps => 'Mit nicht verfügbaren Belegen fortfahren';
+
+  @override
+  String get pbPrivate =>
+      'Eine unverschlüsselte Sicherung kann private Daten enthalten. Wählen Sie einen sicheren Ort außerhalb der App.';
+
+  @override
+  String get pbEncrypt => 'Mit Passwort schützen';
+
+  @override
+  String get pbPassword => 'Passwort für die Sicherung';
+
+  @override
+  String get pbRepeat => 'Passwort wiederholen';
+
+  @override
+  String get pbPasswordHelp =>
+      'Bewahren Sie dieses Passwort sicher auf. Ein vergessenes Passwort lässt sich nicht wiederherstellen.';
+
+  @override
+  String get pbAuthentication =>
+      'Falsches Passwort oder beschädigte verschlüsselte Sicherung.';
+
+  @override
+  String get pbAuthMismatch =>
+      'Geben Sie zwei identische Passwörter mit mindestens acht Zeichen ein.';
+
+  @override
+  String get pbExisting => 'Dieser Beruf ist bereits vorhanden.';
+
+  @override
+  String get pbDeletedExisting =>
+      'Dieser Beruf steht unter Gelöschte Berufe. Nutzen Sie die vorhandene Wiederherstellung.';
+
+  @override
+  String get pbNameInUse => 'Wählen Sie einen anderen Berufsnamen.';
+
+  @override
+  String get pbOpenExisting => 'Vorhandenen Beruf öffnen';
+
+  @override
+  String get pbBackupSaved =>
+      'Die Sicherung wurde geprüft. Speichern oder teilen Sie sie für eine externe Kopie.';
+
+  @override
+  String get pbPremiumLocked =>
+      'Ihre Einträge sind verfügbar. Bestätigen Sie den Vorlagenkauf, um damit neue Einträge zu erstellen.';
+
+  @override
+  String get pbFailed =>
+      'Sicherung oder Wiederherstellung fehlgeschlagen. Ihre vorhandenen Einträge bleiben verfügbar.';
 }

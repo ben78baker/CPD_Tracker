@@ -1545,4 +1545,88 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get p8Portable => 'Cópia de segurança portátil';
+
+  @override
+  String get pbHelp =>
+      'Salve as cópias fora do app. Sem uma cópia, desinstalar o app, perder o aparelho ou ter uma falha de armazenamento pode apagar seus registros e anexos para sempre.';
+
+  @override
+  String get pbRestore => 'Restaurar de uma cópia';
+
+  @override
+  String get pbAddRestored => 'Restaurar como nova profissão';
+
+  @override
+  String get pbRecords => 'Registros';
+
+  @override
+  String get pbDeleted => 'Registros excluídos incluídos';
+
+  @override
+  String get pbAttachments => 'Anexos';
+
+  @override
+  String get pbLinks => 'Links';
+
+  @override
+  String get pbUnavailable => 'Comprovantes indisponíveis';
+
+  @override
+  String get pbDamaged => 'Arquivo danificado';
+
+  @override
+  String get pbMissing => 'Arquivo ausente';
+
+  @override
+  String get pbIncludeGaps => 'Continuar com comprovantes indisponíveis';
+
+  @override
+  String get pbPrivate =>
+      'Uma cópia sem criptografia pode conter dados privados. Escolha um local seguro fora do app.';
+
+  @override
+  String get pbEncrypt => 'Proteger com senha';
+
+  @override
+  String get pbPassword => 'Senha da cópia';
+
+  @override
+  String get pbRepeat => 'Repetir senha';
+
+  @override
+  String get pbPasswordHelp =>
+      'Guarde esta senha em um local seguro. Uma senha esquecida não pode ser recuperada.';
+
+  @override
+  String get pbAuthentication =>
+      'Senha incorreta ou cópia criptografada danificada.';
+
+  @override
+  String get pbAuthMismatch =>
+      'Digite a mesma senha com pelo menos oito caracteres.';
+
+  @override
+  String get pbExisting => 'Esta profissão já existe.';
+
+  @override
+  String get pbDeletedExisting =>
+      'Esta profissão está em Profissões excluídas. Use a opção de recuperação.';
+
+  @override
+  String get pbNameInUse => 'Escolha outro nome para a profissão.';
+
+  @override
+  String get pbOpenExisting => 'Abrir profissão existente';
+
+  @override
+  String get pbBackupSaved =>
+      'A cópia foi verificada. Salve ou compartilhe para manter uma cópia externa.';
+
+  @override
+  String get pbPremiumLocked =>
+      'Seus registros estão disponíveis. Verifique a compra do modelo para adicionar registros com este layout.';
+
+  @override
+  String get pbFailed =>
+      'Não foi possível concluir a cópia ou a restauração. Seus registros continuam disponíveis.';
 }
