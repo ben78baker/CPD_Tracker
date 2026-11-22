@@ -1632,49 +1632,51 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo completar la copia o restauración. Tus registros existentes siguen disponibles.';
 
   @override
-  String get trialStart => 'Iniciar prueba gratuita de 7 días';
-
-  @override
-  String get trialStarted => 'Tu prueba de 7 días ha comenzado.';
-
-  @override
-  String trialRemaining(String remaining) {
-    return 'Tiempo de prueba restante: $remaining';
+  String evaluationAvailable(int limit) {
+    return '$limit registros gratuitos disponibles';
   }
 
   @override
-  String get trialThreeDays => 'Quedan tres días o menos de prueba.';
+  String evaluationUsed(int used, int limit) {
+    return '$used de $limit registros gratuitos usados';
+  }
 
   @override
-  String get trialOneDay => 'Queda un día o menos de prueba.';
+  String get evaluationExhausted =>
+      'Cupo de registros gratuitos agotado — Comprar plantilla';
 
   @override
-  String get trialEnded => 'Prueba finalizada — Comprar plantilla';
+  String get evaluationBuy => 'Comprar plantilla';
 
   @override
-  String get trialBuy => 'Comprar plantilla';
+  String evaluationTerms(int limit) {
+    return 'Crea hasta $limit registros gratuitos entre todas las profesiones que usen esta plantilla, sin fecha de caducidad. Siempre podrás editar y exportar tus registros y generar informes. Compra la plantilla para crear registros ilimitados.';
+  }
 
   @override
-  String get trialTerms =>
-      'La prueba dura 168 horas. Es gratuita, no requiere datos de pago, no se renueva ni se convierte en una compra. Tus registros, evidencias e informes históricos seguirán disponibles. Compra la plantilla o sigue registrando actividades en una profesión de CPD estándar gratuita.';
+  String get evaluationUnavailable =>
+      'No se puede consultar el cupo de registros gratuitos. Tus registros y el CPD estándar gratuito siguen disponibles.';
 
   @override
-  String get trialUnavailable =>
-      'No se puede consultar el estado de la prueba. Tus registros y las funciones gratuitas siguen disponibles.';
+  String get evaluationSaveBlocked =>
+      'Ya no hay registros gratuitos disponibles para esta plantilla. Tu borrador sigue aquí. Compra la plantilla o restaura una compra para guardarlo.';
 
   @override
-  String get trialSaveBlocked =>
-      'Terminó el acceso a la plantilla. Tus cambios siguen aquí. Compra la plantilla o restaura una compra antes de guardar.';
+  String get evaluationStandard => 'Continuar con CPD estándar';
 
   @override
-  String get trialStandard => 'Continuar con CPD estándar';
+  String get evaluationHistorical => 'Informe histórico del programa';
 
   @override
-  String get trialHistorical => 'Informe histórico del programa';
+  String get evaluationRehearsal => 'Evaluación interna';
 
   @override
-  String get trialAddEvidence => 'Añadir evidencia';
+  String get evaluationUnlimited => 'Registros ilimitados';
 
   @override
-  String get trialRehearsal => 'Prueba interna';
+  String get editorAddEvidence => 'Añadir evidencia';
+
+  @override
+  String get evaluationRestoreInfo =>
+      'Los registros de plantilla restaurados por primera vez pueden contar para el cupo gratuito. Todos los registros restaurados se pueden editar.';
 }

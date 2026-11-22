@@ -1,5 +1,6 @@
 import '../cpd_creation/historical_bundles.dart';
 import '../cpd_creation/profession_creation_store.dart';
+import '../cpd_creation/template_evaluation.dart';
 import '../cpd_migration/startup_migration_authority.dart';
 import '../recording_engine_storage/portable_archive.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
@@ -11,6 +12,7 @@ SqliteRecordingBackup cpdPortableBackup(AvailableStorage available) =>
       available: available,
       includeHostRow: (namespace, key) =>
           namespace != ProfessionCreationStore.grantsNamespace &&
+          namespace != TemplateEvaluationLedger.namespace &&
           (namespace != migrationAuthorityNamespace ||
               key != migrationAuthorityKey),
       verifyHost: const HistoricalCpdBundles().verify,

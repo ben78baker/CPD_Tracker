@@ -54,7 +54,7 @@ Automatically persist creation and field-edit drafts locally. Preserve the base 
 
 ## Phase 9 addition to the creation flow
 
-Both first-run and existing-user creation get the same catalogue and preview trial controls. Trial activation is a distinct action and is never inferred from browsing or copied into a creation draft. Starting the trial does not complete onboarding or create a profession. Keep the free Standard CPD choice and back navigation accessible while the store or trial authority is unavailable. Apply the same confirmation and idempotent commit when the user creates the first or an additional trial placement. [Phase 9 trial states and acceptance checks](phase9_template_trials.md)
+Both creation routes use the same catalogue and preview allowance presentation. Viewing a preview or placing a template uses no records. The first successfully saved record begins consuming the shared five-record allowance. Keep Standard CPD and back navigation available if the store or allowance authority is unavailable. Use the same confirmation and idempotent placement commit for first and subsequent professions. [Phase 9 evaluation and acceptance checks](phase9_template_evaluation.md)
 
 ## Definitive Phase 6 approval conditions
 

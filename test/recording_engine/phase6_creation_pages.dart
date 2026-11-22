@@ -8,6 +8,7 @@ import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_pilot.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
+import 'package:cpd_tracker/cpd_creation/template_evaluation.dart';
 import 'package:cpd_tracker/recording_editor/edit_fields_page.dart';
 import 'package:cpd_tracker/recording_editor/field_settings.dart';
 import 'package:cpd_tracker/recording_editor/strings.dart';
@@ -20,7 +21,7 @@ import 'package:flutter/material.dart';
 
 import 'phase5_fixtures.dart';
 import 'phase7_rehearsal_pages.dart';
-import 'phase9_trial_panel.dart';
+import 'phase9_evaluation_panel.dart';
 
 class ProfessionCreationPage extends StatefulWidget {
   const ProfessionCreationPage({
@@ -297,7 +298,7 @@ class _PilotCatalogueState extends State<_PilotCatalogue> {
       appBar: AppBar(title: Text(s.p6Templates)),
       body: BoundedList(
         children: [
-          if (widget.store.trialsEnabled) Text(s.trialRehearsal),
+          if (widget.store.evaluationsEnabled) Text(s.evaluationRehearsal),
           FormSectionTile(
             label: recipe.localizedLabel(language),
             icon: Icons.medical_services_outlined,
@@ -321,8 +322,8 @@ class _PilotCatalogueState extends State<_PilotCatalogue> {
                           previewContext,
                           phase7: widget.phase7,
                           reportLanguage: widget.reportLanguage,
-                          footer: widget.store.trialsEnabled
-                              ? _trialPanel(previewContext)
+                          footer: widget.store.evaluationsEnabled
+                              ? _evaluationPanel(previewContext)
                               : null,
                         ),
                       ),
@@ -330,15 +331,15 @@ class _PilotCatalogueState extends State<_PilotCatalogue> {
                     if (!context.mounted) return;
                     if (chosen == true) {
                       Navigator.pop(context, true);
-                    } else if (widget.store.trialsEnabled) {
+                    } else if (widget.store.evaluationsEnabled) {
                       setState(() => _revision++);
                     }
                   },
                   icon: const Icon(Icons.visibility_outlined),
                   label: Text(s.editorPreview),
                 ),
-                if (widget.store.trialsEnabled)
-                  _trialPanel(context, key: ValueKey(_revision))
+                if (widget.store.evaluationsEnabled)
+                  _evaluationPanel(context, key: ValueKey(_revision))
                 else
                   FilledButton(
                     onPressed: () => Navigator.pop(context, true),
@@ -352,14 +353,15 @@ class _PilotCatalogueState extends State<_PilotCatalogue> {
     );
   }
 
-  Widget _trialPanel(BuildContext context, {Key? key}) => TemplateTrialPanel(
-    key: key,
-    store: widget.store,
-    templateId: nursingPilot.id,
-    purchase: () =>
-        openTemplateCheckout(context, widget.store, nursingPilot.id),
-    onUse: () => Navigator.pop(context, true),
-  );
+  Widget _evaluationPanel(BuildContext context, {Key? key}) =>
+      TemplateEvaluationPanel(
+        key: key,
+        store: widget.store,
+        templateId: nursingPilot.id,
+        purchase: () =>
+            openTemplateCheckout(context, widget.store, nursingPilot.id),
+        onUse: () => Navigator.pop(context, true),
+      );
 }
 
 Future<void> openTemplateCheckout(
@@ -465,13 +467,20 @@ class RehearsalCheckout extends StatefulWidget {
 }
 
 class _RehearsalCheckoutState extends State<RehearsalCheckout> {
-  late Future<(CreationAccess, Map<String, String>, bool)> _data = _read();
+  late Future<
+    (CreationAccess, Map<String, String>, bool, TemplateEvaluationStatus?)
+  >
+  _data = _read();
   bool _busy = false;
 
-  Future<(CreationAccess, Map<String, String>, bool)> _read() async => (
+  Future<(CreationAccess, Map<String, String>, bool, TemplateEvaluationStatus?)>
+  _read() async => (
     await widget.store.access(),
     await widget.store.purchaseStates(),
     (await widget.store.settings())['offline'] == 'true',
+    widget.store.evaluationsEnabled && widget.product.startsWith('template:')
+        ? await widget.store.evaluationStatus(widget.product.substring(9))
+        : null,
   );
 
   Future<void> _change(Future<void> Function() action) async {
@@ -503,7 +512,7 @@ class _RehearsalCheckoutState extends State<RehearsalCheckout> {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final (access, ledger, offline) = snapshot.requireData;
+          final (access, ledger, offline, evaluation) = snapshot.requireData;
           final state = ledger[widget.product];
           final attempt = ledger['attempt:${widget.product}'];
           final owned = custom
@@ -518,6 +527,8 @@ class _RehearsalCheckoutState extends State<RehearsalCheckout> {
                 supportingText: s.p6StoreHint,
                 child: Text(custom ? s.p6CustomScope : s.p6TemplateScope),
               ),
+              if (evaluation != null)
+                EvaluationSummary(evaluation, explain: true),
               SwitchListTile(
                 title: Text(s.p6UseOffline),
                 value: offline,
@@ -776,8 +787,6 @@ class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
           },
         );
       }
-    } on TemplateAccessException {
-      if (mounted) setState(() => _problem = s.trialSaveBlocked);
     } on Object {
       if (mounted) _showError(context);
     } finally {

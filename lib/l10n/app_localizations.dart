@@ -3004,89 +3004,83 @@ abstract class AppLocalizations {
   /// **'Backup or restore could not be completed. Your existing records are still available.'**
   String get pbFailed;
 
-  /// No description provided for @trialStart.
+  /// No description provided for @evaluationAvailable.
   ///
   /// In en, this message translates to:
-  /// **'Start 7-Day Free Trial'**
-  String get trialStart;
+  /// **'{limit} free records available'**
+  String evaluationAvailable(int limit);
 
-  /// No description provided for @trialStarted.
+  /// No description provided for @evaluationUsed.
   ///
   /// In en, this message translates to:
-  /// **'Your 7-day trial has started.'**
-  String get trialStarted;
+  /// **'{used} of {limit} free records used'**
+  String evaluationUsed(int used, int limit);
 
-  /// No description provided for @trialRemaining.
+  /// No description provided for @evaluationExhausted.
   ///
   /// In en, this message translates to:
-  /// **'Trial time remaining: {remaining}'**
-  String trialRemaining(String remaining);
+  /// **'Free record allowance used — Purchase Template'**
+  String get evaluationExhausted;
 
-  /// No description provided for @trialThreeDays.
-  ///
-  /// In en, this message translates to:
-  /// **'Three days or less remain in your trial.'**
-  String get trialThreeDays;
-
-  /// No description provided for @trialOneDay.
-  ///
-  /// In en, this message translates to:
-  /// **'One day or less remains in your trial.'**
-  String get trialOneDay;
-
-  /// No description provided for @trialEnded.
-  ///
-  /// In en, this message translates to:
-  /// **'Trial Ended — Purchase Template'**
-  String get trialEnded;
-
-  /// No description provided for @trialBuy.
+  /// No description provided for @evaluationBuy.
   ///
   /// In en, this message translates to:
   /// **'Purchase Template'**
-  String get trialBuy;
+  String get evaluationBuy;
 
-  /// No description provided for @trialTerms.
+  /// No description provided for @evaluationTerms.
   ///
   /// In en, this message translates to:
-  /// **'The trial lasts 168 hours. It is free and requires no payment details. It never renews or becomes a purchase. Your records, evidence and historical reports stay available. Buy the template to resume editing or continue in a free Standard CPD profession.'**
-  String get trialTerms;
+  /// **'Create up to {limit} free records across all professions using this template, with no expiry date. You can always edit, report on and export your existing records. Purchase the template to create unlimited records.'**
+  String evaluationTerms(int limit);
 
-  /// No description provided for @trialUnavailable.
+  /// No description provided for @evaluationUnavailable.
   ///
   /// In en, this message translates to:
-  /// **'Trial status is unavailable. Your records and free CPD features are available.'**
-  String get trialUnavailable;
+  /// **'Free record allowance is unavailable. Your existing records and free Standard CPD are still available.'**
+  String get evaluationUnavailable;
 
-  /// No description provided for @trialSaveBlocked.
+  /// No description provided for @evaluationSaveBlocked.
   ///
   /// In en, this message translates to:
-  /// **'Template access has ended. Your changes are still here. Buy the template or restore a purchase before saving.'**
-  String get trialSaveBlocked;
+  /// **'There is no free record available for this template. Your draft is still here. Purchase the template or restore a purchase to save it.'**
+  String get evaluationSaveBlocked;
 
-  /// No description provided for @trialStandard.
+  /// No description provided for @evaluationStandard.
   ///
   /// In en, this message translates to:
   /// **'Continue with Standard CPD'**
-  String get trialStandard;
+  String get evaluationStandard;
 
-  /// No description provided for @trialHistorical.
+  /// No description provided for @evaluationHistorical.
   ///
   /// In en, this message translates to:
   /// **'Historical scheme report'**
-  String get trialHistorical;
+  String get evaluationHistorical;
 
-  /// No description provided for @trialAddEvidence.
+  /// No description provided for @evaluationRehearsal.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal evaluation rehearsal'**
+  String get evaluationRehearsal;
+
+  /// No description provided for @evaluationUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited records'**
+  String get evaluationUnlimited;
+
+  /// No description provided for @editorAddEvidence.
   ///
   /// In en, this message translates to:
   /// **'Add evidence'**
-  String get trialAddEvidence;
+  String get editorAddEvidence;
 
-  /// No description provided for @trialRehearsal.
+  /// No description provided for @evaluationRestoreInfo.
   ///
   /// In en, this message translates to:
-  /// **'Internal trial rehearsal'**
-  String get trialRehearsal;
+  /// **'Template records restored for the first time may count toward the free allowance. All restored records remain editable.'**
+  String get evaluationRestoreInfo;
 }
 
 class _AppLocalizationsDelegate

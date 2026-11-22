@@ -17,6 +17,40 @@ typedef ProjectCollectionSettings =
     );
 typedef CheckCollectionName =
     Future<bool> Function(SqliteRecordingRepository transaction, String label);
+typedef OnCollectionRestored =
+    Future<void> Function(
+      SqliteRecordingRepository transaction,
+      String collectionId,
+    );
+
+extension CollectionRecordOrigins on SqliteRecordingRepository {
+  /// Template provenance follows the record's stored layout, including deleted
+  /// rows. A restored record retains the identity from its original collection.
+  Stream<({String templateId, String origin})> loadCollectionRecordOrigins(
+    String id,
+  ) async* {
+    var cursor = 0;
+    while (true) {
+      final rows = await _db.rawQuery(
+        'SELECT r.rowid, l.template_id, COALESCE(o.value, r.id) AS origin '
+        'FROM records r JOIN layouts l ON l.collection_id = r.collection_id '
+        'AND l.version = r.layout_version LEFT JOIN host_state o '
+        'ON o.namespace = ? AND o.key = r.id '
+        'WHERE r.collection_id = ? AND r.rowid > ? AND l.template_id IS NOT NULL '
+        'ORDER BY r.rowid LIMIT 64',
+        [_entityOrigin('record', id), id, cursor],
+      );
+      if (rows.isEmpty) return;
+      for (final row in rows) {
+        cursor = row['rowid'] as int;
+        yield (
+          templateId: row['template_id'] as String,
+          origin: row['origin'] as String,
+        );
+      }
+    }
+  }
+}
 
 enum UnavailableOriginal { missing, damaged, unresolved }
 
@@ -109,12 +143,14 @@ class SqliteCollectionBackup {
     required this.available,
     this.projectSettings,
     this.verifyHost,
+    this.onRestored,
     this.factory,
   });
 
   final AvailableStorage available;
   final ProjectCollectionSettings? projectSettings;
   final VerifyBackupHost? verifyHost;
+  final OnCollectionRestored? onRestored;
   final DatabaseFactory? factory;
   static const _archive = PortableArchive();
   static const encryption = BackupEncryption();
@@ -353,6 +389,7 @@ class SqliteCollectionBackup {
           remapped: planned,
         );
         await target.saveHostValue(_collectionLineage, id, review._lineage);
+        await onRestored?.call(target, id);
         await beforeCommit?.call();
         return (
           status: CollectionImportStatus.added,

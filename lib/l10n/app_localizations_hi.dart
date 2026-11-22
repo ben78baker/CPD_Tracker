@@ -1610,49 +1610,51 @@ class AppLocalizationsHi extends AppLocalizations {
       'बैकअप या बहाली पूरी नहीं हुई। आपके मौजूदा रिकॉर्ड उपलब्ध हैं।';
 
   @override
-  String get trialStart => '7 दिन का मुफ़्त परीक्षण शुरू करें';
-
-  @override
-  String get trialStarted => 'आपका 7 दिन का परीक्षण शुरू हो गया है।';
-
-  @override
-  String trialRemaining(String remaining) {
-    return 'परीक्षण का शेष समय: $remaining';
+  String evaluationAvailable(int limit) {
+    return '$limit मुफ़्त रिकॉर्ड उपलब्ध';
   }
 
   @override
-  String get trialThreeDays => 'परीक्षण के तीन दिन या उससे कम बचे हैं।';
+  String evaluationUsed(int used, int limit) {
+    return '$limit में से $used मुफ़्त रिकॉर्ड इस्तेमाल किए गए';
+  }
 
   @override
-  String get trialOneDay => 'परीक्षण का एक दिन या उससे कम बचा है।';
+  String get evaluationExhausted =>
+      'मुफ़्त रिकॉर्ड की सीमा पूरी — टेम्पलेट खरीदें';
 
   @override
-  String get trialEnded => 'परीक्षण समाप्त — टेम्पलेट खरीदें';
+  String get evaluationBuy => 'टेम्पलेट खरीदें';
 
   @override
-  String get trialBuy => 'टेम्पलेट खरीदें';
+  String evaluationTerms(int limit) {
+    return 'इस टेम्पलेट का उपयोग करने वाले सभी प्रोफ़ेशन में कुल $limit मुफ़्त रिकॉर्ड बनाएँ। इसकी कोई समय-सीमा नहीं है। आप अपने पुराने रिकॉर्ड संपादित और निर्यात कर सकते हैं और उनकी रिपोर्ट बना सकते हैं। असीमित रिकॉर्ड बनाने के लिए टेम्पलेट खरीदें।';
+  }
 
   @override
-  String get trialTerms =>
-      'मुफ़्त परीक्षण 168 घंटे चलता है। इसके लिए भुगतान विवरण की ज़रूरत नहीं है और यह अपने आप नवीनीकृत नहीं होता या खरीद में नहीं बदलता। आपके रिकॉर्ड, साक्ष्य और पिछली रिपोर्ट उपलब्ध रहती हैं। टेम्पलेट खरीदें या मुफ़्त मानक CPD प्रोफ़ेशन में रिकॉर्ड बनाना जारी रखें।';
+  String get evaluationUnavailable =>
+      'मुफ़्त रिकॉर्ड की सीमा की जानकारी उपलब्ध नहीं है। आपके रिकॉर्ड और मुफ़्त मानक CPD उपलब्ध हैं।';
 
   @override
-  String get trialUnavailable =>
-      'परीक्षण की स्थिति उपलब्ध नहीं है। आपके रिकॉर्ड और मुफ़्त CPD सुविधाएँ उपलब्ध हैं।';
+  String get evaluationSaveBlocked =>
+      'इस टेम्पलेट के लिए कोई मुफ़्त रिकॉर्ड उपलब्ध नहीं है। आपका ड्राफ़्ट अभी मौजूद है। इसे सहेजने के लिए टेम्पलेट खरीदें या खरीद बहाल करें।';
 
   @override
-  String get trialSaveBlocked =>
-      'इस टेम्पलेट की पहुँच समाप्त हो गई है। आपके बदलाव अभी मौजूद हैं। सहेजने से पहले टेम्पलेट खरीदें या खरीद बहाल करें।';
+  String get evaluationStandard => 'मानक CPD के साथ जारी रखें';
 
   @override
-  String get trialStandard => 'मानक CPD के साथ जारी रखें';
+  String get evaluationHistorical => 'योजना की पिछली रिपोर्ट';
 
   @override
-  String get trialHistorical => 'योजना की पिछली रिपोर्ट';
+  String get evaluationRehearsal => 'आंतरिक मूल्यांकन';
 
   @override
-  String get trialAddEvidence => 'साक्ष्य जोड़ें';
+  String get evaluationUnlimited => 'असीमित रिकॉर्ड';
 
   @override
-  String get trialRehearsal => 'आंतरिक परीक्षण';
+  String get editorAddEvidence => 'साक्ष्य जोड़ें';
+
+  @override
+  String get evaluationRestoreInfo =>
+      'पहली बार बहाल किए गए टेम्पलेट रिकॉर्ड मुफ़्त रिकॉर्ड की सीमा में गिने जा सकते हैं। आप सभी बहाल रिकॉर्ड संपादित कर सकते हैं।';
 }

@@ -10,7 +10,7 @@ import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_pilot.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
-import 'package:cpd_tracker/cpd_creation/template_trials.dart';
+import 'package:cpd_tracker/cpd_creation/template_evaluation.dart';
 import 'package:cpd_tracker/l10n/app_localizations.dart';
 import 'package:cpd_tracker/onboarding_page.dart';
 import 'package:cpd_tracker/recording_editor/record_form.dart';
@@ -34,19 +34,17 @@ import 'package:uuid/uuid.dart';
 import 'phase6_creation_pages.dart';
 import 'phase7_rehearsal_pages.dart';
 import 'phase9_record_tools.dart';
-import 'phase9_trial_panel.dart';
+import 'phase9_evaluation_panel.dart';
 
 ProfessionCreationStore phase6Store(
   SqliteRecordingRepository repository, {
-  TemplateTrialLedger? trialLedger,
-  TrialClock? trialClock,
+  TemplateEvaluationLedger? evaluationLedger,
 }) => ProfessionCreationStore(
   repository,
   templates: {(nursingPilot.id, 1): nursingPilot},
   reportRules: {(nursingPilot.id, 1): nursingReportRules},
   bundles: {(nursingPilot.id, 1): nursingBundle},
-  trialLedger: trialLedger,
-  trialClock: trialClock,
+  evaluationLedger: evaluationLedger,
 );
 
 void main() {
@@ -279,7 +277,7 @@ class _HomeState extends State<_Home> {
       final enabled = await widget.store.canAddToLayout(history.last);
       if (!mounted) return;
       if (!enabled) {
-        if (widget.store.trialsEnabled) {
+        if (widget.store.evaluationsEnabled) {
           await _open(profession);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -577,6 +575,7 @@ class _ProfessionPage extends StatefulWidget {
 
 class _ProfessionPageState extends State<_ProfessionPage> {
   String _query = "";
+  bool? _withinAllowance;
   late Future<(List<LayoutRevision>, List<RecordingRecord>, CreationAccess)>
   _state = _load();
   Future<(List<LayoutRevision>, List<RecordingRecord>, CreationAccess)>
@@ -588,6 +587,7 @@ class _ProfessionPageState extends State<_ProfessionPage> {
   void _refresh() {
     if (mounted) {
       setState(() {
+        _withinAllowance = null;
         _state = _load();
       });
     }
@@ -796,31 +796,32 @@ class _ProfessionPageState extends State<_ProfessionPage> {
           final active = history.last;
           final templateId = active.templateId;
           final hasTemplate = access.hasTemplateAccess(templateId);
-          final trialUi = widget.store.trialsEnabled;
+          final evaluationUi = widget.store.evaluationsEnabled;
           final historical =
-              trialUi && templateId != null && records.isNotEmpty;
+              evaluationUi && templateId != null && records.isNotEmpty;
           return BoundedList(
             children: [
-              if (trialUi && templateId != null)
-                TemplateTrialPanel(
+              if (evaluationUi && templateId != null)
+                TemplateEvaluationPanel(
+                  key: ObjectKey(_state),
                   store: widget.store,
                   templateId: templateId,
                   purchase: () =>
                       openTemplateCheckout(context, widget.store, templateId),
                   onStandard: _standard,
                   onStatus: (status) {
-                    final enabled =
-                        status.active ||
-                        status.state == TemplateTrialState.owned;
-                    if (enabled != hasTemplate) _refresh();
+                    if (_withinAllowance != status.canCreate) {
+                      setState(() => _withinAllowance = status.canCreate);
+                    }
                   },
                 ),
-              if (active.templateId == null || hasTemplate)
+              if (templateId == null ||
+                  (evaluationUi ? _withinAllowance == true : hasTemplate))
                 FilledButton(
                   onPressed: () => _record(history),
                   child: Text(s.editorNewRecord),
                 )
-              else if (!trialUi)
+              else if (!evaluationUi)
                 Text(s.pbPremiumLocked),
               if (hasTemplate ||
                   access.canCustomiseFields && active.templateId == null)
@@ -828,14 +829,16 @@ class _ProfessionPageState extends State<_ProfessionPage> {
               if (hasTemplate || historical)
                 OutlinedButton(
                   onPressed: () => _report(history, records, active.version),
-                  child: Text(hasTemplate ? s.p6OpenReport : s.trialHistorical),
+                  child: Text(
+                    hasTemplate ? s.p6OpenReport : s.evaluationHistorical,
+                  ),
                 ),
-              if (!hasTemplate || trialUi)
+              if (!hasTemplate || evaluationUi)
                 OutlinedButton(
                   onPressed: () => _standardReport(history, records),
                   child: Text(s.editorExport),
                 ),
-              if (trialUi && records.isNotEmpty)
+              if (evaluationUi && records.isNotEmpty)
                 RehearsalExportActions(
                   store: widget.store,
                   profession: widget.profession,
@@ -912,8 +915,10 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
   late final _layout = widget.history.singleWhere(
     (layout) => layout.version == _version,
   );
-  late final _scoped = widget.store.trialsEnabled && _layout.templateId != null;
-  late bool _editable = !_scoped;
+  late final _scoped =
+      widget.store.evaluationsEnabled && _layout.templateId != null;
+  late bool _maySave = !_scoped || widget.record != null;
+  int _allowanceRevision = 0;
   late final _fields = resolveFields(_version, widget.history);
   late final _display = () {
     if (!widget.phase7) return _fields;
@@ -956,7 +961,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
   bool _busy = false;
 
   Future<void> _save() async {
-    if (_recordFiles.picking) return;
+    if (_busy || _recordFiles.picking) return;
     final s = editorStrings(context);
     setState(() => _busy = true);
     try {
@@ -990,7 +995,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
       attachments.addAll(_recordFiles.linked(_fields, _values));
       if (widget.record case final record?) {
         if (_changes.containsKey(duration)) _changes[duration] ??= 0;
-        await widget.store.updateActivity(
+        await widget.store.repository.updateValues(
           record.id,
           _changes,
           expectedVersion: record.version,
@@ -1006,12 +1011,15 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
         );
       }
       if (mounted) Navigator.of(context).pop();
-    } on TemplateAccessException {
+    } on TemplateAllowanceException {
       if (mounted) {
-        setState(() => _editable = false);
+        setState(() {
+          _maySave = false;
+          _allowanceRevision++;
+        });
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(s.trialSaveBlocked)));
+        ).showSnackBar(SnackBar(content: Text(s.evaluationSaveBlocked)));
       }
     } on Object {
       if (mounted) {
@@ -1026,7 +1034,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
 
   @override
   void dispose() {
-    if (widget.originals != null && widget.store.trialsEnabled) {
+    if (widget.originals != null && widget.store.evaluationsEnabled) {
       unawaited(_recordFiles.dispose());
     }
     super.dispose();
@@ -1046,7 +1054,8 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
     final s = editorStrings(context);
     final ids = widget.history.last.fields.map((f) => f.id).toSet();
     final old = _display.where((field) => !ids.contains(field.id)).toList();
-    final realEvidence = widget.store.trialsEnabled && widget.originals != null;
+    final realEvidence =
+        widget.store.evaluationsEnabled && widget.originals != null;
     Widget form(List<LayoutField> fields, {bool historical = false}) =>
         FutureBuilder(
           future: realEvidence ? _labels : null,
@@ -1064,7 +1073,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
             openAttachment: realEvidence
                 ? (id) => _recordFiles.open(context, id)
                 : null,
-            onChanged: _editable && !_busy ? _edit : null,
+            onChanged: _busy ? null : _edit,
           ),
         );
     return PopScope(
@@ -1078,7 +1087,8 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
         body: BoundedList(
           children: [
             if (_scoped)
-              TemplateTrialPanel(
+              TemplateEvaluationPanel(
+                key: ValueKey(_allowanceRevision),
                 store: widget.store,
                 templateId: _layout.templateId!,
                 purchase: () => openTemplateCheckout(
@@ -1087,8 +1097,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
                   _layout.templateId!,
                 ),
                 onStatus: (status) => setState(() {
-                  _editable =
-                      status.active || status.state == TemplateTrialState.owned;
+                  _maySave = widget.record != null || status.canCreate;
                 }),
               ),
             form(_display.where((field) => ids.contains(field.id)).toList()),
@@ -1098,7 +1107,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
             ],
           ],
         ),
-        bottomNavigationBar: !_editable
+        bottomNavigationBar: !_maySave
             ? null
             : SafeArea(
                 top: false,

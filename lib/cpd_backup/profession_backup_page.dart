@@ -261,6 +261,9 @@ class _ProfessionBackupPageState extends State<_ProfessionBackupPage> {
                       ),
                       if (restore != null) ...[
                         _summary(context, restore.summary),
+                        if (widget.store.evaluationsEnabled &&
+                            restore.summary.recordCount > 0)
+                          Text(s.evaluationRestoreInfo),
                         TextField(
                           controller: _name,
                           enabled: !_busy,

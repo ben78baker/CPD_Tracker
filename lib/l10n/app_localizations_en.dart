@@ -1624,49 +1624,51 @@ class AppLocalizationsEn extends AppLocalizations {
       'Backup or restore could not be completed. Your existing records are still available.';
 
   @override
-  String get trialStart => 'Start 7-Day Free Trial';
-
-  @override
-  String get trialStarted => 'Your 7-day trial has started.';
-
-  @override
-  String trialRemaining(String remaining) {
-    return 'Trial time remaining: $remaining';
+  String evaluationAvailable(int limit) {
+    return '$limit free records available';
   }
 
   @override
-  String get trialThreeDays => 'Three days or less remain in your trial.';
+  String evaluationUsed(int used, int limit) {
+    return '$used of $limit free records used';
+  }
 
   @override
-  String get trialOneDay => 'One day or less remains in your trial.';
+  String get evaluationExhausted =>
+      'Free record allowance used — Purchase Template';
 
   @override
-  String get trialEnded => 'Trial Ended — Purchase Template';
+  String get evaluationBuy => 'Purchase Template';
 
   @override
-  String get trialBuy => 'Purchase Template';
+  String evaluationTerms(int limit) {
+    return 'Create up to $limit free records across all professions using this template, with no expiry date. You can always edit, report on and export your existing records. Purchase the template to create unlimited records.';
+  }
 
   @override
-  String get trialTerms =>
-      'The trial lasts 168 hours. It is free and requires no payment details. It never renews or becomes a purchase. Your records, evidence and historical reports stay available. Buy the template to resume editing or continue in a free Standard CPD profession.';
+  String get evaluationUnavailable =>
+      'Free record allowance is unavailable. Your existing records and free Standard CPD are still available.';
 
   @override
-  String get trialUnavailable =>
-      'Trial status is unavailable. Your records and free CPD features are available.';
+  String get evaluationSaveBlocked =>
+      'There is no free record available for this template. Your draft is still here. Purchase the template or restore a purchase to save it.';
 
   @override
-  String get trialSaveBlocked =>
-      'Template access has ended. Your changes are still here. Buy the template or restore a purchase before saving.';
+  String get evaluationStandard => 'Continue with Standard CPD';
 
   @override
-  String get trialStandard => 'Continue with Standard CPD';
+  String get evaluationHistorical => 'Historical scheme report';
 
   @override
-  String get trialHistorical => 'Historical scheme report';
+  String get evaluationRehearsal => 'Internal evaluation rehearsal';
 
   @override
-  String get trialAddEvidence => 'Add evidence';
+  String get evaluationUnlimited => 'Unlimited records';
 
   @override
-  String get trialRehearsal => 'Internal trial rehearsal';
+  String get editorAddEvidence => 'Add evidence';
+
+  @override
+  String get evaluationRestoreInfo =>
+      'Template records restored for the first time may count toward the free allowance. All restored records remain editable.';
 }

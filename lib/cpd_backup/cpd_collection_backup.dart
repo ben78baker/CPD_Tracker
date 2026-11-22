@@ -7,18 +7,22 @@ import '../cpd_creation/profession_creation_store.dart';
 import '../cpd_creation/scheme_period_store.dart';
 import '../cpd_creation/scheme_progress.dart';
 import '../cpd_creation/template_bundle.dart';
+import '../cpd_creation/template_evaluation.dart';
 import '../recording_engine/models.dart';
 import '../recording_engine_storage/portable_archive.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
 
 const cpdCollectionTargets = 'cpd.phase7.standard-targets';
 
-SqliteCollectionBackup cpdCollectionBackup(AvailableStorage available) =>
-    SqliteCollectionBackup(
-      available: available,
-      projectSettings: _settings,
-      verifyHost: const HistoricalCpdBundles().verify,
-    );
+SqliteCollectionBackup cpdCollectionBackup(
+  AvailableStorage available, {
+  TemplateEvaluationLedger? evaluationLedger,
+}) => SqliteCollectionBackup(
+  available: available,
+  projectSettings: _settings,
+  verifyHost: const HistoricalCpdBundles().verify,
+  onRestored: evaluationLedger?.accountImported,
+);
 
 Future<List<CollectionSetting>> _settings(
   SqliteRecordingRepository source,

@@ -1631,49 +1631,51 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível concluir a cópia ou a restauração. Seus registros continuam disponíveis.';
 
   @override
-  String get trialStart => 'Iniciar teste gratuito de 7 dias';
-
-  @override
-  String get trialStarted => 'O seu teste de 7 dias começou.';
-
-  @override
-  String trialRemaining(String remaining) {
-    return 'Tempo restante do teste: $remaining';
+  String evaluationAvailable(int limit) {
+    return '$limit registos gratuitos disponíveis';
   }
 
   @override
-  String get trialThreeDays => 'Restam três dias ou menos de teste.';
+  String evaluationUsed(int used, int limit) {
+    return '$used de $limit registos gratuitos utilizados';
+  }
 
   @override
-  String get trialOneDay => 'Resta um dia ou menos de teste.';
+  String get evaluationExhausted =>
+      'Limite de registos gratuitos atingido — Comprar modelo';
 
   @override
-  String get trialEnded => 'Teste terminado — Comprar modelo';
+  String get evaluationBuy => 'Comprar modelo';
 
   @override
-  String get trialBuy => 'Comprar modelo';
+  String evaluationTerms(int limit) {
+    return 'Crie até $limit registos gratuitos no total em todas as profissões que usam este modelo, sem prazo de validade. Pode sempre editar e exportar os registos existentes e gerar relatórios. Compre o modelo para criar registos ilimitados.';
+  }
 
   @override
-  String get trialTerms =>
-      'O teste dura 168 horas. É gratuito, não exige dados de pagamento, não se renova e não se transforma numa compra. Os seus registos, comprovativos e relatórios históricos continuam disponíveis. Compre o modelo ou continue numa profissão de DPC padrão gratuita.';
+  String get evaluationUnavailable =>
+      'O limite de registos gratuitos está indisponível. Os seus registos e o DPC padrão gratuito continuam disponíveis.';
 
   @override
-  String get trialUnavailable =>
-      'O estado do teste está indisponível. Os seus registos e as funções gratuitas continuam disponíveis.';
+  String get evaluationSaveBlocked =>
+      'Já não há registos gratuitos para este modelo. O rascunho continua aqui. Compre o modelo ou restaure uma compra para o guardar.';
 
   @override
-  String get trialSaveBlocked =>
-      'O acesso a este modelo terminou. As alterações continuam aqui. Compre o modelo ou restaure uma compra antes de guardar.';
+  String get evaluationStandard => 'Continuar com DPC padrão';
 
   @override
-  String get trialStandard => 'Continuar com DPC padrão';
+  String get evaluationHistorical => 'Relatório histórico do programa';
 
   @override
-  String get trialHistorical => 'Relatório histórico do programa';
+  String get evaluationRehearsal => 'Avaliação interna';
 
   @override
-  String get trialAddEvidence => 'Adicionar comprovativo';
+  String get evaluationUnlimited => 'Registos ilimitados';
 
   @override
-  String get trialRehearsal => 'Teste interno';
+  String get editorAddEvidence => 'Adicionar comprovativo';
+
+  @override
+  String get evaluationRestoreInfo =>
+      'Os registos de um modelo restaurados pela primeira vez podem contar para o limite gratuito. Pode editar todos os registos restaurados.';
 }

@@ -120,7 +120,7 @@ Use `--dart-define=CPD_REHEARSAL_SAMPLE=review` or `space` to open those results
 
 ## Outstanding approvals
 
-Trial qualification is a separate, later store and physical-device exercise. The Phase 3B signed migration rehearsal uses its existing scope and identity. Verify that migrating or restoring a recording store cannot supply or restart trial entitlements before activating any public trial flow. [Phase 9 checklist](phase9_template_trials.md#physical-device-and-store-checklist)
+Evaluation qualification is a separate store and physical-device exercise. The Phase 3B signed migration rehearsal uses its existing scope and identity. Before enabling public evaluations, qualify continuity of the usage authority if the live recording store is ever replaced, including recovery from an older image. [Phase 9 checklist](phase9_template_evaluation.md#physical-device-and-store-checklist)
 
 Approve how reviewers confirm duplicate identities, dates, fractional durations and provider references. Approve the availability of the evidence-warning path and the startup authority composition before any production writer change. Review minimum-device signed-upgrade measurements and agree how to prove coverage of acknowledged SQLite writes when recovering a damaged installation. Retiring or deleting legacy material is a subsequent decision.
 

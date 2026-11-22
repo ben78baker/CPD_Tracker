@@ -29,7 +29,7 @@ The pilot distinguishes the valid duration recorded in the period, the portion a
 
 ### Template updates and historical integrity
 
-Phase 9 trial and purchase access are keyed to the template identity. Publishing a new template version does not start another trial or alter historical rule bindings. Template access can change available writing and arrangement actions without hiding historical records, evidence or pinned reports. [Trial lifecycle and expiry rules](phase9_template_trials.md)
+Phase 9 evaluation and purchase access are keyed to the template identity. Publishing a new version does not reset the five-record allowance or alter historical rule bindings. Exhaustion affects new template records. Existing records, evidence, report settings and pinned reports remain available. [Evaluation and authority rules](phase9_template_evaluation.md)
 
 The bundle codec is stable for the current reader. The same store product identifies subsequent template revisions. A comparison rejects unrelated products and flags changed thresholds, role bindings and controlled meanings. Regulatory changes require advancing the rule revision. The existing generic template comparison remains the layout comparison mechanism. It can compare the supplied baseline, local edits and the new recipe. Phase 7 introduces no automatic adoption, layout rewrite or application of new rules to old periods.
 

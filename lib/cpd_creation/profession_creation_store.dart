@@ -11,7 +11,7 @@ import '../recording_engine/layout_draft.dart';
 import '../recording_engine/models.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
 import 'creation_policy.dart';
-import 'template_trials.dart';
+import 'template_evaluation.dart';
 
 class ProfessionDraft {
   ProfessionDraft({
@@ -88,22 +88,19 @@ class ProfessionCreationStore {
     required Map<(String, int), TemplateVersion> templates,
     required Map<(String, int), SchemeReportRules> reportRules,
     Map<(String, int), ProfessionTemplateBundle> bundles = const {},
-    this.trialLedger,
-    TrialClock? trialClock,
+    this.evaluationLedger,
   }) : templates = Map.unmodifiable(templates),
        reportRules = Map.unmodifiable(reportRules),
-       bundles = Map.unmodifiable(bundles),
-       _trialClock = trialClock ?? TrialClock();
+       bundles = Map.unmodifiable(bundles);
 
   final SqliteRecordingRepository repository;
   final Map<(String, int), TemplateVersion> templates;
   final Map<(String, int), SchemeReportRules> reportRules;
 
   final Map<(String, int), ProfessionTemplateBundle> bundles;
-  final TemplateTrialLedger? trialLedger;
-  final TrialClock _trialClock;
+  final TemplateEvaluationLedger? evaluationLedger;
 
-  bool get trialsEnabled => trialLedger != null;
+  bool get evaluationsEnabled => evaluationLedger != null;
 
   static const _uuid = Uuid();
   static const draftsNamespace = 'cpd.creation.drafts';
@@ -143,18 +140,12 @@ class ProfessionCreationStore {
   Future<CreationAccess> access() => _access(repository);
   Future<CreationAccess> _access(SqliteRecordingRepository tx) async {
     final permanent = await _permanentAccess(tx);
-    if (!trialsEnabled) return permanent;
-    final active = <String>{};
-    for (final id in templates.keys.map((key) => key.$1).toSet()) {
-      if (!permanent.templates.contains(id) && (await _trial(id)).active) {
-        active.add(id);
-      }
-    }
+    if (!evaluationsEnabled) return permanent;
     return CreationAccess(
       customFields: permanent.customFields,
       legacy: permanent.legacy,
       templates: permanent.templates,
-      activeTrials: active,
+      evaluationTemplates: templates.keys.map((key) => key.$1),
     );
   }
 
@@ -173,35 +164,18 @@ class ProfessionCreationStore {
     );
   }
 
-  Future<TemplateTrialStatus> trialStatus(String id) =>
-      _templateTrialStatus(repository, id);
-
-  Future<TemplateTrialStatus> startTrial(String id) =>
-      repository.transaction((tx) => _templateTrialStatus(tx, id, start: true));
-
-  Future<TemplateTrialStatus> _templateTrialStatus(
-    SqliteRecordingRepository tx,
-    String id, {
-    bool start = false,
-  }) async {
-    if ((await _permanentAccess(tx)).templates.contains(id)) {
-      return const TemplateTrialStatus(TemplateTrialState.owned);
+  Future<TemplateEvaluationStatus> evaluationStatus(String id) async {
+    if ((await _permanentAccess(repository)).templates.contains(id)) {
+      return const TemplateEvaluationStatus(owned: true);
     }
-    return _trial(id, start: start);
+    final ledger = evaluationLedger;
+    if (ledger != null && _knownTemplate(id)) {
+      return ledger.status(repository, id);
+    }
+    return const TemplateEvaluationStatus();
   }
 
-  Future<TemplateTrialStatus> _trial(String id, {bool start = false}) async {
-    final ledger = trialLedger;
-    if (ledger != null && templates.keys.any((key) => key.$1 == id)) {
-      try {
-        return await ledger.check(id, clock: _trialClock, start: start);
-      } on Object {
-        // Uncertain local trial history cannot grant access. Purchases,
-        // historical reports and the free routes have separate authority.
-      }
-    }
-    return const TemplateTrialStatus(TemplateTrialState.unavailable);
-  }
+  bool _knownTemplate(String id) => templates.keys.any((key) => key.$1 == id);
 
   Future<Map<String, String>> purchaseStates() =>
       repository.loadHostState(grantsNamespace);
@@ -414,19 +388,7 @@ class ProfessionCreationStore {
   /// Historical records can be read even when the store cannot verify ownership.
   Future<bool> canAddToLayout(LayoutRevision layout) async =>
       layout.templateId == null ||
-      (await access()).hasTemplateAccess(layout.templateId);
-
-  Future<void> checkTrialTemplateAccess(
-    SqliteRecordingRepository tx,
-    String? templateId,
-  ) async {
-    if (trialsEnabled && templateId != null) {
-      final status = await _templateTrialStatus(tx, templateId);
-      if (!status.active && status.state != TemplateTrialState.owned) {
-        throw const TemplateAccessException();
-      }
-    }
-  }
+      (await evaluationStatus(layout.templateId!)).canCreate;
 
   Future<RecordingRecord> createActivity(
     String collectionId,
@@ -435,11 +397,17 @@ class ProfessionCreationStore {
     Iterable<RecordingAttachment> newAttachments = const [],
   }) => repository.transaction((tx) async {
     final layout = (await tx.loadLayouts(collectionId)).last;
-    await checkTrialTemplateAccess(tx, layout.templateId);
-    if (!trialsEnabled &&
-        layout.templateId != null &&
-        !(await _permanentAccess(tx)).hasTemplateAccess(layout.templateId)) {
-      throw StateError('Template access is required.');
+    final templateId = layout.templateId;
+    final ledger = evaluationLedger;
+    var owned = false;
+    if (templateId != null) {
+      owned = (await _permanentAccess(tx)).templates.contains(templateId);
+      if (!owned && ledger == null) {
+        throw StateError('Template access is required.');
+      }
+      if (!owned && !_knownTemplate(templateId)) {
+        throw const TemplateAllowanceException();
+      }
     }
     final record = await tx.createRecord(
       collectionId,
@@ -447,34 +415,10 @@ class ProfessionCreationStore {
       expectedLayoutVersion: expectedLayoutVersion,
       newAttachments: newAttachments,
     );
-    await checkTrialTemplateAccess(tx, layout.templateId);
-    return record;
-  });
-
-  Future<RecordingRecord> updateActivity(
-    String id,
-    Map<String, Object?> changes, {
-    required int expectedVersion,
-    Iterable<RecordingAttachment> newAttachments = const [],
-  }) => repository.transaction((tx) async {
-    String? templateId;
-    if (trialsEnabled) {
-      final record = await tx.loadRecord(id);
-      if (record == null) throw StateError('Activity unavailable.');
-      final layout = (await tx.loadLayouts(
-        record.collectionId,
-      )).singleWhere((layout) => layout.version == record.layoutVersion);
-      templateId = layout.templateId;
-      await checkTrialTemplateAccess(tx, templateId);
+    if (templateId != null && ledger != null) {
+      await ledger.accountCreated(tx, templateId, record.id, owned: owned);
     }
-    final updated = await tx.updateValues(
-      id,
-      changes,
-      expectedVersion: expectedVersion,
-      newAttachments: newAttachments,
-    );
-    await checkTrialTemplateAccess(tx, templateId);
-    return updated;
+    return record;
   });
 
   Future<SchemeReportRules> requireOwnedReport(LayoutRevision layout) async {
@@ -488,10 +432,10 @@ class ProfessionCreationStore {
     return definition;
   }
 
-  /// Phase 9 retains scheme reporting for stored records after access ends.
+  /// Phase 9 retains scheme reporting independently of recording allowance.
   /// Only a persisted layout can supply a historical report version.
   Future<void> requireHistoricalReport(LayoutRevision layout) async {
-    if (!trialsEnabled) {
+    if (!evaluationsEnabled) {
       await requireOwnedReport(layout);
       return;
     }
@@ -665,7 +609,6 @@ class ProfessionCreationStore {
       }
     }
     await tx.removeHostValue(draftsNamespace, requestId);
-    await checkTrialTemplateAccess(tx, draft.templateId);
     return collectionId;
   });
 
@@ -675,9 +618,6 @@ class ProfessionCreationStore {
     String? template,
   ) {
     if (!access.allows(kind, template)) {
-      if (trialsEnabled && kind == ProfessionKind.template) {
-        throw const TemplateAccessException();
-      }
       throw StateError('This configuration needs verified access.');
     }
   }

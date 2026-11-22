@@ -1632,49 +1632,51 @@ class AppLocalizationsDe extends AppLocalizations {
       'Sicherung oder Wiederherstellung fehlgeschlagen. Ihre vorhandenen Einträge bleiben verfügbar.';
 
   @override
-  String get trialStart => 'Kostenlosen 7-Tage-Test starten';
-
-  @override
-  String get trialStarted => 'Ihr 7-Tage-Test hat begonnen.';
-
-  @override
-  String trialRemaining(String remaining) {
-    return 'Verbleibende Testzeit: $remaining';
+  String evaluationAvailable(int limit) {
+    return '$limit kostenlose Einträge verfügbar';
   }
 
   @override
-  String get trialThreeDays => 'Der Test endet in höchstens drei Tagen.';
+  String evaluationUsed(int used, int limit) {
+    return '$used von $limit kostenlosen Einträgen genutzt';
+  }
 
   @override
-  String get trialOneDay => 'Der Test endet in höchstens einem Tag.';
+  String get evaluationExhausted =>
+      'Kostenlose Einträge aufgebraucht – Vorlage kaufen';
 
   @override
-  String get trialEnded => 'Test beendet – Vorlage kaufen';
+  String get evaluationBuy => 'Vorlage kaufen';
 
   @override
-  String get trialBuy => 'Vorlage kaufen';
+  String evaluationTerms(int limit) {
+    return 'Erstellen Sie bis zu $limit kostenlose Einträge über alle Berufe mit dieser Vorlage hinweg. Es gibt kein Ablaufdatum. Bestehende Einträge können Sie bearbeiten, für Berichte verwenden und exportieren. Mit dem Kauf der Vorlage können Sie unbegrenzt Einträge erstellen.';
+  }
 
   @override
-  String get trialTerms =>
-      'Der Test dauert 168 Stunden. Er ist kostenlos, erfordert keine Zahlungsdaten, verlängert sich nicht und führt zu keinem Kauf. Einträge, Nachweise und bisherige Berichte bleiben verfügbar. Kaufen Sie die Vorlage oder erfassen Sie weiter in einem kostenlosen Standard-CPD-Beruf.';
+  String get evaluationUnavailable =>
+      'Das Kontingent für kostenlose Einträge ist nicht verfügbar. Bestehende Einträge und kostenloses Standard-CPD bleiben verfügbar.';
 
   @override
-  String get trialUnavailable =>
-      'Der Teststatus ist nicht verfügbar. Ihre Einträge und die kostenlosen CPD-Funktionen bleiben verfügbar.';
+  String get evaluationSaveBlocked =>
+      'Für diese Vorlage ist kein kostenloser Eintrag mehr verfügbar. Ihr Entwurf ist noch vorhanden. Kaufen Sie die Vorlage oder stellen Sie den Kauf wieder her, um ihn zu speichern.';
 
   @override
-  String get trialSaveBlocked =>
-      'Ihr Vorlagenzugriff ist beendet. Ihre Änderungen sind noch vorhanden. Kaufen Sie die Vorlage oder stellen Sie den Kauf wieder her.';
+  String get evaluationStandard => 'Mit Standard-CPD fortfahren';
 
   @override
-  String get trialStandard => 'Mit Standard-CPD fortfahren';
+  String get evaluationHistorical => 'Historischer Bericht zum CPD-Programm';
 
   @override
-  String get trialHistorical => 'Historischer Bericht zum CPD-Programm';
+  String get evaluationRehearsal => 'Interner Testlauf';
 
   @override
-  String get trialAddEvidence => 'Nachweis hinzufügen';
+  String get evaluationUnlimited => 'Unbegrenzte Einträge';
 
   @override
-  String get trialRehearsal => 'Interner Testlauf';
+  String get editorAddEvidence => 'Nachweis hinzufügen';
+
+  @override
+  String get evaluationRestoreInfo =>
+      'Erstmals wiederhergestellte Vorlageneinträge können auf das kostenlose Kontingent angerechnet werden. Alle wiederhergestellten Einträge bleiben bearbeitbar.';
 }

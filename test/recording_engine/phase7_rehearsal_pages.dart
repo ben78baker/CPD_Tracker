@@ -293,7 +293,6 @@ Future<void> pickSchemePeriod(
       store: SchemePeriodStore(store.repository),
       collection: profession.id,
       bundle: bundle,
-      access: store,
     ),
   ),
 );
@@ -303,12 +302,10 @@ class _PeriodsPage extends StatefulWidget {
     required this.store,
     required this.collection,
     required this.bundle,
-    required this.access,
   });
   final SchemePeriodStore store;
   final String collection;
   final ProfessionTemplateBundle bundle;
-  final ProfessionCreationStore access;
 
   @override
   State<_PeriodsPage> createState() => _PeriodsPageState();
@@ -328,20 +325,8 @@ class _PeriodsPageState extends State<_PeriodsPage> {
   Future<void> _select(SchemePeriod period) async {
     setState(() => _busy = true);
     try {
-      await widget.store.select(
-        widget.collection,
-        period,
-        canChange: (tx) =>
-            widget.access.checkTrialTemplateAccess(tx, period.templateId),
-      );
+      await widget.store.select(widget.collection, period);
       if (mounted) Navigator.pop(context);
-    } on TemplateAccessException {
-      if (mounted) {
-        setState(() => _busy = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(editorStrings(context).trialSaveBlocked)),
-        );
-      }
     } on Object {
       if (mounted) {
         setState(() => _busy = false);
@@ -628,7 +613,7 @@ Future<void> openSchemeReport(
       (revision) => revision.version == version,
     );
     var current = phase7Bundles[(active.templateId, active.templateVersion)];
-    final historical = store.trialsEnabled && records.isNotEmpty;
+    final historical = store.evaluationsEnabled && records.isNotEmpty;
     if (historical) {
       await store.requireHistoricalReport(active);
       current = await const HistoricalCpdBundles().readOnlyRecipeVersion(
@@ -751,12 +736,12 @@ Future<void> openSchemeReport(
           ),
           body: PdfPreview(
             initialPageFormat: PdfPageFormat.a4,
-            allowSharing: store.trialsEnabled,
+            allowSharing: store.evaluationsEnabled,
             allowPrinting: false,
             canChangePageFormat: false,
             canChangeOrientation: false,
             canDebug: false,
-            useActions: store.trialsEnabled,
+            useActions: store.evaluationsEnabled,
             onError: rehearsalReportError,
             build: (_) => buildSchemeReport(
               bundle: bundle,

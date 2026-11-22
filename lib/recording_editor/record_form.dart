@@ -283,7 +283,7 @@ class RecordingFieldTile extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: enabled ? addAttachment : null,
                 icon: Icon(type.icon),
-                label: Text(s.trialAddEvidence),
+                label: Text(s.editorAddEvidence),
               )
             else if (attachments.isEmpty ||
                 (sampleAttachmentId != null &&

@@ -1638,49 +1638,51 @@ class AppLocalizationsFr extends AppLocalizations {
       'La sauvegarde ou la restauration a échoué. Vos fiches existantes restent accessibles.';
 
   @override
-  String get trialStart => 'Démarrer un essai gratuit de 7 jours';
-
-  @override
-  String get trialStarted => 'Votre essai de 7 jours a commencé.';
-
-  @override
-  String trialRemaining(String remaining) {
-    return 'Durée restante de l’essai : $remaining';
+  String evaluationAvailable(int limit) {
+    return '$limit activités gratuites disponibles';
   }
 
   @override
-  String get trialThreeDays => 'Il reste trois jours ou moins à votre essai.';
+  String evaluationUsed(int used, int limit) {
+    return '$used activités gratuites utilisées sur $limit';
+  }
 
   @override
-  String get trialOneDay => 'Il reste un jour ou moins à votre essai.';
+  String get evaluationExhausted =>
+      'Quota d’activités gratuites atteint — Acheter le modèle';
 
   @override
-  String get trialEnded => 'Essai terminé — Acheter le modèle';
+  String get evaluationBuy => 'Acheter le modèle';
 
   @override
-  String get trialBuy => 'Acheter le modèle';
+  String evaluationTerms(int limit) {
+    return 'Créez jusqu’à $limit activités gratuites pour l’ensemble des professions qui utilisent ce modèle, sans date limite. Vous pouvez toujours modifier et exporter vos activités existantes et générer des rapports. Achetez le modèle pour créer un nombre illimité d’activités.';
+  }
 
   @override
-  String get trialTerms =>
-      'L’essai dure 168 heures. Il est gratuit, ne nécessite aucune information de paiement, ne se renouvelle pas et ne devient pas un achat. Vos activités, justificatifs et rapports historiques restent accessibles. Achetez le modèle ou continuez dans une profession DPC standard gratuite.';
+  String get evaluationUnavailable =>
+      'Le quota d’activités gratuites est indisponible. Vos activités et le DPC standard gratuit restent accessibles.';
 
   @override
-  String get trialUnavailable =>
-      'Le statut de l’essai est indisponible. Vos activités et les fonctions gratuites restent accessibles.';
+  String get evaluationSaveBlocked =>
+      'Il ne reste plus d’activité gratuite pour ce modèle. Votre brouillon est toujours là. Achetez le modèle ou restaurez un achat pour l’enregistrer.';
 
   @override
-  String get trialSaveBlocked =>
-      'L’accès à ce modèle est terminé. Vos modifications sont toujours présentes. Achetez le modèle ou restaurez un achat avant d’enregistrer.';
+  String get evaluationStandard => 'Continuer avec le DPC standard';
 
   @override
-  String get trialStandard => 'Continuer avec le DPC standard';
+  String get evaluationHistorical => 'Rapport historique du dispositif';
 
   @override
-  String get trialHistorical => 'Rapport historique du dispositif';
+  String get evaluationRehearsal => 'Évaluation interne';
 
   @override
-  String get trialAddEvidence => 'Ajouter un justificatif';
+  String get evaluationUnlimited => 'Activités illimitées';
 
   @override
-  String get trialRehearsal => 'Essai interne';
+  String get editorAddEvidence => 'Ajouter un justificatif';
+
+  @override
+  String get evaluationRestoreInfo =>
+      'Les activités d’un modèle restaurées pour la première fois peuvent être comptées dans le quota gratuit. Vous pourrez modifier toutes les activités restaurées.';
 }
