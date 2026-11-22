@@ -31,7 +31,8 @@
 - [Phase 7 template bundles and scheme reporting](international/phase7_implementation_report.md) · shared profession cards, NMC targets and periods, generated examples, and remaining release gates.
 - [Phase 7A presentation and reporting locales](international/phase7a_implementation_report.md) · production Home comparison, period and PDF refinements, field limit and offline Hindi findings.
 - [Phase 7B reporting completion and compatibility](international/phase7b_implementation_report.md) · recipient traceability, stress and blank-page checks, offline shaping, simulator incident and minimum-OS findings.
-- [Phase 8 portable backup and write recovery](international/phase8_backup_and_recovery.md) · portable format, historical scheme rules, restore rehearsal, privacy and remaining release gates.
+- [Phase 8 portable backup and write recovery rehearsal](international/phase8_backup_and_recovery.md) · whole-store format, historical scheme rules, recovery evidence and migration protections.
+- [Profession backup and restore assessment](international/phase8_profession_backup_assessment.md) · current product direction, proposed restore protocol, policy wording and release decisions.
 - [Open questions and validation](international/validation_plan.md).
 - [Custom Fields UI specification](../../docs/custom_fields_ui.md) · the agreed editor and Field Library design.
 

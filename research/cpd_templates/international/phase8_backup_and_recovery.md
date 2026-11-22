@@ -2,6 +2,8 @@
 
 Status on 21 November 2026. Internal rehearsal on `feature/recording-engine`. Production continues to use its existing storage and recovery paths.
 
+**Product direction updated 22 November 2026.** The whole-store replacement flow and per-save recovery copies below describe the historical rehearsal. The approved public direction is free, user-managed profession backup and additive restoration. [Current assessment and proposed protocol](phase8_profession_backup_assessment.md)
+
 ## Recording format and coverage
 
 Version 1 is a single `.recordingbackup` file. The first eight ASCII bytes are `RECBAK01`. A four-byte big-endian unsigned length precedes the UTF-8 JSON manifest. The manifest carries a UTC creation date, backup and SQLite schema versions, and an ordered list of payload names, byte lengths and SHA-256 digests. Its first payload is `rows.ndjson`. Remaining payloads contain original evidence bytes without recompression. The reader verifies the exact file length, the manifest fingerprint the user reviewed and every payload fingerprint. An internal version-1 reader accepts SQLite logical schema 4. A future reader needs an explicit, tested converter before accepting other schema versions.
@@ -25,7 +27,7 @@ Manifest bounds are 8 MiB, 20,000 entries including the row stream, 64 GiB aggre
 
 The protected store currently takes a complete checkpoint per acknowledged operation. This is the reference guarantee for the rehearsal. A failure after the SQL commit leaves that data in the live workspace and holds authority for review. Recovery can inspect the last acknowledgement without replacing the potentially newer live workspace. No conflict merge or automatic rewind is implemented. Restored candidates have no production authority. SQLite documents transaction durability under its VFS and filesystem assumptions. Portable files and authority use flushed files and same-volume rename. Dart does not provide the explicit directory barriers needed to claim resilience to sudden device power loss. Same-volume recovery cannot survive loss of that volume. [SQLite atomic commit](https://www.sqlite.org/atomiccommit.html) · [SQLite synchronous modes](https://www.sqlite.org/pragma.html#pragma_synchronous)
 
-Complete per-write copies grow with every save. They require a single exclusive host writer and temporarily require space for the comparison, row stream and next checkpoint. This is unsuitable for broad production rollout on evidence-heavy installations as implemented. Choose a bounded incremental checkpoint or journal design, verify same-acknowledgement evidence recovery and safe compaction, measure low-storage behavior, and add the required native durability barriers before enabling production use. Preserve the existing 30-day minimum for migration recovery beginning only after verified activation. There is no automatic deletion of legacy originals or uncertain snapshots.
+Complete per-write copies grow with every save. They require a single exclusive host writer and temporarily require space for the comparison, row stream and next checkpoint. This is unsuitable for broad production rollout on evidence-heavy installations as implemented. The current product direction retires per-save recovery copies from the future production path. Its review covers SQLite journalling and original-file publication. Preserve the existing 30-day minimum for migration recovery beginning only after verified activation. There is no automatic deletion of legacy originals or uncertain snapshots.
 
 ## Workflow and privacy
 
@@ -37,7 +39,7 @@ For portable encryption, prefer a separately versioned, authenticated streaming 
 
 ## Validation and release decisions
 
-See the verification results below. Keep SQLite production activation disabled. The next review should approve a bounded acknowledged-write recovery design and public restore authority/presentation, including explicit replacement, pre-existing records, unresolved conflicts and recovery from damaged live data. Separately decide whether passphrase encryption is required before users can export. Public merge is deferred. Keep the approved initial model of bundled templates unlocked by verified store purchase, with externally distributed, validated bundles as a later option. No remote distribution or compulsory online backup was added.
+See the verification results below. Keep SQLite production activation disabled. Use the [profession backup assessment](phase8_profession_backup_assessment.md) for the current protocol and pending approvals, including the public encryption decision. Keep the approved initial model of bundled templates unlocked by verified store purchase, with externally distributed, validated bundles as a later option. No remote distribution or compulsory online backup was added.
 
 All Phase 7B release gates remain open. They include faithful offline complex-script PDF rendering with exact Unicode search, selection and copying; signed upgrade and runtime on iOS 15.6; production-signed Android API 24 upgrades; physical-device accessibility; public specialised sharing, printing and evidence export parity; and verified purchases and restoration. Six app languages, independent report locale and the explicit unsupported-renderer guard remain in place. Further complex-script experiments are deferred.
 

@@ -172,8 +172,8 @@ The [Phase 4 implementation](../research/cpd_templates/international/phase4_reco
 | Phase 6 · Internal shared creation and researched catalogue | Rehearse both entry points, scoped layout and report editing, app-wide Custom Fields, automatically saved drafts, simulated purchase recovery, and preview parity with one researched pilot. [Phase 6 plan and acceptance criteria](../research/cpd_templates/international/phase6_profession_creation_plan.md) · [Implementation report](../research/cpd_templates/international/phase6_implementation_report.md) |
 | Phase 7 · Internal scheme reporting | Reuse the standard profession card with progress supplied by the selected template bundle. Rehearse independent NMC periods, two simultaneous targets and the shared PDF pipeline. [Phase 7 roadmap and verification](../research/cpd_templates/international/phase7_implementation_report.md) |
 | Phase 7A · Presentation and report locale | Reuse the production Home chrome and target treatment. Rehearse reviewed reporting periods, independently selectable PDF language and recipient branding. [Phase 7A evidence and roadmap](../research/cpd_templates/international/phase7a_implementation_report.md) |
-| Phase 8 · Backup and restore rehearsal | Show inclusion, plaintext exposure, verification and date before sharing. Before preparing a replacement, validate the selected file, explain its effect and require explicit confirmation and a verified recovery copy. [Phase 8 specification and validation](../research/cpd_templates/international/phase8_backup_and_recovery.md) |
 | Phase 7B · Recipient reports and compatibility | Keep report traceability in the app, verify stress and blank-page behaviour, and test the offline shaping options and minimum-OS upgrades. [Phase 7B report](../research/cpd_templates/international/phase7b_implementation_report.md) |
+| Phase 8 follow-up · Profession backups | Review the free, user-managed single-profession export and additive restore protocol. Reuse portable verification and shared creation after approval. [Assessment and proposed protocol](../research/cpd_templates/international/phase8_profession_backup_assessment.md) |
 | Premium release, separately authorised | Surface the public preview from the catalogue regardless of ownership. Connect confirmation, purchase and restore to the CPD host. Integrate reporting and branding on their own schedules. |
 
 ### Decisions for approval
@@ -203,7 +203,7 @@ Keep the existing branded welcome, language, app colour, optional personal detai
 
 ### Page 2 · Create your first profession
 
-Reuse this same page from Home’s **Add Profession** action. Render the three approved tiles in this order and give each a concise description.
+Reuse this same page from Home’s **Add Profession** action. Render the three approved tiles in this order and give each a concise description. Place the free **Restore from Backup** action on this same page, outside the catalogue and purchase flows.
 
 | Choice | Shared behaviour |
 |---|---|
@@ -218,10 +218,12 @@ Existing user →  Home → Add Profession  ────────────
                                                                  ├─ Standard CPD → Name
                                                                  ├─ Custom CPD → Access notice → Name
                                                                  │              → Verify access or purchase → Edit Fields
-                                                                 └─ Profession Templates → Browse ↔ Preview
+                                                                 ├─ Profession Templates → Browse ↔ Preview
                                                                                           → Choose → Name
                                                                                           → Verify access or purchase
                                                                                           → Use as-is or Edit Fields
+                                                                 └─ Restore from Backup → Choose → Verify and review
+                                                                                         → Resolve name if needed
 
 Each path → Confirm creation → Saved profession
                                ├─ First profession → Home with the new tile
@@ -235,7 +237,7 @@ Use one naming form, validator, confirmation and error treatment for all paths a
 - Back from a template preview returns to the same catalogue position. Back from a creation path can return to the three choices without a purchase. Back from the choices returns to saved welcome preferences in onboarding or to Home for an existing user.
 - A cancelled purchase leaves the user in context. For a pending purchase, display the pending status and make Restore or Check status available when appropriate. On a store outage, explain the temporary issue and offer Retry and a return to the choices. Standard CPD stays available throughout.
 - Confirmed purchases belong to the store account independently of the draft. If a purchase finishes after the user leaves, surface the entitlement on return and wait for a new explicit creation confirmation. Never silently create a profession or repeat a purchase.
-- Onboarding completes only after the first profession and its layout are durably created or an earlier successful creation has been recovered. Welcome preferences, previews, pending purchases and cancelled creation leave onboarding incomplete. Honour existing onboarding completion through updates and migration, including for users with no current tiles.
+- Onboarding completes after the first profession and its layout are durably created or restored, or after recovering an earlier successful commit. Welcome preferences, previews, pending purchases and cancelled creation leave onboarding incomplete. Honour existing onboarding completion through updates and migration, including for users with no current tiles.
 - Use the same accent tokens, spacing, controls and copy across both entry points. Support all eight app colours and six app locales, readable wrapping and scrolling at large text sizes, accessible tile names, visible focus and status feedback, generous touch targets and keyboard/Back navigation. Test the supported minimum platforms as release gates.
 
 [Architecture and recovery contract](../research/cpd_templates/international/architecture_implications.md#10-shared-profession-creation-and-onboarding) · [Phase 6 rehearsal and acceptance criteria](../research/cpd_templates/international/phase6_profession_creation_plan.md)
@@ -277,3 +279,11 @@ Author templates in the language used by the relevant body. Add reviewed special
 Verify that a PDF can be searched, selected and copied faithfully as well as rendered correctly. Enable offline complex-script output after both checks pass at the minimum supported platforms. The experimental Hindi reports are restricted to the isolated rehearsal. [Phase 7B acceptance evidence](../research/cpd_templates/international/phase7b_implementation_report.md)
 
 Template owners receive subsequent updates to the same product. Require a review before adopting a new form or rule version and retain compatible local customisations and prior reporting windows. The complete selective adoption UX is deferred. Original paid-app customers receive app-wide Custom Fields via an owner-managed grant. Normal purchases and restoration retain their own verification flows. [Phase 7 architecture and rollout gates](../research/cpd_templates/international/phase7_implementation_report.md)
+
+## 13. User-managed profession backup and restore
+
+**Approved product direction.** Add **Create Backup** to each profession tile menu and **Restore from Backup** to the shared creation page. Both are free. Users choose where to save or share a verified file. The Settings help explains how to create and securely store external copies. Keep **Standard CPD** readily accessible, and retain existing report export and deleted-record recovery routes.
+
+**Proposed interaction for review.** Show the selected file's profession name, date, record count, attachment count and verification status before allowing confirmation. Explain any unavailable attachments and whether their originals are included. Confirm with **Restore as new profession** and use the shared name validator if needed. A duplicate points to its existing or recoverable profession. A failure leaves the original file and existing professions available. Surface paid access separately from data restoration.
+
+Use the existing localised UI components, readable mobile layout and accessible progress and status messages. Draft copy, identity handling, privacy decisions and the staged restore protocol are in the [profession backup assessment](../research/cpd_templates/international/phase8_profession_backup_assessment.md). Implementation awaits protocol review.
