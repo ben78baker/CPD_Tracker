@@ -1,3 +1,7 @@
+import 'choice_values.dart';
+
+export 'choice_values.dart';
+
 /// Types supported by the recording foundation. Hosts bind their own business
 /// concepts to definition IDs. Decimals persist as exact base-10 strings.
 enum FieldKind {
@@ -20,6 +24,7 @@ class FieldDefinition {
     required this.label,
     required this.kind,
     Map<String, String> choices = const {},
+    this.allowCustomOptions = false,
     this.multiline = false,
     this.unit,
     this.decimalPlaces,
@@ -35,7 +40,8 @@ class FieldDefinition {
     final selectable =
         kind == FieldKind.choice || kind == FieldKind.multipleChoices;
     final numeric = kind == FieldKind.integer || kind == FieldKind.decimal;
-    if (selectable != choices.isNotEmpty ||
+    if ((allowCustomOptions && !selectable) ||
+        selectable != choices.isNotEmpty ||
         choices.entries.any(
           (choice) => choice.key.trim().isEmpty || choice.value.trim().isEmpty,
         ) ||
@@ -65,6 +71,9 @@ class FieldDefinition {
   /// Stable option ID to display label, in presentation order.
   final Map<String, String> choices;
 
+  /// Closed by default, including historical definitions and templates.
+  final bool allowCustomOptions;
+
   String localizedLabel(String? locale) =>
       localize(label, translations, locale);
 
@@ -74,7 +83,8 @@ class FieldDefinition {
       id == other.id &&
       kind == other.kind &&
       unit == other.unit &&
-      decimalPlaces == other.decimalPlaces;
+      decimalPlaces == other.decimalPlaces &&
+      allowCustomOptions == other.allowCustomOptions;
 
   void validate(Object value) {
     final valid = switch (kind) {
@@ -83,12 +93,12 @@ class FieldDefinition {
             (maxLength == null || value.runes.length <= maxLength!),
       FieldKind.date => value is String && isCalendarDay(value),
       FieldKind.duration => value is int && value >= 0,
-      FieldKind.choice => value is String && choices.containsKey(value),
+      FieldKind.choice => _validChoice(value),
       FieldKind.multipleChoices =>
         value is List &&
             value.isNotEmpty &&
-            value.toSet().length == value.length &&
-            value.every(choices.containsKey),
+            value.every(_validChoice) &&
+            value.map(readChoiceSelection).toSet().length == value.length,
       FieldKind.attachments =>
         value is List &&
             value.isNotEmpty &&
@@ -110,10 +120,23 @@ class FieldDefinition {
     return (value.split('.').elementAtOrNull(1)?.length ?? 0) <= decimalPlaces!;
   }
 
+  bool _validChoice(Object? value) {
+    final selection = readChoiceSelection(value);
+    if (selection == null) return false;
+    return selection.text == null
+        ? choices.containsKey(selection.id)
+        : allowCustomOptions;
+  }
+
+  String _choiceLabel(Object value) {
+    final selection = readChoiceSelection(value)!;
+    return selection.text ?? choices[selection.id]!;
+  }
+
   Object displayValue(Object value) => switch (kind) {
-    FieldKind.choice => choices[value]!,
+    FieldKind.choice => _choiceLabel(value),
     FieldKind.multipleChoices => List<String>.unmodifiable(
-      (value as List).map((id) => choices[id]!),
+      (value as List).cast<Object>().map(_choiceLabel),
     ),
     _ => value,
   };
@@ -124,6 +147,7 @@ class FieldDefinition {
     'label': label,
     'kind': kind.name,
     'choices': choices,
+    if (allowCustomOptions) 'allowCustomOptions': true,
     'multiline': multiline,
     if (unit != null) 'unit': unit,
     if (decimalPlaces != null) 'decimalPlaces': decimalPlaces,
@@ -140,6 +164,7 @@ class FieldDefinition {
         label: json['label'] as String,
         kind: FieldKind.values.byName(json['kind'] as String),
         choices: (json['choices'] as Map).cast<String, String>(),
+        allowCustomOptions: json['allowCustomOptions'] as bool? ?? false,
         multiline: json['multiline'] as bool,
         unit: json['unit'] as String?,
         decimalPlaces: json['decimalPlaces'] as int?,

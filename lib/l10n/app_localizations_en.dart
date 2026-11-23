@@ -1049,6 +1049,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editorAddChoice => 'Add choice';
 
   @override
+  String get choiceAllowNew => 'Allow new options while recording';
+
+  @override
+  String get choiceAddNew => 'Add new option';
+
+  @override
+  String get choiceUseOnce => 'Use once';
+
+  @override
+  String get choiceSaveOption => 'Save as option';
+
+  @override
+  String get choiceEnterLabel => 'Enter an option.';
+
+  @override
+  String get choiceAlreadyExists => 'This option already exists.';
+
+  @override
   String get editorFormatting => 'Display format';
 
   @override

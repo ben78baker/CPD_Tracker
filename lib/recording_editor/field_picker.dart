@@ -100,6 +100,8 @@ class _TypePage extends StatelessWidget {
         kind: type == EditorFieldType.heading ? FieldKind.text : type.kind,
         multiline: type == EditorFieldType.longText,
         decimalPlaces: type == EditorFieldType.decimal ? 2 : null,
+        allowCustomOptions:
+            type == EditorFieldType.single || type == EditorFieldType.multiple,
         choices:
             type == EditorFieldType.single || type == EditorFieldType.multiple
             ? {'1': name}

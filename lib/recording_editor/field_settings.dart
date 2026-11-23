@@ -55,12 +55,13 @@ class _FieldSettingsPageState extends State<FieldSettingsPage> {
     text: _field.definition.decimalPlaces?.toString() ?? '',
   );
   late final _choices = LinkedHashMap.of({
-    for (final choice in _field.definition.choices.entries)
+    for (final choice in _field.availableChoices.entries)
       choice.key: TextEditingController(
         text: widget.needsName ? '' : choice.value,
       ),
   });
   late bool _required = _field.required;
+  late bool _allowCustomOptions = _field.definition.allowCustomOptions;
   late bool _nonNegative = _field.definition.nonNegative;
   late EditorFieldType _type = EditorFieldType.of(_field);
   late Object? _default = _field.defaultValue;
@@ -88,6 +89,11 @@ class _FieldSettingsPageState extends State<FieldSettingsPage> {
       c.text.trim().isEmpty ? null : c.text;
   bool get _selectable =>
       _type == EditorFieldType.single || _type == EditorFieldType.multiple;
+  bool get _canChangeChoicePolicy =>
+      _selectable &&
+      !widget.protected &&
+      _field.source == null &&
+      _field.id == _field.definition.id;
   bool get _numeric =>
       _type == EditorFieldType.integer || _type == EditorFieldType.decimal;
   bool get _canDefault =>
@@ -113,8 +119,9 @@ class _FieldSettingsPageState extends State<FieldSettingsPage> {
             choices: {
               if (_selectable)
                 for (final choice in _choices.entries)
-                  choice.key: choice.value.text.trim(),
+                  choice.key: cleanChoiceLabel(choice.value.text),
             },
+            allowCustomOptions: _selectable && _allowCustomOptions,
             nonNegative: _numeric && _nonNegative,
             maxLength: original.maxLength,
             description: replacement ? original.description : null,
@@ -130,6 +137,9 @@ class _FieldSettingsPageState extends State<FieldSettingsPage> {
       placeholder: _optional(_placeholder),
       required: _required,
       source: _field.source,
+      addedOptions: identical(definition, original)
+          ? _field.addedOptions
+          : const {},
       defaultValue: forPreview ? null : _default,
     );
   }
@@ -144,12 +154,14 @@ class _FieldSettingsPageState extends State<FieldSettingsPage> {
       return true;
     }
     if (_selectable) {
-      final before = definition.choices.entries.toList();
-      return before.length != _choices.length ||
+      final before = _field.availableChoices.entries.toList();
+      return _allowCustomOptions != definition.allowCustomOptions ||
+          before.length != _choices.length ||
           _choices.entries.indexed.any((item) {
             final (index, choice) = item;
             return before[index].key != choice.key ||
-                before[index].value != choice.value.text.trim();
+                cleanChoiceLabel(before[index].value) !=
+                    cleanChoiceLabel(choice.value.text);
           });
     }
     return false;
@@ -162,10 +174,7 @@ class _FieldSettingsPageState extends State<FieldSettingsPage> {
         throw ArgumentError('Missing name');
       }
       if (_selectable &&
-          _choices.values
-                  .map((c) => c.text.trim().toLowerCase())
-                  .toSet()
-                  .length !=
+          _choices.values.map((c) => choiceLabelKey(c.text)).toSet().length !=
               _choices.length) {
         throw ArgumentError('Duplicate choice labels');
       }
@@ -283,6 +292,16 @@ class _FieldSettingsPageState extends State<FieldSettingsPage> {
                       title: Text(s.editorRequired),
                       value: _required,
                       onChanged: (value) => _change(() => _required = value),
+                    ),
+                  if (_canChangeChoicePolicy)
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(s.choiceAllowNew),
+                      value: _allowCustomOptions,
+                      onChanged: (value) => _change(() {
+                        _allowCustomOptions = value;
+                        if (!value) _default = null;
+                      }),
                     ),
                   if (_selectable && !widget.protected) ...[
                     for (final choice in _choices.entries)

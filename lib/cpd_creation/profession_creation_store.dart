@@ -395,6 +395,7 @@ class ProfessionCreationStore {
     Map<String, Object> values, {
     required int expectedLayoutVersion,
     Iterable<RecordingAttachment> newAttachments = const [],
+    Map<String, Map<String, String>> addedOptions = const {},
   }) => repository.transaction((tx) async {
     final layout = (await tx.loadLayouts(collectionId)).last;
     final templateId = layout.templateId;
@@ -409,10 +410,18 @@ class ProfessionCreationStore {
         throw const TemplateAllowanceException();
       }
     }
+    final version = addedOptions.isEmpty
+        ? expectedLayoutVersion
+        : await _saveActivityOptions(
+            tx,
+            collectionId,
+            expectedLayoutVersion,
+            addedOptions,
+          );
     final record = await tx.createRecord(
       collectionId,
       values,
-      expectedLayoutVersion: expectedLayoutVersion,
+      expectedLayoutVersion: version,
       newAttachments: newAttachments,
     );
     if (templateId != null && ledger != null) {
@@ -420,6 +429,52 @@ class ProfessionCreationStore {
     }
     return record;
   });
+
+  Future<RecordingRecord> editActivity(
+    RecordingRecord record,
+    Map<String, Object?> changes, {
+    required int expectedLayoutVersion,
+    Iterable<RecordingAttachment> newAttachments = const [],
+    Map<String, Map<String, String>> addedOptions = const {},
+  }) {
+    Future<RecordingRecord> update(SqliteRecordingRepository tx) =>
+        tx.updateValues(
+          record.id,
+          changes,
+          expectedVersion: record.version,
+          newAttachments: newAttachments,
+        );
+    if (addedOptions.isEmpty) return update(repository);
+    return repository.transaction((tx) async {
+      await _saveActivityOptions(
+        tx,
+        record.collectionId,
+        expectedLayoutVersion,
+        addedOptions,
+      );
+      return update(tx);
+    });
+  }
+
+  Future<int> _saveActivityOptions(
+    SqliteRecordingRepository tx,
+    String collectionId,
+    int version,
+    Map<String, Map<String, String>> options,
+  ) async {
+    final revision = await tx.addFieldOptions(
+      collectionId,
+      options,
+      expectedLayoutVersion: version,
+    );
+    final report = await _report(tx, collectionId, version);
+    await tx.saveHostValue(
+      reportsNamespace,
+      '$collectionId:${revision.version}',
+      jsonEncode(report.toJson()),
+    );
+    return revision.version;
+  }
 
   Future<SchemeReportRules> requireOwnedReport(LayoutRevision layout) async {
     final access = await this.access();

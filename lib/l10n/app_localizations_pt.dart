@@ -1057,6 +1057,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String get editorAddChoice => 'Adicionar opção';
 
   @override
+  String get choiceAllowNew => 'Permitir novas opções ao registrar';
+
+  @override
+  String get choiceAddNew => 'Adicionar nova opção';
+
+  @override
+  String get choiceUseOnce => 'Usar uma vez';
+
+  @override
+  String get choiceSaveOption => 'Salvar como opção';
+
+  @override
+  String get choiceEnterLabel => 'Digite uma opção.';
+
+  @override
+  String get choiceAlreadyExists => 'Essa opção já existe.';
+
+  @override
   String get editorFormatting => 'Formato de apresentação';
 
   @override

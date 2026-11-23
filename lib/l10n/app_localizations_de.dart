@@ -1056,6 +1056,24 @@ class AppLocalizationsDe extends AppLocalizations {
   String get editorAddChoice => 'Option hinzufügen';
 
   @override
+  String get choiceAllowNew => 'Neue Optionen beim Erfassen zulassen';
+
+  @override
+  String get choiceAddNew => 'Neue Option hinzufügen';
+
+  @override
+  String get choiceUseOnce => 'Einmal verwenden';
+
+  @override
+  String get choiceSaveOption => 'Als Option speichern';
+
+  @override
+  String get choiceEnterLabel => 'Geben Sie eine Option ein.';
+
+  @override
+  String get choiceAlreadyExists => 'Diese Option gibt es bereits.';
+
+  @override
   String get editorFormatting => 'Anzeigeformat';
 
   @override

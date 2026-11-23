@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import '../recording_engine/models.dart';
 import '../widgets/form_section_tile.dart';
+import 'custom_option_dialog.dart';
 import 'strings.dart';
 
 enum EditorFieldType {
@@ -101,6 +102,8 @@ class RecordingFieldTile extends StatelessWidget {
     this.attachmentLabels = const {},
     this.addAttachment,
     this.openAttachment,
+    this.onCustomOption,
+    this.canSaveOption = false,
   });
 
   final LayoutField field;
@@ -111,6 +114,29 @@ class RecordingFieldTile extends StatelessWidget {
   final Map<String, String> attachmentLabels;
   final VoidCallback? addAttachment;
   final ValueChanged<String>? openAttachment;
+  final void Function(String label, bool save)? onCustomOption;
+  final bool canSaveOption;
+
+  static const ChoiceSelection _addOption = (id: null, text: null);
+
+  Future<void> _promptForOption(BuildContext context) async {
+    final option = await showCustomOptionDialog(
+      context,
+      field: field,
+      canSave: canSaveOption,
+    );
+    if (context.mounted && option != null) {
+      onCustomOption!(option.label, option.save);
+    }
+  }
+
+  Map<ChoiceSelection, String> _choices(Iterable<ChoiceSelection> selected) => {
+    for (final option in field.definition.choices.entries)
+      (id: option.key, text: null): option.value,
+    for (final option in field.addedOptions.entries)
+      (id: option.key, text: option.value): option.value,
+    for (final choice in selected) choice: ?choice.text,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +146,8 @@ class RecordingFieldTile extends StatelessWidget {
     final label = field.localizedLabel(locale.toLanguageTag());
     final enabled = onChanged != null;
     final definition = field.definition;
+    final canAddOption =
+        enabled && definition.allowCustomOptions && onCustomOption != null;
     final decoration = InputDecoration(
       hintText: field.placeholder ?? type.label(s),
       suffixText:
@@ -171,46 +199,73 @@ class RecordingFieldTile extends StatelessWidget {
           ],
         );
       case EditorFieldType.single:
+        final current = readChoiceSelection(value);
+        final choices = _choices([?current]);
+        final items = [
+          for (final choice in choices.entries)
+            DropdownMenuItem(
+              value: choice.key,
+              child: Text(choice.value, overflow: TextOverflow.ellipsis),
+            ),
+          if (canAddOption)
+            DropdownMenuItem(value: _addOption, child: Text(s.choiceAddNew)),
+        ];
+        void select(ChoiceSelection? choice) {
+          if (choice == _addOption) {
+            _promptForOption(context);
+          } else if (choice != null) {
+            onChanged!(storeChoiceSelection(choice));
+          }
+        }
+
         control = Row(
           children: [
             Expanded(
-              child: DropdownButtonFormField<String>(
-                key: ValueKey(value == null),
-                decoration: decoration,
-                isExpanded: true,
-                initialValue: value as String?,
-                items: [
-                  for (final choice in definition.choices.entries)
-                    DropdownMenuItem(
-                      value: choice.key,
-                      child: Text(choice.value),
+              child: canAddOption
+                  ? InputDecorator(
+                      decoration: decoration.copyWith(hintText: ''),
+                      isEmpty: current == null,
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<ChoiceSelection>(
+                          isDense: true,
+                          isExpanded: true,
+                          value: current,
+                          hint: Text(
+                            decoration.hintText!,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          items: items,
+                          onChanged: select,
+                        ),
+                      ),
+                    )
+                  : DropdownButtonFormField<ChoiceSelection>(
+                      key: ValueKey(current),
+                      decoration: decoration,
+                      isExpanded: true,
+                      initialValue: current,
+                      items: items,
+                      onChanged: enabled ? select : null,
                     ),
-                ],
-                selectedItemBuilder: (context) => [
-                  for (final choice in definition.choices.values)
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(choice, overflow: TextOverflow.ellipsis),
-                    ),
-                ],
-                onChanged: enabled ? onChanged : null,
-              ),
             ),
-            if (enabled && value != null)
+            if (enabled && current != null)
               IconButton(
                 tooltip: s.editorClear,
-                icon: const Icon(Icons.clear),
                 onPressed: () => onChanged!(null),
+                icon: const Icon(Icons.clear),
               ),
           ],
         );
       case EditorFieldType.multiple:
-        final selected = (value as List?)?.cast<String>() ?? const [];
+        final selected = (value as List? ?? const [])
+            .map(readChoiceSelection)
+            .nonNulls
+            .toSet();
         control = Wrap(
           spacing: 8,
           runSpacing: 4,
           children: [
-            for (final choice in definition.choices.entries)
+            for (final choice in _choices(selected).entries)
               FilterChip(
                 label: Text(choice.value),
                 selected: selected.contains(choice.key),
@@ -221,8 +276,18 @@ class RecordingFieldTile extends StatelessWidget {
                         checked
                             ? next.add(choice.key)
                             : next.remove(choice.key);
-                        onChanged!(next.isEmpty ? null : next.toList());
+                        onChanged!(
+                          next.isEmpty
+                              ? null
+                              : next.map(storeChoiceSelection).toList(),
+                        );
                       },
+              ),
+            if (canAddOption)
+              ActionChip(
+                avatar: const Icon(Icons.add, size: 18),
+                label: Text(s.choiceAddNew),
+                onPressed: () => _promptForOption(context),
               ),
           ],
         );
@@ -373,6 +438,8 @@ class RecordingForm extends StatelessWidget {
     this.requiredIds,
     this.addAttachment,
     this.openAttachment,
+    this.onCustomOption,
+    this.reusableOptionFields = const {},
   });
 
   final List<LayoutField> fields;
@@ -384,6 +451,9 @@ class RecordingForm extends StatelessWidget {
   final Set<String>? requiredIds;
   final ValueChanged<LayoutField>? addAttachment;
   final ValueChanged<String>? openAttachment;
+  final void Function(LayoutField field, String label, bool save)?
+  onCustomOption;
+  final Set<String> reusableOptionFields;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -407,6 +477,10 @@ class RecordingForm extends StatelessWidget {
                 ? null
                 : () => addAttachment!(field),
             openAttachment: openAttachment,
+            onCustomOption: onCustomOption == null
+                ? null
+                : (label, save) => onCustomOption!(field, label, save),
+            canSaveOption: reusableOptionFields.contains(field.id),
             onChanged: onChanged == null
                 ? null
                 : (value) => onChanged!(field.id, value),

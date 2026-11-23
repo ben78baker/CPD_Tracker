@@ -1960,6 +1960,42 @@ abstract class AppLocalizations {
   /// **'Add choice'**
   String get editorAddChoice;
 
+  /// No description provided for @choiceAllowNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow new options while recording'**
+  String get choiceAllowNew;
+
+  /// No description provided for @choiceAddNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new option'**
+  String get choiceAddNew;
+
+  /// No description provided for @choiceUseOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Use once'**
+  String get choiceUseOnce;
+
+  /// No description provided for @choiceSaveOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as option'**
+  String get choiceSaveOption;
+
+  /// No description provided for @choiceEnterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an option.'**
+  String get choiceEnterLabel;
+
+  /// No description provided for @choiceAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'This option already exists.'**
+  String get choiceAlreadyExists;
+
   /// No description provided for @editorFormatting.
   ///
   /// In en, this message translates to:

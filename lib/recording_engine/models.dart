@@ -14,10 +14,10 @@ class LayoutField {
     this.placeholder,
     this.format = FieldFormat.standard,
     this.source,
+    Map<String, String> addedOptions = const {},
     Object? defaultValue,
-  }) : defaultValue = defaultValue is List
-           ? List<Object?>.unmodifiable(defaultValue)
-           : defaultValue {
+  }) : addedOptions = Map.unmodifiable(addedOptions),
+       defaultValue = defaultValue == null ? null : _freezeValue(defaultValue) {
     if (id.trim().isEmpty || labelOverride?.trim().isEmpty == true) {
       throw ArgumentError('A field needs an ID and a nonblank label.');
     }
@@ -26,6 +26,20 @@ class LayoutField {
         (format == FieldFormat.photograph &&
             definition.kind != FieldKind.attachments)) {
       throw ArgumentError('The format does not match the field type.');
+    }
+    if (addedOptions.isNotEmpty) {
+      final labels = definition.choices.values.map(choiceLabelKey).toSet();
+      if (!definition.allowCustomOptions ||
+          addedOptions.entries.any(
+            (option) =>
+                option.key.trim().isEmpty ||
+                definition.choices.containsKey(option.key) ||
+                option.value.isEmpty ||
+                cleanChoiceLabel(option.value) != option.value ||
+                !labels.add(choiceLabelKey(option.value)),
+          )) {
+        throw ArgumentError('Custom options must be enabled and distinct.');
+      }
     }
     if (this.defaultValue case final value?) {
       if (definition.kind == FieldKind.attachments) {
@@ -44,6 +58,14 @@ class LayoutField {
   final Object? defaultValue;
   final FieldFormat format;
   final LibrarySource? source;
+
+  /// Collection-local additions carried by an immutable layout revision.
+  final Map<String, String> addedOptions;
+
+  Map<String, String> get availableChoices => {
+    ...definition.choices,
+    ...addedOptions,
+  };
   String get label => labelOverride ?? definition.label;
   String localizedLabel(String? locale) =>
       labelOverride ?? definition.localizedLabel(locale);
@@ -55,7 +77,11 @@ class LayoutField {
       definition.hasSameValueMeaning(replacement.definition) &&
       definition.version <= replacement.definition.version;
 
-  LayoutField reidentify(String newId, {bool? required}) => LayoutField(
+  LayoutField reidentify(
+    String newId, {
+    bool? required,
+    Map<String, String>? addedOptions,
+  }) => LayoutField(
     id: newId,
     definition: definition,
     required: required ?? this.required,
@@ -64,6 +90,7 @@ class LayoutField {
     placeholder: placeholder,
     format: format,
     source: source,
+    addedOptions: addedOptions ?? this.addedOptions,
     defaultValue: defaultValue,
   );
 
@@ -77,6 +104,7 @@ class LayoutField {
     if (format != FieldFormat.standard) 'format': format.name,
     if (source case final library?) 'source': library.toJson(),
     if (defaultValue != null) 'defaultValue': defaultValue,
+    if (addedOptions.isNotEmpty) 'addedOptions': addedOptions,
   };
 
   factory LayoutField.fromJson(Map<String, dynamic> json) => LayoutField(
@@ -93,6 +121,8 @@ class LayoutField {
         ? null
         : LibrarySource.fromJson(json['source'] as Map<String, dynamic>),
     defaultValue: json['defaultValue'],
+    addedOptions:
+        (json['addedOptions'] as Map?)?.cast<String, String>() ?? const {},
   );
 }
 
@@ -255,12 +285,7 @@ class RecordingRecord {
     required this.deleted,
     required Map<String, Object> values,
   }) : values = Map.unmodifiable(
-         values.map(
-           (key, value) => MapEntry(
-             key,
-             value is List ? List<Object?>.unmodifiable(value) : value,
-           ),
-         ),
+         values.map((key, value) => MapEntry(key, _freezeValue(value))),
        );
 
   final String id;
@@ -285,6 +310,16 @@ class RecordingRecord {
           (value) => value.toString().toLowerCase().contains(needle),
         );
   }
+}
+
+Object _freezeValue(Object value) {
+  if (value is Map) return Map.unmodifiable(value);
+  if (value is List) {
+    return List<Object?>.unmodifiable(
+      value.map((item) => item is Map ? Map.unmodifiable(item) : item),
+    );
+  }
+  return value;
 }
 
 enum AttachmentKind { managed, link, unresolved }

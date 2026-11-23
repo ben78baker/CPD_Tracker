@@ -1209,6 +1209,46 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
     widget.record?.values ?? initialFieldValues(_fields),
   );
   final _changes = <String, Object?>{};
+  final _pendingOptions = <String, Map<String, String>>{};
+  late final _activeFields = {
+    for (final field in widget.history.last.fields) field.id: field,
+  };
+
+  bool _canSaveOption(LayoutField field) =>
+      _activeFields[field.id]?.definition.allowCustomOptions == true;
+
+  LayoutField _optionsForEditing(LayoutField field) {
+    if (widget.readOnly || !field.definition.allowCustomOptions) return field;
+    return field.reidentify(
+      field.id,
+      addedOptions: {
+        ...field.addedOptions,
+        ...?_activeFields[field.id]?.addedOptions,
+        ...?_pendingOptions[field.id],
+      },
+    );
+  }
+
+  void _addCustomOption(LayoutField field, String label, bool save) {
+    final id = save ? const Uuid().v4() : null;
+    if (id != null) {
+      (_pendingOptions[field.id] ??= {})[id] = label;
+    }
+    final choice = storeChoiceSelection((id: id, text: label));
+    if (field.definition.kind == FieldKind.multipleChoices) {
+      final existing = (_values[field.id] as List?) ?? const [];
+      _edit(field.id, [
+        ...existing.where((value) {
+          final text = readChoiceSelection(value)?.text;
+          return text == null || choiceLabelKey(text) != choiceLabelKey(label);
+        }),
+        choice,
+      ]);
+    } else {
+      _edit(field.id, choice);
+    }
+  }
+
   final _sampleEvidence = const Uuid().v4();
   late final _recordFiles = RehearsalRecordFiles(
     widget.store.repository,
@@ -1252,11 +1292,12 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
       attachments.addAll(_recordFiles.linked(_fields, _values));
       if (widget.record case final record?) {
         if (_changes.containsKey(duration)) _changes[duration] ??= 0;
-        await widget.store.repository.updateValues(
-          record.id,
+        await widget.store.editActivity(
+          record,
           _changes,
-          expectedVersion: record.version,
+          expectedLayoutVersion: widget.history.last.version,
           newAttachments: attachments,
+          addedOptions: _pendingOptions,
         );
       } else {
         _values.putIfAbsent(duration, () => 0);
@@ -1265,6 +1306,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
           _values,
           expectedLayoutVersion: _version,
           newAttachments: attachments,
+          addedOptions: _pendingOptions,
         );
       }
       if (mounted) Navigator.of(context).pop();
@@ -1317,8 +1359,15 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
         FutureBuilder(
           future: realEvidence ? _labels : null,
           builder: (_, snapshot) => RecordingForm(
-            fields: fields,
+            fields: fields.map(_optionsForEditing).toList(),
             values: _values,
+            onCustomOption: widget.store.evaluationsEnabled && !widget.readOnly
+                ? _addCustomOption
+                : null,
+            reusableOptionFields: {
+              for (final field in fields)
+                if (_canSaveOption(field)) field.id,
+            },
             sampleAttachmentId: !realEvidence && !historical
                 ? _sampleEvidence
                 : null,

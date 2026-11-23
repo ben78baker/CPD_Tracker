@@ -409,6 +409,48 @@ class SqliteRecordingRepository {
     return revision;
   });
 
+  /// Publish collection-local options without rewriting a template, a
+  /// definition, or an earlier layout revision. A host can call this on its
+  /// transaction repository to commit the options alongside a record.
+  Future<LayoutRevision> addFieldOptions(
+    String collectionId,
+    Map<String, Map<String, String>> options, {
+    required int expectedLayoutVersion,
+  }) => _transaction((tx) async {
+    final repository = SqliteRecordingRepository._(tx);
+    final active = (await repository.loadLayouts(collectionId)).last;
+    if (active.version != expectedLayoutVersion) {
+      throw StateError('The layout has changed.');
+    }
+    if (options.isEmpty) return active;
+
+    final fields = {for (final field in active.fields) field.id: field};
+    for (final entry in options.entries) {
+      final field = fields[entry.key];
+      if (field == null ||
+          !field.definition.allowCustomOptions ||
+          entry.value.isEmpty ||
+          entry.value.keys.any(field.availableChoices.containsKey)) {
+        throw ArgumentError(
+          'Custom options need an active flexible field and new IDs.',
+        );
+      }
+      fields[entry.key] = field.reidentify(
+        field.id,
+        addedOptions: {
+          ...field.addedOptions,
+          for (final option in entry.value.entries)
+            option.key: cleanChoiceLabel(option.value),
+        },
+      );
+    }
+    return repository.reviseLayout(
+      collectionId,
+      fields.values,
+      expectedVersion: expectedLayoutVersion,
+    );
+  });
+
   Future<List<LayoutRevision>> loadLayouts(String collectionId) =>
       _layouts(_db, collectionId);
 

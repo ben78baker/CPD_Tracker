@@ -1048,6 +1048,24 @@ class AppLocalizationsHi extends AppLocalizations {
   String get editorAddChoice => 'विकल्प जोड़ें';
 
   @override
+  String get choiceAllowNew => 'रिकॉर्ड भरते समय नए विकल्प जोड़ने दें';
+
+  @override
+  String get choiceAddNew => 'नया विकल्प जोड़ें';
+
+  @override
+  String get choiceUseOnce => 'एक बार उपयोग करें';
+
+  @override
+  String get choiceSaveOption => 'विकल्प के रूप में सहेजें';
+
+  @override
+  String get choiceEnterLabel => 'कोई विकल्प दर्ज करें।';
+
+  @override
+  String get choiceAlreadyExists => 'यह विकल्प पहले से मौजूद है।';
+
+  @override
   String get editorFormatting => 'दिखाने का तरीका';
 
   @override
