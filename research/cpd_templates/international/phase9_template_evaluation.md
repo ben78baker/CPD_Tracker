@@ -48,4 +48,33 @@ The synthetic native entry point is `test/recording_engine/native_phase9_evaluat
 - The full Flutter suite passed 263 tests. Static analysis reported the same 13 existing findings and none in the changed files. Widget tests exercised allowance copy in six locales and eight colours, checkout and restore, isolated sample entry, and editing after the fifth record.
 - Native synthetic tests passed on iOS 18.5 and Android API 24 and 34. They exercised contended fifth and sixth saves, a ledger write failure after record insertion, cancelled and invalid requests, changed versions, separate templates, database reopen, deletion, ownership and original paid-customer access. Failed restore rolled back both history and usage. Re-import and re-export counted original IDs once, and restored photo and PDF digests matched. A whole-store portable archive excluded the ledger.
 - The revised UI launched on iOS 18.5. The existing Android API 24 timed rehearsal profile with no saved records displayed five free records after upgrade and after a separate process restart.
-- Physical devices, iOS 15.6, true store transactions, and OS recovery of usage remain unverified. The acceptance, store and installation gates above remain open. Updated Terms and Privacy Policy copy is held locally for private review.
+- Physical-device UI testing was pending at this checkpoint. iOS 15.6, true store transactions, and OS recovery of usage remain unverified. Updated Terms and Privacy Policy copy is held locally for private review.
+
+## Isolated Android test application
+
+Build the existing Phase 9 entry point in debug mode. Gradle assigns it package `com.ingeneralapps.cpdtracker.phase9test` and the launcher label **CPD Tracker Test**. It keeps the app icon and colour selector, starts with its own SQLite workspace and uses the simulated store. The normal Flutter entry point retains its existing Android identifier and label. The Phase 9 target is excluded from Android profile and release variants.
+
+```sh
+flutter build apk --debug --target test/recording_engine/phase9_evaluation_rehearsal_app.dart
+```
+
+Before installation, inspect the APK with `aapt dump badging` and confirm the `.phase9test` package. Select the intended device with `adb -s <serial>`. The original package and the test package use distinct private data directories. Use synthetic records and evidence in the test app. Keep production SQLite activation disabled.
+
+### Physical OPPO smoke test
+
+On 23 November 2026, the debug APK installed on the OPPO CPH2371 running Android 13 (API 33). The existing CPD package retained its version, code and data directories, and install and update timestamps. A separate inspection of the normal debug APK confirmed its original package, launcher label and API 24 minimum.
+
+| Journey | Observed result |
+| --- | --- |
+| Welcome and Standard CPD | Selected Teal, continued to profession creation and saved a record with a synthetic PDF selected from Android Downloads. The managed original matched the fixture byte for byte. |
+| Custom CPD and historical values | Used the simulated original-customer grant, added a text field and saved a record. Removing the field published a second layout and the original value remained visible under Historical fields. |
+| Template preview and evaluation | Entered temporary input, selected a controlled option and saw the example PDF render. The new NMC profession started with five free records. The fifth save removed the add action. Simulated checkout enabled a sixth save. The isolated database contained no saved preview value. |
+| Reports and sharing | Standard CSV contained the expected synthetic activity. A one-page text-only PDF and a two-page PDF with evidence parsed successfully. Both PDFs and the CSV opened the Android share sheet. The share sheets were dismissed before selecting a destination. |
+| Profession backup and restore | Created a verified backup of the Standard profession, including its original PDF, and opened the share sheet. Selected a separate prior synthetic backup through Downloads, checked the unavailable-evidence warnings and restored it as a new tile with five records, including one deleted record. The source file retained its checksum. |
+| Cold restart | Reopened the test app after a force-stop. The SQLite copy held four professions and 13 records, including six in the NMC evaluation tile. Integrity and foreign-key checks passed. |
+
+The UI still labels saved-entry flows “New sample record” and “Example entry.” Returning from the field editor can reopen the phone keyboard over the creation buttons. Dismissing the keyboard allowed creation to finish. The run did not cover a share destination, password-protected backup entry, TalkBack or the full colour and locale matrix.
+
+### iPhone XR preparation
+
+Xcode detected the XR on iOS 18.7.10. The local wildcard profile includes the XR but has no matching valid local signing identity. For a later build, choose a separate debug-only bundle ID and display name and obtain a development profile covering the test bundle ID and XR, with a matching Apple Development identity in the keychain. Build the same Flutter entry point and verify the distinct container before installation. This Android smoke test did not change iOS signing or install anything on the XR.

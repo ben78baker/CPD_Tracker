@@ -15,7 +15,7 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         tools:node="remove" />
     <application
-        android:label="CPD Progress Tracker"
+        android:label="${cpdAppLabel}"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

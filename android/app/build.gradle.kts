@@ -15,6 +15,12 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// Give the Phase 9 Flutter target its own app sandbox, even when built directly.
+val phase9EntryPoint = rootProject.file("../test/recording_engine/phase9_evaluation_rehearsal_app.dart")
+val phase9Test = providers.gradleProperty("target").orNull?.let { target ->
+    rootProject.projectDir.parentFile.resolve(target).canonicalFile
+} == phase9EntryPoint.canonicalFile
+
 android {
     namespace = "com.ingeneralapps.cpdtracker"
     compileSdk = flutter.compileSdkVersion
@@ -32,6 +38,7 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.ingeneralapps.cpdtracker"
+        manifestPlaceholders["cpdAppLabel"] = "CPD Progress Tracker"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -52,10 +59,24 @@ android {
     }
 
     buildTypes {
+        debug {
+            if (phase9Test) {
+                applicationIdSuffix = ".phase9test"
+                manifestPlaceholders["cpdAppLabel"] = "CPD Tracker Test"
+            }
+        }
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the release keys.
             signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}
+
+androidComponents {
+    beforeVariants { variant ->
+        if (phase9Test && variant.buildType != "debug") {
+            variant.enable = false
         }
     }
 }
