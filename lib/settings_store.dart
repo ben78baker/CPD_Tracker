@@ -61,7 +61,7 @@ class SettingsStore implements CpdProfessionStore {
   }
 
   Future<void> setAppAccent(AppAccent accent) =>
-      LegacyWriteGate.instance.write(() async {
+      LegacyWriteGate.instance.writeShared(() async {
         appAccent.value = accent;
         final prefs = await _prefsWithRetry();
         await prefs.setString(_kAppAccent, accent.storageValue);
@@ -88,7 +88,7 @@ class SettingsStore implements CpdProfessionStore {
   }
 
   Future<void> setReportLanguage(ReportLanguage language) =>
-      LegacyWriteGate.instance.write(() async {
+      LegacyWriteGate.instance.writeShared(() async {
         final prefs = await _prefsWithRetry();
         final saved = language == ReportLanguage.app
             ? await prefs.remove('report_locale_code')
@@ -102,7 +102,7 @@ class SettingsStore implements CpdProfessionStore {
   }
 
   Future<void> setDateFormat(String fmt) =>
-      LegacyWriteGate.instance.write(() async {
+      LegacyWriteGate.instance.writeShared(() async {
         final prefs = await _prefsWithRetry();
         await prefs.setString(_kDateFormat, fmt);
       });
@@ -121,17 +121,18 @@ class SettingsStore implements CpdProfessionStore {
 
   /// Persist week start preference
   Future<void> setWeekStart(String value) =>
-      LegacyWriteGate.instance.write(() async {
+      LegacyWriteGate.instance.writeShared(() async {
         // Expect one of: 'monday' | 'sunday' | 'saturday' | 'locale'
         final prefs = await _prefsWithRetry();
         await prefs.setString(_kWeekStart, value);
       });
 
   /// Clear week start preference so locale default is used
-  Future<void> clearWeekStart() => LegacyWriteGate.instance.write(() async {
-    final prefs = await _prefsWithRetry();
-    await prefs.remove(_kWeekStart);
-  });
+  Future<void> clearWeekStart() =>
+      LegacyWriteGate.instance.writeShared(() async {
+        final prefs = await _prefsWithRetry();
+        await prefs.remove(_kWeekStart);
+      });
 
   static const _kProfessions = 'professions';
   static const _kDeletedProfessions = 'deleted_professions';
@@ -432,13 +433,13 @@ class SettingsStore implements CpdProfessionStore {
 
   /// Persist the user's choice for the QR reminder tip
   Future<void> setQrHintDismissed(bool value) =>
-      LegacyWriteGate.instance.write(() async {
+      LegacyWriteGate.instance.writeShared(() async {
         final prefs = await _prefsWithRetry();
         await prefs.setBool(_kQrHintDismissed, value);
       });
 
   /// Optional helper to re-enable the tip from a settings screen
-  Future<void> resetQrHint() => LegacyWriteGate.instance.write(() async {
+  Future<void> resetQrHint() => LegacyWriteGate.instance.writeShared(() async {
     final prefs = await _prefsWithRetry();
     await prefs.remove(_kQrHintDismissed);
   });
@@ -456,7 +457,7 @@ class SettingsStore implements CpdProfessionStore {
     String? company,
     String? address,
     String? email,
-  }) => LegacyWriteGate.instance.write(() async {
+  }) => LegacyWriteGate.instance.writeShared(() async {
     final prefs = await _prefsWithRetry();
     if (name != null) await prefs.setString(_kProfileName, name);
     if (company != null) await prefs.setString(_kProfileCompany, company);
@@ -542,7 +543,7 @@ class SettingsStore implements CpdProfessionStore {
   /// Persist an in-app language override.
   /// Pass '' or null to follow system language.
   Future<void> setLocaleCode(String? code) =>
-      LegacyWriteGate.instance.write(() async {
+      LegacyWriteGate.instance.writeShared(() async {
         final prefs = await _prefsWithRetry();
         final c = (code ?? '').trim();
         if (c.isEmpty) {

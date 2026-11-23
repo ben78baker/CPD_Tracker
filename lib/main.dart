@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'cpd_compatibility/cpd_data_store.dart';
 import 'home_page.dart';
 import 'qr_scan_page.dart';
 import 'onboarding_page.dart';
@@ -43,7 +44,9 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.dataStore});
+
+  final CpdDataStore? dataStore;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -53,6 +56,7 @@ class _MyAppState extends State<MyApp> {
   late final Future<bool> _startOnboarding = _shouldStartOnboarding();
 
   Future<bool> _shouldStartOnboarding() async {
+    if (widget.dataStore != null) return false;
     // Start onboarding if not completed yet
     final done = await SettingsStore.instance.isOnboardingComplete();
     return !done;
@@ -92,16 +96,17 @@ class _MyAppState extends State<MyApp> {
                   final startOnboarding = snapshot.data ?? true;
                   return startOnboarding
                       ? const OnboardingPage()
-                      : const HomePage();
+                      : HomePage(dataStore: widget.dataStore);
                 },
               ),
               routes: {
                 '/onboarding': (_) => const OnboardingPage(),
-                '/home': (_) => const HomePage(),
+                '/home': (_) => HomePage(dataStore: widget.dataStore),
                 '/scan': (_) => const QrScanPage(profession: ''),
               },
-              onUnknownRoute: (_) =>
-                  MaterialPageRoute(builder: (_) => const HomePage()),
+              onUnknownRoute: (_) => MaterialPageRoute(
+                builder: (_) => HomePage(dataStore: widget.dataStore),
+              ),
             );
           },
         );

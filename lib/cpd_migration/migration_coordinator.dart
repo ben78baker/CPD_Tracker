@@ -31,6 +31,7 @@ final class CpdMigrationCoordinator {
     LegacyWriteGate? gate,
     DateTime Function()? clock,
     this.onCheckpoint,
+    this.onFailure,
     this.authorityFence,
   }) : _available = availableStorage ?? availableDeviceStorage,
        _gate = gate ?? LegacyWriteGate.instance,
@@ -43,6 +44,7 @@ final class CpdMigrationCoordinator {
   final LegacyWriteGate _gate;
   final DateTime Function() _clock;
   final Future<void> Function(MigrationReport)? onCheckpoint;
+  final void Function(Object)? onFailure;
   final File? authorityFence;
 
   static final _openAttempts = <String>{};
@@ -431,6 +433,11 @@ final class CpdMigrationCoordinator {
         review: review,
       );
     } catch (error) {
+      try {
+        onFailure?.call(error);
+      } on Object {
+        // Diagnostic observers cannot decide the migration outcome.
+      }
       final capacity = error is InsufficientRecoveryStorage ? error : null;
       final storageError =
           capacity != null ||

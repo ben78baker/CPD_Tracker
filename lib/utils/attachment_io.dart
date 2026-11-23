@@ -174,7 +174,7 @@ String resolveStoredPathForDocumentsDirectory(
 
 /// Ensure and return the app's attachments directory inside Documents.
 Future<Directory> getAppAttachmentsDir() =>
-    LegacyWriteGate.instance.write(() async {
+    LegacyWriteGate.instance.writeShared(() async {
       final docs = await getApplicationDocumentsDirectory();
       final dir = Directory(p.join(docs.path, 'attachments'));
       if (!dir.existsSync()) {
@@ -187,7 +187,7 @@ Future<Directory> getAppAttachmentsDir() =>
 /// If [preferredName] is supplied it will be used (sanitized) for the filename; otherwise
 /// we derive it from the source path. A timestamp is appended to avoid collisions.
 Future<String> copyLocalToAppDir(String sourcePath, {String? preferredName}) =>
-    LegacyWriteGate.instance.write(() async {
+    LegacyWriteGate.instance.writeShared(() async {
       final dir = await getAppAttachmentsDir();
       final baseNoExt = preferredName != null && preferredName.isNotEmpty
           ? _sanitizeFileName(p.basenameWithoutExtension(preferredName))
@@ -271,7 +271,7 @@ Future<String?> downloadToAppDir(BuildContext context, String url) async {
       final ext = _extFromContentType(resp.headers['content-type']);
       if (ext.isNotEmpty) name = '$name$ext';
     }
-    final savePath = await LegacyWriteGate.instance.write(() async {
+    final savePath = await LegacyWriteGate.instance.writeShared(() async {
       final attachmentsDir = await getAppAttachmentsDir();
       final path = p.join(attachmentsDir.path, name);
       await File(path).writeAsBytes(resp.bodyBytes);

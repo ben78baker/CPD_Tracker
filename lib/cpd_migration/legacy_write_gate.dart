@@ -8,12 +8,26 @@ final class LegacyWriteGate {
   var _writers = 0;
   var _frozen = false;
   var _retired = false;
+  var _sharedAfterRetirement = false;
   Completer<void>? _drained;
 
-  Future<T> write<T>(Future<T> Function() action) async {
+  Future<T> write<T>(Future<T> Function() action) => _write(action);
+
+  /// Preferences and owned evidence remain shared by the two CPD storage
+  /// paths. They still freeze during migration alongside legacy record writes.
+  Future<T> writeShared<T>(Future<T> Function() action) =>
+      _write(action, shared: true);
+
+  Future<T> _write<T>(
+    Future<T> Function() action, {
+    bool shared = false,
+  }) async {
+    if (_retired && !(shared && _sharedAfterRetirement)) {
+      throw StateError('Legacy storage is unavailable for writes.');
+    }
     final scope = Zone.current[_scopeKey] as _WriteScope?;
     if (scope?.active == true) return action();
-    if (_frozen || _retired) {
+    if (_frozen) {
       throw StateError('Legacy storage is unavailable for writes.');
     }
     final writer = _WriteScope();
@@ -45,11 +59,12 @@ final class LegacyWriteGate {
   }
 
   /// Seal when an independent handoff marker exists or boot requires recovery.
-  void seal() {
+  void seal({bool allowSharedWrites = false}) {
     if (!_frozen || _writers != 0) {
       throw StateError('Only a quiescent legacy store can be sealed.');
     }
     _retired = true;
+    _sharedAfterRetirement = allowSharedWrites;
   }
 }
 

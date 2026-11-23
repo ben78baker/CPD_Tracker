@@ -37,13 +37,20 @@ class CpdStartupAuthority {
     LegacyWriteGate gate, {
     required AuthorityScope scope,
     required bool hasLegacyRecords,
+    bool allowSharedWritesForRecording = false,
   }) => gate.freeze(() async {
     try {
       final state = await inspect(
         scope: scope,
         hasLegacyRecords: hasLegacyRecords,
       );
-      if (state.store != StoreAuthority.legacy) gate.seal();
+      if (state.store != StoreAuthority.legacy) {
+        gate.seal(
+          allowSharedWrites:
+              state.store == StoreAuthority.recording &&
+              allowSharedWritesForRecording,
+        );
+      }
       return state;
     } catch (_) {
       gate.seal();
