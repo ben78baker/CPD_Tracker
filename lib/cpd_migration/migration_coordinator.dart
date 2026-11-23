@@ -19,6 +19,12 @@ import 'startup_migration_authority.dart';
 
 enum _Purpose { verifyOnly, rehearsalActivation, productionActivation }
 
+enum MigrationHandoffCheckpoint {
+  fenceCreated,
+  receiptPending,
+  receiptCommitted,
+}
+
 /// Explicitly invoked while the legacy app is quiescent. Construct with an
 /// app-private attempt directory outside Documents. No startup caller or
 /// production authority consumer is installed in Phase 3A.
@@ -32,6 +38,7 @@ final class CpdMigrationCoordinator {
     DateTime Function()? clock,
     this.onCheckpoint,
     this.onFailure,
+    this.onRehearsalHandoff,
     this.authorityFence,
   }) : _available = availableStorage ?? availableDeviceStorage,
        _gate = gate ?? LegacyWriteGate.instance,
@@ -45,6 +52,9 @@ final class CpdMigrationCoordinator {
   final DateTime Function() _clock;
   final Future<void> Function(MigrationReport)? onCheckpoint;
   final void Function(Object)? onFailure;
+
+  /// Observes native handoff boundaries without changing the persisted journal.
+  final Future<void> Function(MigrationHandoffCheckpoint)? onRehearsalHandoff;
   final File? authorityFence;
 
   static final _openAttempts = <String>{};
@@ -423,6 +433,7 @@ final class CpdMigrationCoordinator {
         ),
       );
       final activated = await _recordActivation(db, binding);
+      await _observeHandoff(scope, MigrationHandoffCheckpoint.receiptCommitted);
       // SQLite's receipt is authoritative if the process stops here. The
       // ready journal already contains matching source and review information.
       return MigrationReport(
@@ -490,6 +501,7 @@ final class CpdMigrationCoordinator {
     // terminated writer makes startup fail closed.
     await fence.create(exclusive: true);
     if (scope == AuthorityScope.production) _gate.seal();
+    await _observeHandoff(scope, MigrationHandoffCheckpoint.fenceCreated);
     await fence.writeAsString(binding.encode(), flush: true);
     return binding;
   }
@@ -522,8 +534,19 @@ final class CpdMigrationCoordinator {
       migrationAuthorityKey,
       receipt.encode(),
     );
+    await _observeHandoff(
+      binding.scope,
+      MigrationHandoffCheckpoint.receiptPending,
+    );
     return receipt;
   });
+
+  Future<void>? _observeHandoff(
+    AuthorityScope scope,
+    MigrationHandoffCheckpoint checkpoint,
+  ) => scope == AuthorityScope.rehearsal
+      ? onRehearsalHandoff?.call(checkpoint)
+      : null;
 
   Future<MigrationReport?> _readJournal() async => await _journal.exists()
       ? MigrationReport.decode(await _journal.readAsString())

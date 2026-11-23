@@ -27,6 +27,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../recording_engine/native_phase9_evaluation.dart'
+    show verifyRecordingFeatureIntegration;
+import 'native_cutover_recovery.dart';
 import 'native_rehearsal_media.dart';
 
 /// Use a disposable app with a distinct identifier, away from the tracker.
@@ -44,6 +47,10 @@ Future<void> main() async {
     );
     if (mode == 'crash') {
       await _restartProbe();
+      return;
+    }
+    if (mode == 'release-validation') {
+      await _releaseValidation(frameMs);
       return;
     }
     actions.value = await RehearsalMedia.create(
@@ -71,6 +78,45 @@ Future<void> main() async {
   }
 }
 
+Future<void> _releaseValidation(int frameMs) async {
+  if (kReleaseMode) throw UnsupportedError('Development rehearsal only.');
+  final support = await getApplicationSupportDirectory();
+  final command = File(p.join(support.path, 'release-command'));
+  final request = (await command.readAsString()).trim().split(' ');
+  await command.delete();
+  if (request.length == 2) {
+    await runCutoverCase(request.first, request.last);
+    return;
+  }
+  final temp = await Directory.systemTemp.createTemp('cpd_release_validation_');
+  try {
+    switch (request.single) {
+      case 'scale':
+        final media = await RehearsalMedia.create(temp);
+        for (final (records, photos) in [(1200, 32), (3600, 96)]) {
+          await _scale(
+            temp,
+            records,
+            photos,
+            frameMs,
+            media.pdf,
+            activate: true,
+          );
+        }
+        await _largeReview(temp, media.pdf);
+        debugPrintSynchronously('CPD_RELEASE_SCALE_PASS');
+      case 'integration':
+        await verifyRecordingFeatureIntegration(temp);
+        await rehearseLocalisedReports(temp, fetchFonts: false);
+        debugPrintSynchronously('CPD_RELEASE_INTEGRATION_PASS');
+      default:
+        throw ArgumentError('Unknown release validation command.');
+    }
+  } finally {
+    await temp.delete(recursive: true);
+  }
+}
+
 const _professions = [
   'Dentistry',
   'Education',
@@ -83,13 +129,15 @@ const _professions = [
 CpdEntry _entry(int index, String label, List<String> references) => CpdEntry(
   id: index + 1,
   profession: label,
-  date: DateTime(2024, 1 + index % 12, 1 + index % 28),
+  date: index % 101 == 0
+      ? DateTime(2020, 2, 29)
+      : DateTime(2024, 1 + index % 12, 1 + index % 28),
   title: index % 13 == 0
       ? 'Case review and workshop'
       : 'Practice development $index',
   details:
       'Learning evidence and reflection. '
-      '${'Follow-up and evaluation. ' * (3 + index % 14)}\nReviewed objectives.',
+      '${'Follow-up and evaluation. ' * (3 + index % 14)}\nRéflexion et práctica.',
   hours: index % 3,
   minutes: index % 60,
   attachments: references,
@@ -111,8 +159,9 @@ Future<void> _scale(
   int count,
   int photos,
   int frameMs,
-  File pdf,
-) async {
+  File pdf, {
+  bool activate = false,
+}) async {
   final root = await temp.createTemp('scale_$count');
   final docs = await Directory(p.join(root.path, 'Documents')).create();
   final owned = await Directory(p.join(docs.path, 'attachments')).create();
@@ -161,7 +210,13 @@ Future<void> _scale(
 
   final timeline = <String, int>{};
   final watch = Stopwatch()..start();
+  var lastTick = 0;
+  var maxTickGapMs = 0;
   final timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+    final now = watch.elapsedMilliseconds;
+    final gap = now - lastTick;
+    if (gap > maxTickGapMs) maxTickGapMs = gap;
+    lastTick = now;
     pendingSample ??= sample().whenComplete(() => pendingSample = null);
   });
   final coordinator = CpdMigrationCoordinator(
@@ -175,7 +230,9 @@ Future<void> _scale(
   );
   late MigrationReport report;
   try {
-    report = await coordinator.rehearse();
+    report = await (activate
+        ? coordinator.rehearseActivation()
+        : coordinator.rehearse());
   } finally {
     timer.cancel();
     await pendingSample;
@@ -183,15 +240,29 @@ Future<void> _scale(
   }
   final migrationMs = watch.elapsedMilliseconds;
   requireRehearsal(
-    report.phase == MigrationPhase.ready,
+    report.phase ==
+        (activate ? MigrationPhase.rehearsalActivated : MigrationPhase.ready),
     'Scale $count did not verify: ${report.encode()}',
   );
   requireRehearsal(
-    await coordinator.readReceipt() == null,
-    'Readiness leaves authority unset',
+    (await coordinator.readReceipt())?.rehearsal == (activate ? true : null),
+    'Only the requested rehearsal may write an authority receipt',
   );
+  if (activate) {
+    final authority = await coordinator.startup.inspect(
+      scope: AuthorityScope.rehearsal,
+      hasLegacyRecords: true,
+    );
+    requireRehearsal(
+      authority.store == StoreAuthority.recording,
+      'No authority.',
+    );
+  }
   final reopen = Stopwatch()..start();
-  final db = await SqliteRecordingRepository.open(coordinator.databasePath);
+  final db = await SqliteRecordingRepository.open(
+    coordinator.databasePath,
+    durableWrites: activate,
+  );
   try {
     final store = await SqliteCpdStore.openVerified(
       db,
@@ -199,6 +270,7 @@ Future<void> _scale(
       documents: docs,
     );
     final openUs = reopen.elapsedMicroseconds;
+    if (activate) await store.verifyLegacyProjection(source);
     final search = Stopwatch()..start();
     final rows = await store.loadForProfession('Dentistry');
     final matches = RecordSearch.filter(rows, 'workshop');
@@ -244,12 +316,93 @@ Future<void> _scale(
     );
     final pdfMs = pdfWatch.elapsedMilliseconds;
     debugPrintSynchronously(
-      'CPD_PHASE3_SCALE ${jsonEncode({'records': count, 'professions': _professions.length, 'originals': photos + pdfs, 'legacyBytes': existingBytes, 'peakAdditionalBytes': peakWorkspace, 'peakRssBytes': peakRss, 'rssBeforeBytes': baselineRss, 'databaseBytes': await File(coordinator.databasePath).length(), 'migrationMs': migrationMs, 'checkpointsMs': timeline, 'scratchFirstFrameMs': frameMs, 'legacyDecodeUs': baselineDecodeUs, 'stagedOpenUs': openUs, 'legacySearchUs': oldSearchUs, 'projectedSearchUs': searchUs, 'matches': matches.length, 'csvUs': csvUs, 'csvBytes': utf8.encode(csv.text).length, 'pdf20Ms': pdfMs, 'pdfBytes': await reportPdf.length()})}',
+      'CPD_PHASE3_SCALE ${jsonEncode({'records': count, 'professions': _professions.length, 'originals': photos + pdfs, 'legacyBytes': existingBytes, 'peakAdditionalBytes': peakWorkspace, 'peakRssBytes': peakRss, 'rssBeforeBytes': baselineRss, 'databaseBytes': await File(coordinator.databasePath).length(), 'migrationMs': migrationMs, 'checkpointsMs': timeline, 'scratchFirstFrameMs': frameMs, 'max50msTimerGapMs': maxTickGapMs, 'legacyDecodeUs': baselineDecodeUs, 'stagedOpenUs': openUs, 'legacySearchUs': oldSearchUs, 'projectedSearchUs': searchUs, 'matches': matches.length, 'csvUs': csvUs, 'csvBytes': utf8.encode(csv.text).length, 'pdf20Ms': pdfMs, 'pdfBytes': await reportPdf.length()})}',
     );
   } finally {
     await db.close();
   }
   await root.delete(recursive: true);
+}
+
+Future<void> _largeReview(Directory parent, File pdf) async {
+  final root = await parent.createTemp('large-review');
+  final docs = await Directory(p.join(root.path, 'Documents')).create();
+  final originals = await Directory(p.join(docs.path, 'attachments')).create();
+  await pdf.copy(p.join(originals.path, 'retained.pdf'));
+  final valid = [
+    for (var i = 0; i < 1200; i++)
+      _entry(i, _professions[i % _professions.length], [
+        if (i % 17 == 0) 'attachments/retained.pdf',
+        if (i % 19 == 0) 'attachments/was-missing.pdf',
+        if (i % 23 == 0) 'https://example.com/evidence/$i',
+      ]).toJson(),
+  ];
+  final unusual = _entry(1200, 'Dentistry', []).toMap();
+  final rows = [
+    ...valid,
+    valid.first,
+    jsonEncode({...unusual, 'date': '2024-02-30'}),
+    jsonEncode({...unusual, 'minutes': 22.5}),
+    '{"title":"An interrupted record write',
+    jsonEncode({
+      ...unusual,
+      'legacyFlag': 'preserve',
+      'attachments': ['content://old-provider/no-longer-granted'],
+    }),
+  ];
+  final values = _source(rows);
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setStringList('entries_json_list', rows);
+  await prefs.setInt('next_entry_id', values['next_entry_id'] as int);
+  Future<Map<String, Object?>> read() => readCpdLegacyPreferences(prefs);
+  final original = await read();
+  final stopwatch = Stopwatch()..start();
+  final coordinator = CpdMigrationCoordinator(
+    workspace: Directory(p.join(root.path, 'attempt')),
+    documents: docs,
+    readLegacy: read,
+  );
+  final report = await coordinator.rehearseActivation();
+  final reviewMs = stopwatch.elapsedMilliseconds;
+  final codes = report.review.map((issue) => issue.code).toSet();
+  requireRehearsal(
+    report.phase == MigrationPhase.reviewRequired &&
+        codes.containsAll({
+          'duplicate_legacy_id',
+          'invalid_or_ambiguous_activity_date',
+          'fractional_duration',
+          'invalid_record_json',
+          'unresolved_attachment',
+          'unsupported_evidence_reference',
+          'unknown_record_fields_retained',
+        }) &&
+        await coordinator.readReceipt() == null &&
+        !await coordinator.startup.fence.exists(),
+    'A dirty source entered authority or missed a review issue.',
+  );
+  final restored = Directory(p.join(root.path, 'restored'));
+  final recovery = await coordinator.snapshot.restoreTo(restored);
+  final raw = recovery.values['entries_json_list'] as List;
+  requireRehearsal(
+    listEquals(raw, rows) &&
+        encodeLegacySnapshot(recovery.values) ==
+            encodeLegacySnapshot(original) &&
+        encodeLegacySnapshot(await read()) == encodeLegacySnapshot(original) &&
+        listEquals(
+          await pdf.readAsBytes(),
+          await File(
+            p.join(restored.path, 'attachments', 'retained.pdf'),
+          ).readAsBytes(),
+        ),
+    'Independent recovery did not contain the exact source and evidence.',
+  );
+  final issueCounts = <String, int>{};
+  for (final issue in report.review) {
+    issueCounts.update(issue.code, (count) => count + 1, ifAbsent: () => 1);
+  }
+  debugPrintSynchronously(
+    'CPD_RELEASE_LARGE_REVIEW ${jsonEncode({'rawRows': rows.length, 'preservedValidRows': valid.length, 'reviewMs': reviewMs, 'issues': issueCounts, 'rawAndEvidenceMatch': true})}',
+  );
 }
 
 Future<void> _reviewAndRetry(Directory temp) async {

@@ -113,12 +113,19 @@ class RehearsalActions extends StatelessWidget {
   );
 }
 
-Future<void> rehearseLocalisedReports(Directory temp) async {
+Future<void> rehearseLocalisedReports(
+  Directory temp, {
+  bool fetchFonts = true,
+}) async {
   CpdPdfFonts? fonts;
-  try {
-    fonts = await _downloadFonts().timeout(const Duration(seconds: 25));
-  } catch (error) {
-    debugPrintSynchronously('CPD_PHASE3_FONT_UNAVAILABLE ${error.runtimeType}');
+  if (fetchFonts) {
+    try {
+      fonts = await _downloadFonts().timeout(const Duration(seconds: 25));
+    } catch (error) {
+      debugPrintSynchronously(
+        'CPD_PHASE3_FONT_UNAVAILABLE ${error.runtimeType}',
+      );
+    }
   }
   final docs = await Directory(p.join(temp.path, 'multilingual')).create();
   final media = await RehearsalMedia.create(docs);

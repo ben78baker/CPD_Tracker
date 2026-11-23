@@ -37,7 +37,7 @@ Future<void> main() async {
   );
   final folder = await Directory.systemTemp.createTemp('phase9_evaluation_');
   try {
-    await _verify(folder);
+    await verifyRecordingFeatureIntegration(folder);
     debugPrintSynchronously('CPD_PHASE9_EVALUATION_PASS');
   } on Object catch (error, stack) {
     debugPrintSynchronously('CPD_PHASE9_EVALUATION_FAIL $error\n$stack');
@@ -47,7 +47,7 @@ Future<void> main() async {
   }
 }
 
-Future<void> _verify(Directory folder) async {
+Future<void> verifyRecordingFeatureIntegration(Directory folder) async {
   final workspace = RecordingWorkspace(folder);
   final files = ManagedAttachmentFiles(
     workspace.originals,
@@ -110,6 +110,26 @@ Future<void> _verify(Directory folder) async {
     _check(
       !(await store.access()).canCustomiseFields,
       'evaluation has no app-wide grant',
+    );
+    await _reject<StateError>(() async {
+      await store.begin(ProfessionKind.custom);
+    });
+    final standard = (await store.begin(
+      ProfessionKind.standard,
+    )).withChanges(name: 'Free recording');
+    await store.persist(standard);
+    final free = await store.commit(standard.id);
+    final freeLayout = (await repository.loadLayouts(free)).last;
+    final standardRecord = await store.createActivity(
+      free,
+      _standardValues(freeLayout),
+      expectedLayoutVersion: freeLayout.version,
+    );
+    _check(
+      (await repository.loadRecord(standardRecord.id))?.id ==
+              standardRecord.id &&
+          (await store.evaluationStatus(pilot.id)).used == 0,
+      'free Standard recording does not consume template allowance',
     );
     final cancelled = await store.begin(ProfessionKind.template, recipe: pilot);
     await store.discard(cancelled.id);
@@ -323,6 +343,7 @@ Future<void> _verify(Directory folder) async {
           (await store.access()).canCustomiseFields,
           'legacy Custom Fields grant survives',
         );
+        await _customLayout(store, repository);
         await store.saveSetting('offline', 'false');
         final product = 'template:${pilot.id}';
         await store.startSimulatedPurchase(product);
@@ -376,6 +397,48 @@ Future<void> _verify(Directory folder) async {
   } finally {
     await repository.close();
   }
+}
+
+Future<void> _customLayout(
+  ProfessionCreationStore store,
+  SqliteRecordingRepository repository,
+) async {
+  final draft = (await store.begin(
+    ProfessionKind.custom,
+  )).withChanges(name: 'Custom recording');
+  final reflection = LayoutField(
+    id: 'practice-reflection-field',
+    definition: FieldDefinition(
+      id: 'practice-reflection',
+      version: 1,
+      label: 'Practice reflection',
+      kind: FieldKind.text,
+    ),
+  );
+  draft.layout
+    ..add(reflection)
+    ..move(reflection.id, 0);
+  await store.persist(draft);
+  final collection = await store.commit(draft.id);
+  final initial = (await repository.loadLayouts(collection)).last;
+  final record = await store.createActivity(collection, {
+    ..._standardValues(initial),
+    reflection.id: 'Reflective evidence',
+  }, expectedLayoutVersion: initial.version);
+  final revision = await store.beginEdit(collection);
+  revision.layout.retire(reflection.id);
+  await store.persist(revision);
+  await store.commit(revision.id);
+  final layouts = await repository.loadLayouts(collection);
+  final historic = (await repository.loadRecord(record.id))!;
+  _check(
+    initial.fields.first.id == reflection.id &&
+        layouts.last.fields.every((field) => field.id != reflection.id) &&
+        historic
+            .project(resolveFields(historic.layoutVersion, layouts))
+            .contains('Reflective evidence'),
+    'reordered, retired custom field retains its historical value',
+  );
 }
 
 Future<void> _freshAuthority(
@@ -495,14 +558,18 @@ Future<void> _freshAuthority(
 String _binding(LayoutRevision layout, String definition) =>
     layout.fields.singleWhere((field) => field.definition.id == definition).id;
 
-Map<String, Object> _values(
-  LayoutRevision layout,
-  List<RecordingAttachment> evidence,
-) => {
+Map<String, Object> _standardValues(LayoutRevision layout) => {
   _binding(layout, 'cpd.activityDate'): '2026-08-14',
   _binding(layout, 'cpd.title'): 'Synthetic activity',
   _binding(layout, 'cpd.details'): 'Evidence and allowance validation',
   _binding(layout, 'cpd.creditedDuration'): 45,
+};
+
+Map<String, Object> _values(
+  LayoutRevision layout,
+  List<RecordingAttachment> evidence,
+) => {
+  ..._standardValues(layout),
   _binding(layout, 'nmc.method'): 'online',
   _binding(layout, 'nmc.participatory'): 0,
   _binding(layout, 'nmc.code'): ['effective'],
