@@ -4,6 +4,7 @@ import 'package:cpd_tracker/cpd_creation/historical_bundles.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_targets.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
+import 'package:cpd_tracker/cpd_compatibility/sqlite_cpd_store.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
 import 'package:cpd_tracker/cpd_creation/scheme_period_store.dart';
 import 'package:cpd_tracker/cpd_creation/scheme_progress.dart';
@@ -19,6 +20,7 @@ import 'package:cpd_tracker/utils/cpd_pdf_document.dart'
     show CpdPdfFonts, loadCpdPdfFonts;
 import 'package:cpd_tracker/recording_engine/models.dart';
 import 'package:cpd_tracker/recording_engine_storage/managed_attachment_files.dart';
+import 'package:cpd_tracker/settings_store.dart';
 import 'package:cpd_tracker/widgets/branded_headers.dart';
 import 'package:cpd_tracker/widgets/form_section_tile.dart';
 import 'package:cpd_tracker/widgets/profession_card.dart';
@@ -98,6 +100,7 @@ class RehearsalProfessionCard extends StatelessWidget {
     required this.onRename,
     required this.onDelete,
     required this.onRefresh,
+    this.refreshToken = 0,
     this.originals,
     this.onCreateBackup,
     this.onEditFields,
@@ -115,6 +118,7 @@ class RehearsalProfessionCard extends StatelessWidget {
   final ManagedAttachmentFiles? originals;
   final VoidCallback? onCreateBackup;
   final VoidCallback? onEditFields;
+  final int refreshToken;
 
   Future<(ProfessionTemplateBundle?, SchemeProgress?, (int, String)?)>
   _load() async {
@@ -122,15 +126,10 @@ class RehearsalProfessionCard extends StatelessWidget {
     final active = history.last;
     final bundle = phase7Bundles[(active.templateId, active.templateVersion)];
     if (bundle == null) {
-      final saved = (await store.repository.loadHostState(
-        _standardTargets,
-      ))[profession.id];
-      final parts = saved?.split(':');
-      final minutes = int.tryParse(parts?.first ?? '');
       return (
         null,
         null,
-        parts == null || minutes == null ? null : (minutes, parts.last),
+        await SqliteCpdStore.collectionTarget(store.repository, profession),
       );
     }
     final periods = await SchemePeriodStore(
@@ -153,11 +152,14 @@ class RehearsalProfessionCard extends StatelessWidget {
     return (pinned, result.progress, null);
   }
 
-  static const _standardTargets = 'cpd.phase7.standard-targets';
-
-  Future<int> _standardCompleted(String cycle) async {
+  Future<int> _standardCompleted(String cycle, int localeWeekday) async {
+    final weekStart = await SettingsStore.instance.getWeekStart();
     final history = await store.repository.loadLayouts(profession.id);
-    final (start, end) = cpdTargetPeriod(DateTime.now(), cycle);
+    final (start, end) = cpdTargetPeriod(
+      DateTime.now(),
+      cycle,
+      firstWeekday: cpdFirstWeekday(weekStart, localeWeekday),
+    );
     final lower = schemeDay(start), upper = schemeDay(end);
     var total = 0;
     for (final record in await store.repository.loadRecords(profession.id)) {
@@ -214,7 +216,7 @@ class RehearsalProfessionCard extends StatelessWidget {
           FilledButton(
             onPressed: () {
               final value = int.tryParse(minutes);
-              if (value != null && value > 0) {
+              if (value != null && value >= 0) {
                 Navigator.pop(context, (value, cycle));
               }
             },
@@ -224,10 +226,10 @@ class RehearsalProfessionCard extends StatelessWidget {
       ),
     );
     if (target != null) {
-      await store.repository.saveHostValue(
-        _standardTargets,
-        profession.id,
-        '${target.$1}:${target.$2}',
+      await SqliteCpdStore.setCollectionTarget(
+        store.repository,
+        profession,
+        target,
       );
     }
   }
@@ -269,9 +271,12 @@ class RehearsalProfessionCard extends StatelessWidget {
         onRename: onRename,
         onDelete: onDelete,
         target: target,
-        computeCompleted: _standardCompleted,
+        computeCompleted: (cycle) => _standardCompleted(
+          cycle,
+          MaterialLocalizations.of(context).firstDayOfWeekIndex,
+        ),
         onSetTarget: period,
-        refreshToken: 0,
+        refreshToken: refreshToken,
         targetMenuLabel: bundle?.label('period', s.p7Period, s.localeName),
         progressContent: bundle == null
             ? null

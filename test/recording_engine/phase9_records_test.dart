@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:cpd_tracker/cpd_compatibility/cpd_records_source.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
+import 'package:cpd_tracker/cpd_compatibility/cpd_targets.dart';
+import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
 import 'package:cpd_tracker/cpd_migration/legacy_migration.dart';
 import 'package:cpd_tracker/recording_engine/models.dart';
 import 'package:cpd_tracker/recording_engine_storage/managed_attachment_files.dart';
@@ -15,6 +17,9 @@ import 'package:cpd_tracker/models.dart';
 import 'package:cpd_tracker/widgets/record_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'phase7_rehearsal_pages.dart';
 
 const standard = (id: 'standard-id', label: 'Standard', deleted: false);
 const template = (id: 'nmc-id', label: 'Nursing', deleted: false);
@@ -103,6 +108,7 @@ class EvidenceRepository implements SqliteRecordingRepository {
     fields: cpdStandardFields(standard.id),
   );
   final rows = <String, RecordingRecord>{};
+  final hostState = <String, Map<String, String>>{};
   final asset = RecordingAttachment(
     id: 'shared-asset',
     kind: AttachmentKind.managed,
@@ -130,6 +136,10 @@ class EvidenceRepository implements SqliteRecordingRepository {
 
   @override
   Future<RecordingRecord?> loadRecord(String id) async => rows[id];
+
+  @override
+  Future<Map<String, String>> loadHostState(String namespace) async =>
+      hostState[namespace] ?? {};
 
   @override
   Future<RecordingAttachment?> loadAttachment(String id) async =>
@@ -174,6 +184,87 @@ Widget app(Widget page) => MaterialApp(
 );
 
 void main() {
+  testWidgets('standard target cards read migrated credit and refresh', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'week_start': 'saturday'});
+    final repository = EvidenceRepository()
+      ..hostState['cpd.preferences'] = {
+        'targets': '{"standard":{"minutes":120,"cycle":"week"}}',
+      };
+    final fields = cpdFieldBindings(repository.layout.fields);
+    final (saturday, _) = cpdTargetPeriod(
+      DateTime.now(),
+      'week',
+      firstWeekday: DateTime.saturday,
+    );
+    void addActivity(String id) {
+      repository.rows[id] = RecordingRecord(
+        id: id,
+        collectionId: standard.id,
+        layoutVersion: 1,
+        version: 1,
+        deleted: false,
+        values: {
+          fields['cpd.activityDate']!: saturday
+              .toIso8601String()
+              .split('T')
+              .first,
+          fields['cpd.creditedDuration']!: 30,
+        },
+      );
+    }
+
+    addActivity('first');
+    final store = ProfessionCreationStore(
+      repository,
+      templates: const {},
+      reportRules: const {},
+    );
+    late StateSetter refresh;
+    var token = 0;
+    await tester.pumpWidget(
+      app(
+        Scaffold(
+          body: StatefulBuilder(
+            builder: (context, setState) {
+              refresh = setState;
+              return RehearsalProfessionCard(
+                store: store,
+                profession: RecordingCollection(standard.id, standard.label, 1),
+                onAdd: () {},
+                onScan: () {},
+                onView: () {},
+                onSearch: () {},
+                onRename: () {},
+                onDelete: () {},
+                onRefresh: () {},
+                refreshToken: token,
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final strings = await AppLocalizations.delegate.load(const Locale('en'));
+    expect(
+      find.text(strings.weekStartsOnDay(strings.saturday)),
+      findsOneWidget,
+    );
+    expect(
+      find.text(strings.timeRemaining(1, 30, strings.thisWeek)),
+      findsOneWidget,
+    );
+    addActivity('second');
+    refresh(() => token++);
+    await tester.pumpAndSettle();
+    expect(
+      find.text(strings.timeRemaining(1, 0, strings.thisWeek)),
+      findsOneWidget,
+    );
+  });
+
   test(
     'unlink uses the exact evidence occurrence and retains a shared original',
     () async {

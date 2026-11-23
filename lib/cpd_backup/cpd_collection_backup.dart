@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import '../cpd_compatibility/cpd_data_store.dart';
+import '../cpd_compatibility/sqlite_cpd_store.dart';
 import '../cpd_creation/creation_policy.dart';
 import '../cpd_creation/historical_bundles.dart';
 import '../cpd_creation/profession_creation_store.dart';
@@ -12,7 +12,7 @@ import '../recording_engine/models.dart';
 import '../recording_engine_storage/portable_archive.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
 
-const cpdCollectionTargets = 'cpd.phase7.standard-targets';
+export '../cpd_compatibility/sqlite_cpd_store.dart' show cpdCollectionTargets;
 
 SqliteCollectionBackup cpdCollectionBackup(
   AvailableStorage available, {
@@ -84,34 +84,15 @@ Future<List<CollectionSetting>> _settings(
       retain(HistoricalCpdBundles.namespace, entry.key, entry.value);
     }
   }
-  var target = (await source.loadHostState(
-    cpdCollectionTargets,
-  ))[profession.id];
-  if (target == null) {
-    final raw = (await source.loadHostState('cpd.preferences'))['targets'];
-    if (raw != null) {
-      final key = cpdProfessionKey(profession.label);
-      final matches = (jsonDecode(raw) as Map).entries
-          .where((entry) => cpdProfessionKey(entry.key as String) == key)
-          .toList();
-      if (matches.length > 1) {
-        throw const BackupException(
-          BackupProblem.integrity,
-          'Conflicting targets.',
-        );
-      }
-      final value = matches.firstOrNull?.value;
-      if (value is Map) target = '${value['minutes']}:${value['cycle']}';
+  try {
+    if (await SqliteCpdStore.collectionTarget(source, profession) case (
+      final minutes,
+      final cycle,
+    )) {
+      retain(cpdCollectionTargets, destination, '$minutes:$cycle');
     }
-  }
-  if (target != null) {
-    final parts = target.split(':');
-    if (parts.length != 2 ||
-        (int.tryParse(parts.first) ?? -1) < 0 ||
-        !cpdTargetCycles.contains(parts.last)) {
-      throw const BackupException(BackupProblem.integrity, 'Invalid target.');
-    }
-    retain(cpdCollectionTargets, destination, target);
+  } on FormatException catch (error) {
+    throw BackupException(BackupProblem.integrity, error.message);
   }
   return result;
 }

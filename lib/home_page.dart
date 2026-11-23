@@ -243,12 +243,7 @@ class _HomePageState extends State<HomePage> {
       } catch (_) {
         // Keep the legacy default when preferences cannot be read.
       }
-      firstWeekday = switch (pref) {
-        'sunday' => DateTime.sunday,
-        'saturday' => DateTime.saturday,
-        'monday' => DateTime.monday,
-        _ => localeDay == 0 ? DateTime.sunday : localeDay + 1,
-      };
+      firstWeekday = cpdFirstWeekday(pref, localeDay);
     }
     final (start, end) = cpdTargetPeriod(
       now,

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:uuid/uuid.dart';
 
 import '../cpd_compatibility/cpd_data_store.dart';
+import '../cpd_compatibility/cpd_duration.dart';
 import '../cpd_compatibility/cpd_layout_policy.dart';
 import '../cpd_migration/legacy_migration.dart' show cpdStandardFields;
 import '../recording_engine/layout_draft.dart';
@@ -398,6 +399,8 @@ class ProfessionCreationStore {
     Map<String, Map<String, String>> addedOptions = const {},
   }) => repository.transaction((tx) async {
     final layout = (await tx.loadLayouts(collectionId)).last;
+    final duration = cpdFieldBindings(layout.fields)['cpd.creditedDuration'];
+    checkCpdCreditedDuration(values[duration]);
     final templateId = layout.templateId;
     final ledger = evaluationLedger;
     var owned = false;
@@ -437,13 +440,19 @@ class ProfessionCreationStore {
     Iterable<RecordingAttachment> newAttachments = const [],
     Map<String, Map<String, String>> addedOptions = const {},
   }) {
-    Future<RecordingRecord> update(SqliteRecordingRepository tx) =>
-        tx.updateValues(
-          record.id,
-          changes,
-          expectedVersion: record.version,
-          newAttachments: newAttachments,
-        );
+    Future<RecordingRecord> update(SqliteRecordingRepository tx) async {
+      final history = await tx.loadLayouts(record.collectionId);
+      final fields = resolveFields(record.layoutVersion, history);
+      final duration = cpdFieldBindings(fields)['cpd.creditedDuration'];
+      checkCpdCreditedDuration(changes[duration]);
+      return tx.updateValues(
+        record.id,
+        changes,
+        expectedVersion: record.version,
+        newAttachments: newAttachments,
+      );
+    }
+
     if (addedOptions.isEmpty) return update(repository);
     return repository.transaction((tx) async {
       await _saveActivityOptions(

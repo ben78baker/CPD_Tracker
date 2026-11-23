@@ -1,3 +1,12 @@
+/// Match the stored preference or Material's Sunday-based locale index.
+int cpdFirstWeekday(String preference, int localeFirstDayIndex) =>
+    switch (preference) {
+      'monday' => DateTime.monday,
+      'saturday' => DateTime.saturday,
+      'sunday' => DateTime.sunday,
+      _ => localeFirstDayIndex == 0 ? DateTime.sunday : localeFirstDayIndex,
+    };
+
 /// The existing CPD target cycle and rounding policy, shared with parity tests.
 (DateTime start, DateTime end) cpdTargetPeriod(
   DateTime now,
@@ -6,10 +15,11 @@
 }) {
   switch (cycle) {
     case 'week':
-      final today = DateTime(now.year, now.month, now.day);
       final diff = (now.weekday - firstWeekday) % 7;
-      final start = today.subtract(Duration(days: diff));
-      return (start, start.add(const Duration(days: 7)));
+      return (
+        DateTime(now.year, now.month, now.day - diff),
+        DateTime(now.year, now.month, now.day - diff + 7),
+      );
     case 'month':
       return (
         DateTime(now.year, now.month, 1),

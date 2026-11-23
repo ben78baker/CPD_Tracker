@@ -18,7 +18,9 @@ List<List<String>> recordExportRows(
         field.id,
         field.localizedLabel(locale),
         field.definition.kind.name,
-        field.definition.unit ?? '',
+        field.definition.kind == FieldKind.duration
+            ? 'minutes'
+            : field.definition.unit ?? '',
         jsonEncode(value),
         _exportDisplay(field.definition.displayValue(value)),
       ],

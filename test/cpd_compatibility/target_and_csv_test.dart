@@ -1,6 +1,8 @@
 import 'package:cpd_tracker/cpd_compatibility/cpd_targets.dart';
 import 'package:cpd_tracker/l10n/app_localizations_en.dart';
 import 'package:cpd_tracker/models.dart';
+import 'package:cpd_tracker/recording_engine/models.dart';
+import 'package:cpd_tracker/recording_engine/record_export.dart';
 import 'package:cpd_tracker/utils/csv_exporter.dart';
 import 'package:cpd_tracker/utils/export_selection.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +31,72 @@ void main() {
       expect(scaleCpdTargetMinutes(60, 'year', 'week'), 1);
     },
   );
+
+  test('week-start preference overrides the locale weekday when selected', () {
+    expect(cpdFirstWeekday('locale', 0), DateTime.sunday);
+    expect(cpdFirstWeekday('locale', 1), DateTime.monday);
+    expect(cpdFirstWeekday('locale', 6), DateTime.saturday);
+    expect(cpdFirstWeekday('sunday', 1), DateTime.sunday);
+    expect(cpdFirstWeekday('saturday', 1), DateTime.saturday);
+    expect(cpdFirstWeekday('monday', 0), DateTime.monday);
+  });
+
+  test('weekly boundaries stay at local midnight across DST changes', () {
+    // Run with TZ=Europe/London to exercise both offset transitions.
+    for (final (day, start, end, londonHours) in [
+      (
+        DateTime(2025, 3, 30, 12),
+        DateTime(2025, 3, 24),
+        DateTime(2025, 3, 31),
+        167,
+      ),
+      (
+        DateTime(2025, 10, 26, 12),
+        DateTime(2025, 10, 20),
+        DateTime(2025, 10, 27),
+        169,
+      ),
+    ]) {
+      final period = cpdTargetPeriod(day, 'week');
+      expect(period, (start, end));
+      if (const bool.fromEnvironment('CPD_TEST_LONDON_DST')) {
+        expect(period.$2.difference(period.$1).inHours, londonHours);
+      }
+    }
+  });
+
+  test('field values CSV identifies whole-minute durations', () {
+    final duration = LayoutField(
+      id: 'duration',
+      definition: FieldDefinition(
+        id: 'duration',
+        version: 1,
+        label: 'CPD duration',
+        kind: FieldKind.duration,
+      ),
+    );
+    final score = LayoutField(
+      id: 'score',
+      definition: FieldDefinition(
+        id: 'score',
+        version: 1,
+        label: 'Score',
+        kind: FieldKind.integer,
+        unit: 'points',
+      ),
+    );
+    final record = RecordingRecord(
+      id: 'record',
+      collectionId: 'profession',
+      layoutVersion: 1,
+      version: 1,
+      deleted: false,
+      values: {duration.id: 59999, score.id: 0},
+    );
+    final rows = recordExportRows(record, [duration, score]);
+    expect(rows.first.skip(5), ['duration', 'minutes', '59999', '59999']);
+    expect(rows.last.skip(5), ['integer', 'points', '0', '0']);
+  });
 
   test('CSV keeps the legacy header, escaping, line flattening and totals', () {
     final texts = AppLocalizationsEn();

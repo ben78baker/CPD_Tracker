@@ -17,19 +17,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  String _weekStart = 'locale';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadWeekStart();
-  }
-
-  Future<void> _loadWeekStart() async {
-    final value = await SettingsStore.instance.getWeekStart();
-    if (mounted) setState(() => _weekStart = value);
-  }
-
   String _languageName(AppLocalizations loc, String? code) {
     return switch (code) {
       'en' => loc.english,
@@ -39,15 +26,6 @@ class _SettingsPageState extends State<SettingsPage> {
       'pt' => loc.portuguese,
       'hi' => loc.hindi,
       _ => loc.followSystemLanguage,
-    };
-  }
-
-  String _weekStartName(AppLocalizations loc) {
-    return switch (_weekStart) {
-      'monday' => loc.monday,
-      'saturday' => loc.saturday,
-      'sunday' => loc.sunday,
-      _ => loc.useDeviceLocaleRecommended,
     };
   }
 
@@ -91,6 +69,130 @@ class _SettingsPageState extends State<SettingsPage> {
     );
     if (selected == null) return;
     await SettingsStore.instance.setLocaleCode(selected);
+  }
+
+  Future<void> _resetTips() async {
+    await SettingsStore.instance.resetQrHint();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.tipsRestored)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      appBar: AppBar(),
+      body: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            BrandedPageHeader(
+              title: loc.settings,
+              subtitle: loc.settingsSubtitle,
+              icon: Icons.settings_outlined,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ValueListenableBuilder<Locale?>(
+                    valueListenable: SettingsStore.instance.locale,
+                    builder: (context, locale, _) => _SettingsRow(
+                      key: const ValueKey('settings-language'),
+                      icon: Icons.language_rounded,
+                      title: loc.language,
+                      value: _languageName(loc, locale?.languageCode),
+                      onTap: _pickLanguage,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ValueListenableBuilder<AppAccent>(
+                    valueListenable: SettingsStore.instance.appAccent,
+                    builder: (context, selected, _) => FormSectionTile(
+                      key: const ValueKey('settings-app-colour'),
+                      label: loc.appColour,
+                      icon: Icons.palette_outlined,
+                      supportingText: appAccentLabel(loc, selected),
+                      child: AppColourSelector(
+                        selectedAccent: selected,
+                        onChanged: (accent) {
+                          SettingsStore.instance.setAppAccent(accent);
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const WeekStartSettingsRow(),
+                  const SizedBox(height: 12),
+                  Card(
+                    key: const ValueKey('settings-reset-tips'),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loc.resetTips,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            loc.resetTipsDescription,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          TactileButton.icon(
+                            key: const ValueKey('reset-tips-action'),
+                            onPressed: _resetTips,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: Text(loc.resetTips),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class WeekStartSettingsRow extends StatefulWidget {
+  const WeekStartSettingsRow({super.key});
+
+  @override
+  State<WeekStartSettingsRow> createState() => _WeekStartSettingsRowState();
+}
+
+class _WeekStartSettingsRowState extends State<WeekStartSettingsRow> {
+  String _weekStart = 'locale';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWeekStart();
+  }
+
+  Future<void> _loadWeekStart() async {
+    final value = await SettingsStore.instance.getWeekStart();
+    if (mounted) setState(() => _weekStart = value);
+  }
+
+  String _weekStartName(AppLocalizations loc) {
+    return switch (_weekStart) {
+      'monday' => loc.monday,
+      'saturday' => loc.saturday,
+      'sunday' => loc.sunday,
+      _ => loc.useDeviceLocaleRecommended,
+    };
   }
 
   Future<void> _pickWeekStart() async {
@@ -153,102 +255,15 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _resetTips() async {
-    await SettingsStore.instance.resetQrHint();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.tipsRestored)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-
-    return Scaffold(
-      appBar: AppBar(),
-      body: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            BrandedPageHeader(
-              title: loc.settings,
-              subtitle: loc.settingsSubtitle,
-              icon: Icons.settings_outlined,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ValueListenableBuilder<Locale?>(
-                    valueListenable: SettingsStore.instance.locale,
-                    builder: (context, locale, _) => _SettingsRow(
-                      key: const ValueKey('settings-language'),
-                      icon: Icons.language_rounded,
-                      title: loc.language,
-                      value: _languageName(loc, locale?.languageCode),
-                      onTap: _pickLanguage,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ValueListenableBuilder<AppAccent>(
-                    valueListenable: SettingsStore.instance.appAccent,
-                    builder: (context, selected, _) => FormSectionTile(
-                      key: const ValueKey('settings-app-colour'),
-                      label: loc.appColour,
-                      icon: Icons.palette_outlined,
-                      supportingText: appAccentLabel(loc, selected),
-                      child: AppColourSelector(
-                        selectedAccent: selected,
-                        onChanged: (accent) {
-                          SettingsStore.instance.setAppAccent(accent);
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _SettingsRow(
-                    key: const ValueKey('settings-week-start'),
-                    icon: Icons.calendar_view_week_outlined,
-                    title: loc.weekStartsOn,
-                    value: _weekStartName(loc),
-                    onTap: _pickWeekStart,
-                  ),
-                  const SizedBox(height: 12),
-                  Card(
-                    key: const ValueKey('settings-reset-tips'),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            loc.resetTips,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            loc.resetTipsDescription,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 12),
-                          TactileButton.icon(
-                            key: const ValueKey('reset-tips-action'),
-                            onPressed: _resetTips,
-                            icon: const Icon(Icons.refresh_rounded),
-                            label: Text(loc.resetTips),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    return _SettingsRow(
+      key: const ValueKey('settings-week-start'),
+      icon: Icons.calendar_view_week_outlined,
+      title: loc.weekStartsOn,
+      value: _weekStartName(loc),
+      onTap: _pickWeekStart,
     );
   }
 }

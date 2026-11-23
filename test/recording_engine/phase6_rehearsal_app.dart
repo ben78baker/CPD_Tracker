@@ -5,6 +5,7 @@ import 'package:cpd_tracker/cpd_backup/profession_backup_page.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_records_source.dart';
 import 'package:cpd_tracker/cpd_compatibility/report_locale.dart';
+import 'package:cpd_tracker/cpd_compatibility/sqlite_cpd_store.dart';
 import 'package:cpd_tracker/cpd_records_page.dart';
 import 'package:cpd_tracker/deleted_records_page.dart';
 import 'package:cpd_tracker/global_search_page.dart';
@@ -25,6 +26,7 @@ import 'package:cpd_tracker/recording_engine/models.dart';
 import 'package:cpd_tracker/recording_engine/record_export.dart';
 import 'package:cpd_tracker/recording_engine/layout_draft.dart';
 import 'package:cpd_tracker/recording_engine_storage/sqlite_recording_repository.dart';
+import 'package:cpd_tracker/settings_page.dart' show WeekStartSettingsRow;
 import 'package:cpd_tracker/theme/app_accent.dart';
 import 'package:cpd_tracker/theme/app_theme.dart';
 import 'package:cpd_tracker/widgets/home_shell.dart';
@@ -264,9 +266,11 @@ class _Home extends StatefulWidget {
 class _HomeState extends State<_Home> {
   late Future<List<RecordingCollection>> _professions = widget.store.repository
       .loadCollections();
+  int _refreshToken = 0;
   void _refresh() {
     if (mounted) {
       setState(() {
+        _refreshToken++;
         _professions = widget.store.repository.loadCollections();
       });
     }
@@ -595,11 +599,18 @@ class _HomeState extends State<_Home> {
             await widget.store.checkName(draft) != null)) {
       return;
     }
-    await widget.store.repository.updateCollection(
-      profession.id,
-      label: delete ? null : cpdProfessionLabel(draft),
-      deleted: delete ? true : null,
-    );
+    if (delete) {
+      await widget.store.repository.updateCollection(
+        profession.id,
+        deleted: true,
+      );
+    } else {
+      await SqliteCpdStore.renameCollectionWithTarget(
+        widget.store.repository,
+        profession,
+        cpdProfessionLabel(draft),
+      );
+    }
     _refresh();
   }
 
@@ -720,6 +731,7 @@ class _HomeState extends State<_Home> {
                 profession: profession,
                 originals: widget.originals,
                 onRefresh: _refresh,
+                refreshToken: _refreshToken,
                 onCreateBackup: widget.backups == null
                     ? null
                     : () => widget.backups!.open(
@@ -787,24 +799,27 @@ class _HomeState extends State<_Home> {
               } else if (action == 'view_deleted' && widget.backups != null) {
                 _deletedProfessions();
               } else if (action == 'settings' && widget.backups != null) {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (context) => Scaffold(
-                      appBar: AppBar(
-                        title: Text(editorStrings(context).settings),
-                      ),
-                      body: BoundedList(
-                        children: [
-                          Text(
-                            editorStrings(context).p8Title,
-                            style: Theme.of(context).textTheme.titleLarge,
+                Navigator.of(context)
+                    .push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (context) => Scaffold(
+                          appBar: AppBar(
+                            title: Text(editorStrings(context).settings),
                           ),
-                          Text(editorStrings(context).pbHelp),
-                        ],
+                          body: BoundedList(
+                            children: [
+                              const WeekStartSettingsRow(),
+                              Text(
+                                editorStrings(context).p8Title,
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              Text(editorStrings(context).pbHelp),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
+                    )
+                    .then((_) => _refresh());
               } else {
                 _rehearsalAction();
               }

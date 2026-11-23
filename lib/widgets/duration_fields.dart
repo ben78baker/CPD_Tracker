@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../cpd_compatibility/cpd_duration.dart';
 import '../l10n/app_localizations.dart';
 
 /// Compact Hours/Minutes inputs with validation and select‑all on focus.
@@ -94,7 +95,7 @@ class _DurationFieldsState extends State<DurationFields> {
     final n = int.tryParse(v);
     if (n == null) return loc.numbersOnly;
     if (n < 0) return loc.mustBeZeroOrMore;
-    if (n > 999) return loc.tooLarge;
+    if (n > cpdMaxEntryHours) return loc.tooLarge;
     return null;
   }
 
@@ -112,7 +113,7 @@ class _DurationFieldsState extends State<DurationFields> {
     var h = int.tryParse(_hCtrl.text) ?? 0;
     var m = int.tryParse(_mCtrl.text) ?? 0;
     if (h < 0) h = 0;
-    if (h > 999) h = 999;
+    if (h > cpdMaxEntryHours) h = cpdMaxEntryHours;
     if (m < 0) m = 0;
     if (m > 59) m = 59;
     widget.onChanged(h, m);

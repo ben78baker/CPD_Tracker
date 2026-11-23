@@ -11,6 +11,9 @@ import '../recording_engine_storage/managed_attachment_files.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
 import 'cpd_layout_policy.dart';
 import 'cpd_data_store.dart';
+import 'cpd_duration.dart';
+
+const cpdCollectionTargets = 'cpd.phase7.standard-targets';
 
 /// Compatibility writer for an explicitly supplied, verified staging database.
 /// The shipping app continues to construct its SharedPreferences stores.
@@ -221,6 +224,7 @@ class SqliteCpdStore extends CpdDataStore {
     final fields = cpdFieldBindings(layout.fields);
     final assets = await _describeAttachments(entry.attachments);
     final values = _values(entry, fields);
+    checkCpdCreditedDuration(values[fields['cpd.creditedDuration']]);
     if (assets.isNotEmpty) {
       values[fields['cpd.evidence']!] = assets
           .map((asset) => asset.id)
@@ -272,6 +276,12 @@ class SqliteCpdStore extends CpdDataStore {
     }
     final fields = await _fieldsFor(tx, record);
     final changes = <String, Object?>{..._values(updated, fields)};
+    final duration = fields['cpd.creditedDuration']!;
+    if (changes[duration] == record.values[duration]) {
+      changes.remove(duration);
+    } else {
+      checkCpdCreditedDuration(changes[duration]);
+    }
     var references = mapping.value.references;
     final newAssets = <RecordingAttachment>[];
     if (!_sameStrings(previous.attachments, updated.attachments)) {
@@ -499,6 +509,93 @@ class SqliteCpdStore extends CpdDataStore {
     await tx.saveHostValue(_prefs, 'targets', jsonEncode(targets));
   });
 
+  /// New and restored professions have ID-keyed targets. A verified legacy
+  /// profession can still have its target in the original label-keyed map.
+  static Future<(int minutes, String cycle)?> collectionTarget(
+    SqliteRecordingRepository db,
+    RecordingCollection profession,
+  ) async {
+    final saved = (await db.loadHostState(cpdCollectionTargets))[profession.id];
+    if (saved != null) {
+      final parts = saved.split(':');
+      if (parts.length != 2) throw const FormatException('Invalid CPD target.');
+      return _readTarget(int.tryParse(parts.first), parts.last);
+    }
+    final targets = _targets(await db.loadHostState(_prefs));
+    final key = _migratedTargetKey(targets, profession.label);
+    if (key == null) return null;
+    final value = targets[key];
+    if (value is! Map) throw const FormatException('Invalid CPD target.');
+    return _readTarget(value['minutes'], value['cycle']);
+  }
+
+  static Future<void> setCollectionTarget(
+    SqliteRecordingRepository db,
+    RecordingCollection profession,
+    (int minutes, String cycle) target,
+  ) => db.transaction((tx) async {
+    final (minutes, cycle) = _readTarget(target.$1, target.$2);
+    final saved = await tx.loadHostState(cpdCollectionTargets);
+    if (!saved.containsKey(profession.id)) {
+      final targets = _targets(await tx.loadHostState(_prefs));
+      final key = _migratedTargetKey(targets, profession.label);
+      if (key != null) {
+        targets[key] = {
+          ..._object(targets[key]),
+          'minutes': minutes,
+          'cycle': cycle,
+        };
+        await tx.saveHostValue(_prefs, 'targets', jsonEncode(targets));
+        return;
+      }
+    }
+    await tx.saveHostValue(
+      cpdCollectionTargets,
+      profession.id,
+      '$minutes:$cycle',
+    );
+  });
+
+  static Future<void> renameCollectionWithTarget(
+    SqliteRecordingRepository db,
+    RecordingCollection profession,
+    String label,
+  ) => db.transaction((tx) async {
+    final targets = _targets(await tx.loadHostState(_prefs));
+    final key = _migratedTargetKey(targets, profession.label);
+    if (key != null && key != label) {
+      if (_migratedTargetKey(targets, label) case final conflict?
+          when conflict != key) {
+        throw StateError('That profession name already has a saved target.');
+      }
+      targets[label] = targets.remove(key);
+      await tx.saveHostValue(_prefs, 'targets', jsonEncode(targets));
+    }
+    await tx.updateCollection(profession.id, label: label);
+  });
+
+  static String? _migratedTargetKey(
+    Map<String, Object?> targets,
+    String profession,
+  ) {
+    final name = cpdProfessionKey(profession);
+    final matches = targets.keys.where((key) => cpdProfessionKey(key) == name);
+    if (matches.length > 1) {
+      throw const FormatException('Conflicting migrated CPD targets.');
+    }
+    return matches.firstOrNull;
+  }
+
+  static (int, String) _readTarget(Object? minutes, Object? cycle) {
+    if (minutes is! int ||
+        minutes < 0 ||
+        cycle is! String ||
+        !cpdTargetCycles.contains(cycle)) {
+      throw const FormatException('Invalid CPD target.');
+    }
+    return (minutes, cycle);
+  }
+
   @override
   Future<(int, String)?> getTarget(String profession) async {
     final item = _targets(await _db.loadHostState(_prefs))[profession];
@@ -630,7 +727,7 @@ class SqliteCpdStore extends CpdDataStore {
       (jsonDecode(state[key]!) as List).cast<String>();
 
   static Map<String, Object?> _targets(Map<String, String> state) =>
-      _object(jsonDecode(state['targets']!));
+      _object(jsonDecode(state['targets'] ?? '{}'));
 
   static List<String> _active(Map<String, String> state) {
     final deleted = _canonical(
