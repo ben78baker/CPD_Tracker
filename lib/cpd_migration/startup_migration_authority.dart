@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 import '../recording_engine/storage_authority.dart';
+import '../recording_engine_storage/original_directory_sync.dart';
 import '../recording_engine_storage/sqlite_recording_repository.dart';
 import 'legacy_recovery_snapshot.dart';
 import 'legacy_write_gate.dart';
@@ -12,6 +13,7 @@ import 'recovery_retention.dart';
 
 const migrationAuthorityNamespace = 'cpd.migration';
 const migrationAuthorityKey = 'authority';
+const migrationPendingKey = 'pending';
 
 /// Boot-time read-only adapter. Production startup does not call it in this
 /// phase. A future composition root must run it before creating any writer.
@@ -28,6 +30,7 @@ class CpdStartupAuthority {
 
   final Directory workspace;
   final File fence;
+  File get writerReleased => File('${fence.path}.released');
   File get database => File(p.join(workspace.path, 'recording.sqlite'));
   File get journal => File(p.join(workspace.path, 'report.json'));
   LegacyRecoverySnapshot get backup =>
@@ -38,13 +41,31 @@ class CpdStartupAuthority {
     required AuthorityScope scope,
     required bool hasLegacyRecords,
     bool allowSharedWritesForRecording = false,
-  }) => gate.freeze(() async {
+  }) => gate.freeze(
+    () => guardFrozen(
+      gate,
+      scope: scope,
+      hasLegacyRecords: hasLegacyRecords,
+      allowSharedWritesForRecording: allowSharedWritesForRecording,
+    ),
+  );
+
+  /// Use only while the caller holds the legacy write gate frozen.
+  Future<StartupAuthority> guardFrozen(
+    LegacyWriteGate gate, {
+    required AuthorityScope scope,
+    required bool hasLegacyRecords,
+    bool allowSharedWritesForRecording = false,
+  }) async {
     try {
       final state = await inspect(
         scope: scope,
         hasLegacyRecords: hasLegacyRecords,
       );
       if (state.store != StoreAuthority.legacy) {
+        if (state.store == StoreAuthority.recording) {
+          await markWriterReleased();
+        }
         gate.seal(
           allowSharedWrites:
               state.store == StoreAuthority.recording &&
@@ -56,7 +77,19 @@ class CpdStartupAuthority {
       gate.seal();
       rethrow;
     }
-  });
+  }
+
+  /// Independent of SQLite. Once present, even an older copy of a database
+  /// containing a pending handoff cannot prove that no writer was opened.
+  Future<void> markWriterReleased() async {
+    final marker = writerReleased;
+    if (!await _exists(marker)) await marker.create(exclusive: true);
+    await syncOriginalDirectory(marker.parent);
+  }
+
+  Future<bool> hasWriterRelease() async =>
+      await FileSystemEntity.type(writerReleased.path, followLinks: false) !=
+      FileSystemEntityType.notFound;
 
   Future<StartupAuthority> inspect({
     required AuthorityScope scope,
@@ -123,6 +156,7 @@ class CpdStartupAuthority {
         stageAbandoned: progress?.phase == MigrationPhase.abandoned,
         journalValid: progressValid,
         journalClaimsActivation:
+            await hasWriterRelease() ||
             progress?.phase == MigrationPhase.handoffReserved ||
             progress?.phase == MigrationPhase.productionActivated ||
             progress?.phase == MigrationPhase.rehearsalActivated,
@@ -177,6 +211,17 @@ class CpdStartupAuthority {
       );
       if (rows.isEmpty) return const _Destination(ArtifactState.valid);
       try {
+        final pending = await db.query(
+          'host_state',
+          where: 'namespace = ? AND key = ?',
+          whereArgs: [migrationAuthorityNamespace, migrationPendingKey],
+        );
+        if (pending.isNotEmpty) {
+          return const _Destination(
+            ArtifactState.valid,
+            receiptState: ArtifactState.invalid,
+          );
+        }
         final receipt = MigrationReceipt.decode(rows.single['value'] as String);
         final binding = AuthorityBinding(
           id: receipt.bindingId!,

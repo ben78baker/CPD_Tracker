@@ -83,7 +83,9 @@ class LegacyRecoverySnapshot {
         await legacyFileFingerprint(snapshot._manifest),
         flush: true,
       );
-      await snapshot._readVerified();
+      // Each flushed original above has already been independently hashed.
+      // Before staging, the coordinator rechecks the published copy and source.
+      await snapshot._readVerified(checkOriginals: false);
       await _requireAbsent(destination);
       return LegacyRecoverySnapshot(await staging.rename(destination.path));
     } finally {

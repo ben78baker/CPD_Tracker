@@ -1570,6 +1570,48 @@ abstract class AppLocalizations {
   /// **'Restoring this record will also add or restore the profession \"{profession}\". Its other saved, non-deleted records will become visible too. Continue?'**
   String restoreRecordProfessionConfirm(String profession);
 
+  /// No description provided for @migrationPreparingRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your records'**
+  String get migrationPreparingRecords;
+
+  /// No description provided for @migrationKeepOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep CPD Progress Tracker open if you can. If the app closes, it checks your records again before continuing.'**
+  String get migrationKeepOpen;
+
+  /// No description provided for @migrationRecordsReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your records are ready'**
+  String get migrationRecordsReady;
+
+  /// No description provided for @migrationNeedsRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Your records need a recovery check'**
+  String get migrationNeedsRecovery;
+
+  /// No description provided for @migrationContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this app installed and contact CPD Progress Tracker support. Copy the recovery details below. They contain no record contents or attachments.'**
+  String get migrationContactSupport;
+
+  /// No description provided for @migrationCopyDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy recovery details'**
+  String get migrationCopyDetails;
+
+  /// No description provided for @migrationDetailsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery details copied'**
+  String get migrationDetailsCopied;
+
   /// No description provided for @migrationTitle.
   ///
   /// In en, this message translates to:

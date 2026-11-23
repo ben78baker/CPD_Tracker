@@ -379,6 +379,13 @@
       }
     }
   },
+  "migrationPreparingRecords": "Preparing your records",
+  "migrationKeepOpen": "Keep CPD Progress Tracker open if you can. If the app closes, it checks your records again before continuing.",
+  "migrationRecordsReady": "Your records are ready",
+  "migrationNeedsRecovery": "Your records need a recovery check",
+  "migrationContactSupport": "Keep this app installed and contact CPD Progress Tracker support. Copy the recovery details below. They contain no record contents or attachments.",
+  "migrationCopyDetails": "Copy recovery details",
+  "migrationDetailsCopied": "Recovery details copied",
   "migrationTitle": "Storage rehearsal",
   "migrationIntro": "Try moving sample records to the new store. Your own records are separate.",
   "migrationScenario": "Sample data",

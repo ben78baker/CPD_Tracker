@@ -9,12 +9,16 @@ import 'package:cpd_tracker/cpd_migration/legacy_preferences_inventory.dart';
 import 'package:cpd_tracker/cpd_migration/migration_coordinator.dart';
 import 'package:cpd_tracker/cpd_migration/migration_report.dart';
 import 'package:cpd_tracker/cpd_migration/recovery_retention.dart';
+import 'package:cpd_tracker/cpd_migration/rehearsal/migration_recovery_page.dart';
 import 'package:cpd_tracker/recording_engine/storage_authority.dart';
 import 'package:cpd_tracker/entry_repository.dart';
 import 'package:cpd_tracker/l10n/app_localizations_en.dart';
+import 'package:cpd_tracker/l10n/app_localizations.dart';
 import 'package:cpd_tracker/models.dart';
 import 'package:cpd_tracker/recording_engine/models.dart';
 import 'package:cpd_tracker/recording_engine_storage/sqlite_recording_repository.dart';
+import 'package:cpd_tracker/settings_store.dart';
+import 'package:cpd_tracker/theme/app_theme.dart';
 import 'package:cpd_tracker/utils/attachment_io.dart';
 import 'package:cpd_tracker/utils/csv_exporter.dart';
 import 'package:cpd_tracker/utils/export_selection.dart';
@@ -22,6 +26,7 @@ import 'package:cpd_tracker/utils/pdf_exporter.dart';
 import 'package:cpd_tracker/utils/record_search.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,13 +43,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final actions = ValueNotifier<RehearsalMedia?>(null);
   runApp(MaterialApp(home: RehearsalActions(samples: actions)));
-  await WidgetsBinding.instance.endOfFrame;
-  final frameMs = boot.elapsedMilliseconds;
+  const mode = String.fromEnvironment('CPD_PHASE3_MODE', defaultValue: 'scale');
+  final firstFrame = WidgetsBinding.instance.endOfFrame.then(
+    (_) => boot.elapsedMilliseconds,
+  );
+  final frameMs = mode == 'release-validation'
+      ? await firstFrame
+            .then<int?>((value) => value)
+            .timeout(const Duration(seconds: 5), onTimeout: () => null)
+      : await firstFrame;
   try {
-    const mode = String.fromEnvironment(
-      'CPD_PHASE3_MODE',
-      defaultValue: 'scale',
-    );
     if (mode == 'crash') {
       await _restartProbe();
       return;
@@ -78,13 +86,52 @@ Future<void> main() async {
   }
 }
 
-Future<void> _releaseValidation(int frameMs) async {
-  if (kReleaseMode) throw UnsupportedError('Development rehearsal only.');
+Future<void> _releaseValidation(int? frameMs) async {
   final support = await getApplicationSupportDirectory();
-  final command = File(p.join(support.path, 'release-command'));
-  final request = (await command.readAsString()).trim().split(' ');
-  await command.delete();
+  if (kReleaseMode &&
+      (!Platform.isAndroid ||
+          p.basename(support.parent.path) !=
+              'com.ingeneralapps.cpdtracker.phase10')) {
+    throw UnsupportedError('Use the separate Android rehearsal package.');
+  }
+  final String command;
+  if (kReleaseMode) {
+    const channel = MethodChannel('cpd_tracker/release_rehearsal');
+    command = (await channel.invokeMethod<String>('command')) ?? '';
+  } else {
+    final file = File(p.join(support.path, 'release-command'));
+    command = await file.readAsString();
+    await file.delete();
+  }
+  final request = command.trim().split(' ');
   if (request.length == 2) {
+    if (request.first == 'ui') {
+      final accent = await SettingsStore.instance.getAppAccent();
+      final ready = ValueNotifier(false);
+      runApp(
+        MaterialApp(
+          theme: AppTheme.forAccent(accent),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ValueListenableBuilder(
+            valueListenable: ready,
+            builder: (_, finished, _) => finished
+                ? const Scaffold(
+                    body: Center(child: Text('Rehearsal complete')),
+                  )
+                : MigrationRecoveryPage(
+                    prepare: (progress) => runCutoverCase(
+                      'resume',
+                      request.last,
+                      onProgress: progress,
+                    ),
+                    onReady: () => ready.value = true,
+                  ),
+          ),
+        ),
+      );
+      return;
+    }
     await runCutoverCase(request.first, request.last);
     return;
   }
@@ -158,7 +205,7 @@ Future<void> _scale(
   Directory temp,
   int count,
   int photos,
-  int frameMs,
+  int? frameMs,
   File pdf, {
   bool activate = false,
 }) async {

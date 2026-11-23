@@ -844,6 +844,30 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get migrationPreparingRecords => 'Ihre Einträge werden vorbereitet';
+
+  @override
+  String get migrationKeepOpen =>
+      'Lassen Sie CPD Progress Tracker möglichst geöffnet. Wird die App geschlossen, prüft sie Ihre Einträge erneut, bevor sie fortfährt.';
+
+  @override
+  String get migrationRecordsReady => 'Ihre Einträge sind bereit';
+
+  @override
+  String get migrationNeedsRecovery =>
+      'Ihre Einträge müssen zur Wiederherstellung geprüft werden';
+
+  @override
+  String get migrationContactSupport =>
+      'Lassen Sie die App installiert und wenden Sie sich an den Support von CPD Progress Tracker. Kopieren Sie die Wiederherstellungsdetails unten. Sie enthalten keine Einträge oder Anhänge.';
+
+  @override
+  String get migrationCopyDetails => 'Wiederherstellungsdetails kopieren';
+
+  @override
+  String get migrationDetailsCopied => 'Wiederherstellungsdetails kopiert';
+
+  @override
   String get migrationTitle => 'Speicher-Probelauf';
 
   @override

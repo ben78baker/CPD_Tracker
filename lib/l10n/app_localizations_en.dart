@@ -841,6 +841,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get migrationPreparingRecords => 'Preparing your records';
+
+  @override
+  String get migrationKeepOpen =>
+      'Keep CPD Progress Tracker open if you can. If the app closes, it checks your records again before continuing.';
+
+  @override
+  String get migrationRecordsReady => 'Your records are ready';
+
+  @override
+  String get migrationNeedsRecovery => 'Your records need a recovery check';
+
+  @override
+  String get migrationContactSupport =>
+      'Keep this app installed and contact CPD Progress Tracker support. Copy the recovery details below. They contain no record contents or attachments.';
+
+  @override
+  String get migrationCopyDetails => 'Copy recovery details';
+
+  @override
+  String get migrationDetailsCopied => 'Recovery details copied';
+
+  @override
   String get migrationTitle => 'Storage rehearsal';
 
   @override

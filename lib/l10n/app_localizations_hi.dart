@@ -840,6 +840,30 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get migrationPreparingRecords => 'आपके रिकॉर्ड तैयार किए जा रहे हैं';
+
+  @override
+  String get migrationKeepOpen =>
+      'हो सके तो CPD Progress Tracker खुला रखें। ऐप बंद होने पर वह जारी रखने से पहले आपके रिकॉर्ड फिर से जाँचेगा।';
+
+  @override
+  String get migrationRecordsReady => 'आपके रिकॉर्ड तैयार हैं';
+
+  @override
+  String get migrationNeedsRecovery =>
+      'आपके रिकॉर्ड की पुनर्प्राप्ति जाँच ज़रूरी है';
+
+  @override
+  String get migrationContactSupport =>
+      'ऐप को इंस्टॉल रखें और CPD Progress Tracker सहायता से संपर्क करें। नीचे दिए गए पुनर्प्राप्ति विवरण कॉपी करें। इनमें रिकॉर्ड की सामग्री या अटैचमेंट नहीं हैं।';
+
+  @override
+  String get migrationCopyDetails => 'पुनर्प्राप्ति विवरण कॉपी करें';
+
+  @override
+  String get migrationDetailsCopied => 'पुनर्प्राप्ति विवरण कॉपी हो गए';
+
+  @override
   String get migrationTitle => 'स्टोरेज का अभ्यास';
 
   @override

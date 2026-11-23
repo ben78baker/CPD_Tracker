@@ -7,6 +7,7 @@ import 'package:cpd_tracker/cpd_migration/legacy_preferences_inventory.dart';
 import 'package:cpd_tracker/cpd_migration/legacy_write_gate.dart';
 import 'package:cpd_tracker/cpd_migration/migration_coordinator.dart';
 import 'package:cpd_tracker/cpd_migration/migration_report.dart';
+import 'package:cpd_tracker/cpd_migration/startup_migration_authority.dart';
 import 'package:cpd_tracker/models.dart';
 import 'package:cpd_tracker/recording_engine/storage_authority.dart';
 import 'package:cpd_tracker/recording_engine_storage/sqlite_recording_repository.dart';
@@ -30,17 +31,24 @@ const _cases = {
     StoreAuthority.recovery,
     AuthorityReason.interruptedHandoff,
   ),
+  'missingProof': (StoreAuthority.recovery, AuthorityReason.invalidFence),
+  'releasedCopy': (StoreAuthority.recovery, AuthorityReason.interruptedHandoff),
   'receiptCommitted': (StoreAuthority.recording, AuthorityReason.activated),
   'beforeFirstWrite': (StoreAuthority.recording, AuthorityReason.activated),
   'duringWrite': (StoreAuthority.recording, AuthorityReason.activated),
 };
 
 /// An external controller stops the actual app process at KILL_READY.
-Future<void> runCutoverCase(String action, String point) async {
+Future<StartupAuthority> runCutoverCase(
+  String action,
+  String point, {
+  Future<void> Function(MigrationReport)? onProgress,
+}) async {
   final expected = _cases[point];
-  if (expected == null || (action != 'arm' && action != 'resume')) {
+  if (expected == null || !const {'arm', 'resume', 'repeat'}.contains(action)) {
     throw ArgumentError('Unknown late handoff case.');
   }
+  var observed = expected;
   final arm = action == 'arm';
   final support = await getApplicationSupportDirectory();
   final root = await Directory(
@@ -54,27 +62,41 @@ Future<void> runCutoverCase(String action, String point) async {
     for (var id = 1; id <= 4; id++)
       CpdEntry(
         id: id,
-        profession: 'Nursing',
+        profession: id == 3 ? 'Archived' : 'Nursing',
         date: DateTime(2024, 7, id),
         title: 'Baseline $id',
         details: 'Resume fixture',
         hours: 1,
         minutes: id,
         deleted: id == 4,
-        attachments: const [],
+        attachments: id == 1 ? ['attachments/evidence.txt'] : const [],
       ).toJson(),
   ];
   if (arm) {
     requireRehearsal(!await workspace.exists(), 'Use a fresh case directory.');
     await prefs.clear();
+    await Directory(p.join(docs.path, 'attachments')).create();
+    await File(
+      p.join(docs.path, 'attachments', 'evidence.txt'),
+    ).writeAsString('Evidence retained through the handoff', flush: true);
     await prefs.setStringList('entries_json_list', original);
-    await prefs.setStringList('professions', ['Nursing']);
+    await prefs.setStringList('professions', ['Nursing', 'Archived']);
+    await prefs.setStringList('deleted_professions', ['Archived']);
+    await prefs.setString(
+      'targets_v1',
+      '{"Nursing":{"minutes":600,"cycle":"year"}}',
+    );
     await prefs.setInt('next_entry_id', 5);
   }
   final beforeRaw = encodeLegacySnapshot(await read());
   const scope = AuthorityScope.rehearsal;
+  final checkpointToStop = switch (point) {
+    'missingProof' => 'fenceCreated',
+    'releasedCopy' => 'handoffReserved',
+    _ => point,
+  };
   Future<void> pause(String checkpoint) async {
-    if (arm && checkpoint == point) {
+    if (arm && checkpoint == checkpointToStop) {
       debugPrintSynchronously('CPD_RELEASE_KILL_READY $point');
       await Future<void>.delayed(const Duration(minutes: 5));
       throw StateError('The process was not terminated.');
@@ -87,7 +109,10 @@ Future<void> runCutoverCase(String action, String point) async {
     documents: docs,
     gate: gate,
     readLegacy: read,
-    onCheckpoint: (report) => pause(report.phase.name),
+    onCheckpoint: (report) async {
+      await onProgress?.call(report);
+      await pause(report.phase.name);
+    },
     onRehearsalHandoff: (checkpoint) => pause(checkpoint.name),
   );
   if (arm) {
@@ -101,30 +126,32 @@ Future<void> runCutoverCase(String action, String point) async {
       scope: scope,
       hasLegacyRecords: true,
     );
+    observed = (before.store, before.reason);
     requireRehearsal(
-      (before.store, before.reason) == expected,
+      observed ==
+          (action == 'repeat'
+              ? (StoreAuthority.recording, AuthorityReason.activated)
+              : expected),
       '$point opened ${before.store.name}/${before.reason.name}.',
     );
     await coordinator.snapshot.verifyAgainstSource(await read(), docs);
-    if (before.store == StoreAuthority.legacy) {
-      requireRehearsal(
-        (await coordinator.rehearseActivation()).phase ==
-            MigrationPhase.rehearsalActivated,
-        'Pre-fence retry did not activate.',
-      );
-    }
-    if (before.store == StoreAuthority.recovery) {
-      requireRehearsal(
-        (await coordinator.rehearseActivation()).failure ==
-                'handoff_requires_recovery' &&
-            await coordinator.readReceipt() == null,
-        'Uncertain handoff reopened a writer.',
-      );
-      final guarded = await coordinator.startup.resolveAndGuard(
-        gate,
-        scope: scope,
-        hasLegacyRecords: true,
-      );
+    if (point == 'missingProof' || point == 'releasedCopy') {
+      if (point == 'missingProof') {
+        final db = await SqliteRecordingRepository.open(
+          coordinator.databasePath,
+        );
+        try {
+          await db.removeHostValue(
+            migrationAuthorityNamespace,
+            migrationPendingKey,
+          );
+        } finally {
+          await db.close();
+        }
+      } else {
+        await coordinator.startup.markWriterReleased();
+      }
+      final guarded = await coordinator.recoverRehearsalStartup();
       var rejected = false;
       try {
         await gate.write(() async {});
@@ -132,24 +159,28 @@ Future<void> runCutoverCase(String action, String point) async {
         rejected = true;
       }
       requireRehearsal(
-        guarded.store == StoreAuthority.recovery && rejected,
-        'Recovery did not close the legacy write gate.',
+        guarded.store == StoreAuthority.recovery &&
+            rejected &&
+            await coordinator.readReceipt() == null,
+        'Uncertain source reopened a writer.',
       );
       await _verifyNativeDatabase(coordinator.databasePath, 4);
       requireRehearsal(
         encodeLegacySnapshot(await read()) == beforeRaw,
         'Recovery changed the legacy source.',
       );
-      _passed(point, expected, 4);
-      return;
+      _passed(point, observed, guarded.store, 4);
+      return guarded;
     }
   }
 
-  final authority = await coordinator.startup.resolveAndGuard(
-    gate,
-    scope: scope,
-    hasLegacyRecords: true,
-  );
+  final authority = arm
+      ? await coordinator.startup.resolveAndGuard(
+          gate,
+          scope: scope,
+          hasLegacyRecords: true,
+        )
+      : await coordinator.recoverRehearsalStartup();
   requireRehearsal(
     authority.store == StoreAuthority.recording,
     'No authority.',
@@ -198,6 +229,9 @@ Future<void> runCutoverCase(String action, String point) async {
     requireRehearsal(
       listEquals(rows.take(4).map((row) => row.toJson()).toList(), original) &&
           rows.length == (point == 'duringWrite' ? 5 : 4) &&
+          listEquals(await store.loadDeletedProfessions(), ['Archived']) &&
+          (await store.getTarget('Nursing')) == (600, 'year') &&
+          (await store.loadDeleted()).length == 1 &&
           (await db.loadHostState('release-probe')).isEmpty &&
           (rows.length == 4 ||
               (!rows.last.deleted &&
@@ -224,7 +258,8 @@ Future<void> runCutoverCase(String action, String point) async {
   );
   final count = point == 'duringWrite' ? 5 : 4;
   await _verifyNativeDatabase(coordinator.databasePath, count);
-  _passed(point, expected, count);
+  _passed(point, observed, authority.store, count);
+  return authority;
 }
 
 Future<void> _verifyNativeDatabase(String path, int records) async {
@@ -253,9 +288,10 @@ Future<void> _verifyNativeDatabase(String path, int records) async {
 void _passed(
   String point,
   (StoreAuthority, AuthorityReason) startup,
+  StoreAuthority outcome,
   int records,
 ) {
   debugPrintSynchronously(
-    'CPD_RELEASE_RESTART_PASS ${jsonEncode({'checkpoint': point, 'startup': startup.$1.name, 'reason': startup.$2.name, 'records': records, 'integrity': 'ok', 'foreignKeyViolations': 0})}',
+    'CPD_RELEASE_RESTART_PASS ${jsonEncode({'checkpoint': point, 'startup': startup.$1.name, 'reason': startup.$2.name, 'records': records, 'outcome': outcome.name, 'integrity': 'ok', 'foreignKeyViolations': 0})}',
   );
 }

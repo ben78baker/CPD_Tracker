@@ -1,5 +1,76 @@
 # Migration release-readiness validation
 
+## Phase 10 recovery and release checks
+
+**23 November 2026 · Baseline `958a7fa`.** The recovery and progress experience is accessible through the isolated rehearsal. The normal app still starts on its existing storage.
+
+### Recovery procedure
+
+Before publishing the authority fence, the coordinator records a pending binding in SQLite using a durable journal. That binding names the verified source and independent recovery snapshot. A new startup holds the same migration lock and legacy write freeze while it checks the journal, source, snapshot, SQLite graph, CPD projection and evidence. It will complete only an empty or partial fence that matches the pending binding byte for byte, or a complete matching fence with an uncommitted receipt. The receipt transaction consumes the pending binding. An independent release marker is flushed before an application writer can open so a stale staged database cannot prove that the handoff is still pending.
+
+If the pending proof is absent, the bindings differ, a release marker already exists without a verified receipt, or the data does not verify, the app leaves both writers closed. The recovery screen asks the user to keep the app installed and contact support. **Copy recovery details** supplies only the startup reason and recovery-copy status. Staff should preserve the current database with any journals and the independent recovery copy, verify the artifacts separately, and use the snapshot only in a separate review directory. Replacing the active store or deleting the fence to force a retry is outside this procedure. If independent review cannot establish one authority, keep both stores closed and preserve the copies.
+
+The new screen uses the selected app colour and the six existing locales. During recovery it shows the reported stages with an indeterminate indicator and explains that a subsequent launch rechecks the records. **Continue** appears only after the guarded SQLite authority is established.
+
+| Recovery condition | Exact Android API 24 | Physical OPPO, Android 13 |
+| --- | --- | --- |
+| Fence created and empty | Revalidated the pending handoff and adopted SQLite once | Same result after force-stop |
+| Complete fence without a receipt | Revalidated and adopted SQLite once | Same result after force-stop |
+| Receipt written inside an uncommitted transaction | Rolled back the incomplete receipt and adopted SQLite once. Also passed after an emulator OS reboot and two additional launches. | Same result after force-stop and repeat launch |
+| Missing pending proof or a stale staged database with a release marker | Both writers stayed closed. The native UI showed the assisted route without Continue. | Assisted branch covered by API 24 |
+| Before the fence, after receipt commit and before the first active write | All four additional boundaries reopened the correct authority | Covered by API 24 |
+| During a later SQLite write | Preserved the committed row and rolled back the unfinished write | Same result after force-stop |
+
+Every case retained exactly one import and passed SQLite integrity and foreign-key checks. The fixtures included an owned attachment, a deleted record, an archived profession and a target. Each completed recovery confirmed the original row projection, preference values, attachment fingerprint and receipt across rechecks. This qualifies process termination and an emulator reboot. It does not qualify abrupt power loss or damaged flash storage.
+
+### Performance changes
+
+The coordinator previously compared the snapshot and live originals twice before SQLite staging. It now checks the manifest when publishing the snapshot-ready phase, then independently checks the complete snapshot and live source before any staged SQLite writes and again before activation. Each freshly copied file is flushed and its digest compared with the source before the snapshot is published. This removes redundant hashing without removing the checks at either write boundary. Digest format and historical snapshot compatibility are preserved.
+
+The OPPO ran a non-debuggable AOT release-mode APK with the unchanged minimum API 24. It used a separate package ID and local development signing. The normal CPD package kept its existing package metadata and data.
+
+| Physical OPPO, optimised AOT | 1,200 records | 3,600 records |
+| --- | ---: | ---: |
+| Managed originals | 48 | 144 |
+| Migration through authority receipt | 23.910 s | 64.093 s |
+| Recovery copy ready | 5.557 s | 13.545 s |
+| SQLite database | 2,883,584 bytes | 8,433,664 bytes |
+| Sampled peak process RSS | 254 MiB | 369 MiB |
+| Largest gap in the 50 ms Dart timer | 211 ms | 409 ms |
+| SQLite profession load and search | 199 ms | 427 ms |
+| CSV generation | 8 ms | 22 ms |
+| Text PDF generation, up to 20 records | 94 ms | 78 ms |
+
+Both clean datasets achieved parity and rehearsal authority. The separate mixed dataset returned explicit review in 1.998 s and preserved all 1,205 raw rows and the evidence in a separate recovery directory. RSS describes the whole process and timer gaps are a scheduling proxy. They do not establish allocation costs or visual frame-rate guarantees.
+
+In a second run on the same OPPO and AOT toolchain, the control APK restored only the two redundant verification passes. The 1,200-record control took 30.488 s and the 3,600-record control took 81.375 s. Removing the scans saved 6.578 s and 17.282 s respectively, or about 21% in both cases. The larger run reached the snapshot-ready checkpoint 16.913 s sooner. This isolates a material part of the migration overhead to the extra hashing. The comparison with the previous debug emulator also changes hardware and compiler mode, so it does not isolate debug overhead.
+
+The 3,600-record control sampled 375 MiB peak RSS and a 353 ms maximum timer gap, versus 369 MiB and 409 ms in the optimised run. The optimisation establishes a time improvement in this comparison. The sampled memory and responsiveness vary, and the SQLite stage and verification after snapshot readiness still took about 50.5 s. Use a device allocation trace and repeated runs before choosing further memory or responsiveness optimisation.
+
+For reproduction, build the native rehearsal entry point from a disposable copy with application ID `com.ingeneralapps.cpdtracker.phase10` and the release compiler, using a development signer for that package. The scratch Android activity supplies the launch intent's `cpdRehearsalCommand` through the `cpd_tracker/release_rehearsal` method channel. The Dart entry point accepts the command on Android release builds only for this separate package. The benchmark command is `scale`. The recovery tests use `arm <checkpoint>`, then `resume <checkpoint>` after stopping the process, and `repeat <checkpoint>` once authority is established. Inspect the target device, APK package, minimum API and AOT library before installing.
+
+### iOS 15.6 compilation and native dependencies
+
+Xcode 27.2 compiled the unsigned production Release target and the migration and recovery Profile entry point in a disposable checkout. The two Runner binaries and their packaged application manifests report a 15.6 deployment target. The production App and Flutter frameworks report 13.0. The packaged SQLite, SharedPreferences, file picker, image picker, PDF printing and sharing frameworks report 15.6. No embedded framework examined requires a higher OS. The Profile build used an xcconfig forwarding file confined to the disposable checkout. This is compilation and binary metadata evidence. Exact iOS 15.6 runtime migration, interrupted recovery, evidence providers and export sharing remain unverified. Use a device still running 15.6, or an exact supported runtime if one becomes available. [Apple native testing guidance](https://developer.apple.com/documentation/Xcode/running-your-app-on-simulated-or-physical-devices)
+
+### Play-signed in-place upgrade procedure
+
+1. Obtain approval for the precise test artifact, version code, tester accounts and Google Play **Internal testing** track before uploading. Use the current application ID and upload signer. The candidate must permit migration only for a verified rehearsal source. Review the candidate and check that normal users still follow the current startup path.
+2. In Play Console, open App integrity and record the public app-signing certificate and any rotated lineage separately from the upload certificate. On a dedicated Play-certified Android device, install the current legacy app from Play before opting into the internal track. Confirm the installer, version code and signing fingerprints of the delivered APKs.
+3. Seed the Play-delivered legacy app through its normal UI with disposable records, targets, deleted records and original files. Inventory those items and independently copy or hash the original evidence. If the release app cannot export diagnostic data, use its visible screens and exports to record the baseline.
+4. After approval, upload the reviewed candidate with a higher unused version code to **Internal testing**, restricted to the approved test accounts. Use the tester opt-in link and update through Play without uninstalling or clearing data. Internal App Sharing uses its own test signing certificate and cannot qualify the production signing lineage. [Internal testing](https://support.google.com/googleplay/android-developer/answer/9845334) · [Internal App Sharing signing](https://support.google.com/googleplay/android-developer/answer/9844679) · [Play App Signing](https://developer.android.com/studio/publish/app-signing)
+5. Check that Play kept the application ID and installed a compatible signing lineage. Compare all records, targets, settings and evidence before and after migration. Repeat force-stop recovery and one committed SQLite write across restart. Record the results privately and end the restricted test under the agreed tester plan.
+
+No Play upload, native signing change or publication was performed in Phase 10. A local Android APK still cannot qualify this gate.
+
+### Acceptance and cutover decision
+
+The exact API 24 AOT integration passed Standard CPD, custom layout revisions and historical values, template versions, the five-record allowance, simulated entitlements, backup and restore, and native PDF evidence in four languages. Large migration fixtures also checked standard PDF and CSV. The recovery screen passed large-text, indeterminate progress, guarded Continue and clipboard tests. The full Flutter suite passed **266 tests**. Static analysis retained the existing 13 findings.
+
+**Keep production activation disabled.** The pending-proof recovery work closes the known safe-repeat handoff cases. Release still requires exact iOS 15.6 runtime evidence and a Play-delivered in-place upgrade. Before cutover, qualify the support-assisted handling of a genuinely damaged store and agree acceptable progress and memory behaviour on lower-resource devices. Even the optimised large OPPO run required about a minute, so visible progress and safe restart remain part of the cutover design.
+
+## Baseline evidence from `958a7fa`
+
 **23 November 2026.** Validation used the feature branch and a disposable application ID on the Android API 24 emulator. The production app did not acquire a SQLite startup path.
 
 ## Platform and signing evidence
