@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
 
 import 'cpd_compatibility/cpd_data_store.dart';
-import '../cpd_records_page.dart';
-import '../entry_repository.dart';
-import '../models.dart';
-import '../settings_store.dart';
-import '../utils/record_search.dart';
+import 'cpd_compatibility/cpd_records_source.dart';
+import 'cpd_records_page.dart';
+import 'entry_repository.dart';
+import 'l10n/app_localizations.dart';
+import 'settings_store.dart';
 import 'widgets/branded_headers.dart';
 import 'widgets/tactile_button.dart';
 
 class GlobalSearchPage extends StatefulWidget {
-  const GlobalSearchPage({super.key, this.dataStore});
+  const GlobalSearchPage({
+    super.key,
+    this.dataStore,
+    this.source,
+    this.onOpenProfession,
+    this.onOpenRecord,
+  }) : assert(source == null || onOpenProfession != null);
 
   final CpdDataStore? dataStore;
+  final CpdRecordsSource? source;
+  final Future<void> Function(CpdProfessionItem, String)? onOpenProfession;
+  final Future<void> Function(CpdRecordItem)? onOpenRecord;
 
   @override
   State<GlobalSearchPage> createState() => _GlobalSearchPageState();
@@ -24,8 +33,8 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
 
   bool _loading = true;
   String _query = '';
-  List<String> _professions = <String>[];
-  List<CpdEntry> _allEntries = <CpdEntry>[];
+  List<CpdProfessionItem> _professions = [];
+  List<CpdRecordItem> _allEntries = [];
 
   @override
   void initState() {
@@ -40,93 +49,83 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   }
 
   Future<void> _load() async {
-    final CpdProfessionStore store = widget.dataStore ?? SettingsStore.instance;
-    final professions = await store.loadActiveProfessions();
-    final allEntries = <CpdEntry>[];
-
-    for (final profession in professions) {
-      final entries = await _repo.loadForProfession(profession);
-      allEntries.addAll(entries.where((e) => !e.deleted));
+    final source = widget.source;
+    final List<CpdProfessionItem> professions;
+    final List<CpdRecordItem> entries;
+    if (source == null) {
+      final store = widget.dataStore ?? SettingsStore.instance;
+      professions = [
+        for (final label in await store.loadActiveProfessions())
+          (id: label, label: label, deleted: false),
+      ];
+      entries = [
+        for (final profession in professions)
+          for (final entry in await _repo.loadForProfession(profession.label))
+            if (!entry.deleted)
+              CpdRecordItem.legacy(entry, professionId: profession.id),
+      ];
+    } else {
+      professions = (await source.professions())
+          .where((profession) => !profession.deleted)
+          .toList();
+      entries = await source.records();
     }
-
     if (!mounted) return;
     setState(() {
-      _professions = List<String>.from(professions);
-      _allEntries = allEntries;
+      _professions = professions;
+      _allEntries = entries;
       _loading = false;
     });
   }
 
-  bool _professionNameMatches(String profession, String query) {
-    return profession.toLowerCase().contains(query.toLowerCase().trim());
-  }
+  bool _professionNameMatches(String profession, String query) =>
+      profession.toLowerCase().contains(query.toLowerCase().trim());
 
-  List<String> get _matchingProfessions {
+  List<CpdRecordItem> _matches(CpdProfessionItem profession) => _allEntries
+      .where(
+        (item) => item.professionId == profession.id && item.matches(_query),
+      )
+      .toList();
+
+  List<CpdProfessionItem> get _matchingProfessions {
     final query = _query.trim();
     if (query.isEmpty) return _professions;
-
-    final grouped = RecordSearch.groupByProfession(_allEntries, query);
-    final results = <String>{...grouped.keys};
-
-    for (final profession in _professions) {
-      if (_professionNameMatches(profession, query)) {
-        results.add(profession);
-      }
-    }
-
-    final list = results.toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    return list;
+    final matches = {
+      for (final item in _allEntries)
+        if (item.matches(query)) item.professionId,
+    };
+    return _professions
+        .where(
+          (profession) =>
+              matches.contains(profession.id) ||
+              _professionNameMatches(profession.label, query),
+        )
+        .toList()
+      ..sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
   }
 
-  int _matchCountForProfession(String profession) {
-    final query = _query.trim();
-    if (query.isEmpty) return 0;
-    return RecordSearch.filterByProfession(
-      _allEntries,
-      profession,
-      query,
-    ).length;
-  }
-
-  String _recordsPageQueryForProfession(String profession) {
-    final query = _query.trim();
-    if (query.isEmpty) return '';
-
-    final hasRecordMatches = RecordSearch.filterByProfession(
-      _allEntries,
-      profession,
-      query,
-    ).isNotEmpty;
-
-    // If the profession name matched but no record content matched,
-    // open the profession normally and show all its records.
-    if (!hasRecordMatches && _professionNameMatches(profession, query)) {
-      return '';
-    }
-
-    return query;
-  }
-
-  Future<void> _openFilteredRecords(String profession) async {
-    final recordsPageQuery = _recordsPageQueryForProfession(profession);
-
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CpdRecordsPage(
-          recordStore: _repo,
-          profession: profession,
-          startInSearchMode: recordsPageQuery.isNotEmpty,
-          initialSearchQuery: recordsPageQuery,
+  Future<void> _openFilteredRecords(CpdProfessionItem profession) async {
+    final query = _matches(profession).isEmpty ? '' : _query.trim();
+    if (widget.onOpenProfession case final open?) {
+      await open(profession, query);
+    } else {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CpdRecordsPage(
+            recordStore: _repo,
+            profession: profession.label,
+            startInSearchMode: query.isNotEmpty,
+            initialSearchQuery: query,
+          ),
         ),
-      ),
-    );
-    if (!mounted) return;
-    await _load();
+      );
+    }
+    if (mounted) await _load();
   }
 
   @override
   Widget build(BuildContext context) {
+    final professions = _matchingProfessions;
     return Scaffold(
       appBar: AppBar(),
       body: Column(
@@ -176,7 +175,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
                                   'Type to search across all professions',
                                 ),
                               )
-                            : _matchingProfessions.isEmpty
+                            : professions.isEmpty
                             ? const Center(
                                 child: Text('No matching records found'),
                               )
@@ -187,18 +186,16 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
                                   16,
                                   16,
                                 ),
-                                itemCount: _matchingProfessions.length,
-                                separatorBuilder: (_, __) =>
+                                itemCount: professions.length,
+                                separatorBuilder: (_, _) =>
                                     const SizedBox(height: 12),
                                 itemBuilder: (context, index) {
-                                  final profession =
-                                      _matchingProfessions[index];
-                                  final count = _matchCountForProfession(
-                                    profession,
-                                  );
+                                  final profession = professions[index];
+                                  final matches = _matches(profession);
+                                  final count = matches.length;
                                   final isProfessionMatch =
                                       _professionNameMatches(
-                                        profession,
+                                        profession.label,
                                         _query,
                                       );
                                   final opensFilteredRecords = count > 0;
@@ -210,7 +207,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         BrandedSectionHeader(
-                                          title: profession,
+                                          title: profession.label,
                                           icon: Icons.work_outline_rounded,
                                         ),
                                         Padding(
@@ -231,6 +228,30 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
                                                           : 'No matching records')
                                                     : '$count matching record${count == 1 ? '' : 's'}',
                                               ),
+                                              if (widget.onOpenRecord
+                                                  case final open?)
+                                                for (final record in matches)
+                                                  ListTile(
+                                                    dense: true,
+                                                    contentPadding:
+                                                        EdgeInsets.zero,
+                                                    title: Text(
+                                                      record.entry.title.isEmpty
+                                                          ? AppLocalizations.of(
+                                                              context,
+                                                            )!.noTitle
+                                                          : record.entry.title,
+                                                    ),
+                                                    trailing: const Icon(
+                                                      Icons.chevron_right,
+                                                    ),
+                                                    onTap: () async {
+                                                      await open(record);
+                                                      if (mounted) {
+                                                        await _load();
+                                                      }
+                                                    },
+                                                  ),
                                               const SizedBox(height: 12),
                                               SizedBox(
                                                 width: double.infinity,

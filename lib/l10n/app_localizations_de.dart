@@ -108,6 +108,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get viewRecords => 'Einträge anzeigen';
 
   @override
+  String get viewRecord => 'Eintrag ansehen';
+
+  @override
+  String get recordChangeFailed =>
+      'Der Eintrag konnte nicht aktualisiert werden. Bitte neu laden und erneut versuchen.';
+
+  @override
+  String get customFieldsReport => 'Bericht mit benutzerdefinierten Feldern';
+
+  @override
+  String get fieldValuesCsv => 'Feldwerte (CSV)';
+
+  @override
   String get setEditTarget => 'Ziel festlegen/bearbeiten';
 
   @override

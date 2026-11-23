@@ -17,6 +17,9 @@ Future<void> showAttachmentsDialog({
 
   /// Optional callback when an item is removed; receives its index from the *original* list.
   Future<void> Function(int)? onRemoveIndex,
+  List<String>? displayNames,
+  Future<void> Function(int)? onShareAt,
+  Future<bool> Function(int)? onRemoveCurrent,
 }) async {
   if (attachments.isEmpty) {
     await showDialog(
@@ -34,13 +37,17 @@ Future<void> showAttachmentsDialog({
 
   // Work on a local copy we can mutate inside the dialog.
   final original = List<String>.from(attachments);
+  final names = displayNames?.toList();
+  var removing = false;
 
   await showDialog(
     context: context,
     builder: (ctx) {
       return StatefulBuilder(
         builder: (ctx, setState) {
-          final files = original.where((p) => p.trim().isNotEmpty).toList();
+          final files = original.indexed
+              .where((file) => file.$2.trim().isNotEmpty)
+              .toList();
 
           return AlertDialog(
             title: Row(
@@ -56,14 +63,20 @@ Future<void> showAttachmentsDialog({
                 shrinkWrap: true,
                 itemCount: files.length,
                 itemBuilder: (c, i) {
-                  final path = files[i];
+                  final (originalIdx, path) = files[i];
                   return AttachmentTile(
                     value: path,
+                    displayName: names?[originalIdx],
                     enableLongPressActions: enableLongPressActions,
-                    onShare: onShareOne == null ? null : () => onShareOne(path),
-                    onRemove: onRemoveIndex == null
+                    onShare: onShareAt != null
+                        ? () => onShareAt(originalIdx)
+                        : onShareOne == null
+                        ? null
+                        : () => onShareOne(path),
+                    onRemove: onRemoveIndex == null && onRemoveCurrent == null
                         ? null
                         : () async {
+                            if (removing) return;
                             // Ask user to confirm removal first
                             final confirm = await showDialog<bool>(
                               context: ctx,
@@ -96,17 +109,21 @@ Future<void> showAttachmentsDialog({
                               ),
                             );
 
-                            if (confirm != true) return; // cancelled
-
-                            // Map current index back to original list index, then invoke parent removal
-                            final originalIdx = original.indexOf(path);
-                            if (originalIdx >= 0) {
-                              try {
-                                await onRemoveIndex(originalIdx);
-                              } finally {
-                                // Reflect removal in the dialog's local view only after parent handled it
-                                setState(() => original.removeAt(originalIdx));
+                            if (confirm != true || removing) return;
+                            removing = true;
+                            try {
+                              if (onRemoveCurrent != null) {
+                                if (!await onRemoveCurrent(originalIdx)) return;
+                              } else {
+                                await onRemoveIndex!(originalIdx);
                               }
+                              if (!ctx.mounted) return;
+                              setState(() {
+                                original.removeAt(originalIdx);
+                                names?.removeAt(originalIdx);
+                              });
+                            } finally {
+                              removing = false;
                             }
                           },
                   );

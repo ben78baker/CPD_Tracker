@@ -304,6 +304,30 @@ abstract class AppLocalizations {
   /// **'View Records'**
   String get viewRecords;
 
+  /// No description provided for @viewRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'View Record'**
+  String get viewRecord;
+
+  /// No description provided for @recordChangeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update the record. Reload and try again.'**
+  String get recordChangeFailed;
+
+  /// No description provided for @customFieldsReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Fields report'**
+  String get customFieldsReport;
+
+  /// No description provided for @fieldValuesCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Field values (CSV)'**
+  String get fieldValuesCsv;
+
   /// No description provided for @setEditTarget.
   ///
   /// In en, this message translates to:

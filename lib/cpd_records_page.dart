@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'cpd_compatibility/cpd_data_store.dart';
+import 'cpd_compatibility/cpd_records_source.dart';
 import 'cpd_compatibility/report_locale.dart';
 import 'entry_repository.dart';
 import 'models.dart';
@@ -12,7 +13,6 @@ import 'utils/attachment_io.dart';
 import 'utils/export_selection.dart';
 import 'widgets/period_picker.dart' show showPeriodPicker;
 import 'utils/date_utils.dart';
-import 'utils/record_search.dart';
 import 'utils/csv_exporter.dart';
 import 'utils/pdf_exporter.dart';
 import 'widgets/record_card.dart';
@@ -23,17 +23,37 @@ import 'widgets/tactile_button.dart';
 import 'l10n/app_localizations.dart';
 
 class CpdRecordsPage extends StatefulWidget {
+  static const schemeReportFormat = 'scheme_report';
+
   const CpdRecordsPage({
     super.key,
     required this.profession,
     this.startInSearchMode = false,
     this.initialSearchQuery = '',
     this.recordStore,
-  });
+    this.source,
+    this.professionId,
+    this.onOpenRecord,
+    this.onEditFields,
+    this.additionalFormats = const {},
+    this.onAdditionalExport,
+  }) : assert(source == null || (professionId != null && onOpenRecord != null));
   final String profession;
   final bool startInSearchMode;
   final String initialSearchQuery;
   final CpdRecordStore? recordStore;
+  final CpdRecordsSource? source;
+  final String? professionId;
+  final Future<void> Function(CpdRecordItem, {required bool view})?
+  onOpenRecord;
+  final Future<void> Function()? onEditFields;
+  final Map<String, String> additionalFormats;
+  final Future<void> Function(
+    String format,
+    List<CpdRecordItem> records,
+    ReportLanguage language,
+  )?
+  onAdditionalExport;
 
   @override
   State<CpdRecordsPage> createState() => _CpdRecordsPageState();
@@ -42,7 +62,8 @@ class CpdRecordsPage extends StatefulWidget {
 class _CpdRecordsPageState extends State<CpdRecordsPage> {
   late final CpdRecordStore _repo = widget.recordStore ?? EntryRepository();
   final _settings = SettingsStore.instance;
-  List<CpdEntry> _entries = [];
+  List<CpdRecordItem> _entries = [];
+  late final TextEditingController _searchController;
   String _fmt = 'dd/MM/yyyy';
   bool _exporting = false;
   bool _showSearch = false;
@@ -53,15 +74,29 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
   void initState() {
     super.initState();
     _searchQuery = widget.initialSearchQuery;
+    _searchController = TextEditingController(text: _searchQuery);
     _showSearch =
         widget.startInSearchMode || widget.initialSearchQuery.trim().isNotEmpty;
     _load();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
-    final list = await _repo.loadForProfession(widget.profession);
-    list.sort((a, b) => b.date.compareTo(a.date)); // newest first
-    final fmt = await _settings.getDateFormat();
+    final source = widget.source;
+    final list = source == null
+        ? (await _repo.loadForProfession(
+            widget.profession,
+          )).map(CpdRecordItem.legacy).toList()
+        : await source.records(professionId: widget.professionId!);
+    list.sort((a, b) => b.entry.date.compareTo(a.entry.date));
+    final fmt = source == null
+        ? await _settings.getDateFormat()
+        : (await source.preferences())['dateFormat'] ?? 'dd/MM/yyyy';
     if (!mounted) return;
     setState(() {
       _entries = list;
@@ -69,23 +104,25 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     });
   }
 
-  List<CpdEntry> get _filteredEntries {
-    return RecordSearch.filter(_entries, _searchQuery);
-  }
+  List<CpdRecordItem> get _filteredEntries =>
+      _entries.where((record) => record.matches(_searchQuery)).toList();
 
-  Future<void> _edit(CpdEntry e) async {
-    if (!mounted) return; // guard before using context
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AddEntryPage(
-          profession: e.profession,
-          existingEntry: e,
-          recordStore: _repo,
+  Future<void> _open(CpdRecordItem item, {bool view = false}) async {
+    if (widget.onOpenRecord case final open?) {
+      await open(item, view: view);
+    } else {
+      final e = item.entry;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => AddEntryPage(
+            profession: e.profession,
+            existingEntry: e,
+            recordStore: _repo,
+          ),
         ),
-      ),
-    );
-    if (!mounted) return; // guard after the await
-    _load();
+      );
+    }
+    if (mounted) await _load();
   }
 
   void _toggleSearch() {
@@ -93,13 +130,15 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       if (_showSearch) {
         _showSearch = false;
         _searchQuery = '';
+        _searchController.clear();
       } else {
         _showSearch = true;
       }
     });
   }
 
-  Future<void> _toggleDelete(CpdEntry e) async {
+  Future<void> _toggleDelete(CpdRecordItem item) async {
+    final e = item.entry;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -134,12 +173,25 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     );
     if (!context.mounted) return;
     if (confirm != true) return;
-    await _repo.setDeleted(e.id, !e.deleted);
-    if (!mounted) return;
-    _load();
+    if (widget.source case final source?) {
+      try {
+        await source.setDeleted(item, !e.deleted);
+      } on Object {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.recordChangeFailed),
+            ),
+          );
+        }
+      }
+    } else {
+      await _repo.setDeleted(e.id, !e.deleted);
+    }
+    if (mounted) await _load();
   }
 
-  Future<void> _shareAttachmentPath(String path) async {
+  Future<void> _shareAttachmentPath(String path, {String? displayName}) async {
     try {
       if (isUrl(path)) {
         await SharePlus.instance.share(
@@ -161,9 +213,12 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
               XFile(
                 resolvedPath,
                 // mimeType optional; let the platform infer
-                name: p.basename(resolvedPath),
+                name: displayName ?? p.basename(resolvedPath),
               ),
             ],
+            fileNameOverrides: displayName == null
+                ? null
+                : [p.basename(displayName)],
             subject: AppLocalizations.of(context)!.cpdAttachmentSubject,
           ),
         );
@@ -185,6 +240,87 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     }
   }
 
+  Future<void> _showAttachments(CpdRecordItem item) async {
+    final e = item.entry;
+    final loc = AppLocalizations.of(context)!;
+    final source = widget.source;
+    if (source == null) {
+      await showAttachmentsDialog(
+        context: context,
+        attachments: e.attachments,
+        title: loc.attachments,
+        onShareOne: _shareAttachmentPath,
+        onRemoveIndex: (idx) async {
+          if (idx < 0 || idx >= e.attachments.length) return;
+          e.attachments.removeAt(idx);
+          await _repo.updateEntry(e);
+          if (!mounted) return;
+          setState(() {});
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(loc.attachmentRemoved)));
+        },
+      );
+      return;
+    }
+
+    var version = item.version;
+    var evidence = item.evidence;
+    await showAttachmentsDialog(
+      context: context,
+      attachments: e.attachments,
+      displayNames: evidence.map((item) => item.label).toList(),
+      title: loc.attachments,
+      onShareAt: (index) {
+        final asset = evidence[index];
+        final target = asset.target;
+        if (target == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(loc.fileNotFoundWithName(asset.label))),
+          );
+          return Future.value();
+        }
+        return _shareAttachmentPath(target, displayName: asset.label);
+      },
+      onRemoveCurrent: (index) async {
+        final removed = evidence[index];
+        try {
+          await source.unlinkEvidence(item.id, version, removed);
+        } on Object {
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(loc.recordChangeFailed)));
+          }
+          return false;
+        }
+        version++;
+        evidence = [
+          for (final (i, asset) in evidence.indexed)
+            if (i != index)
+              if (asset.fieldId == removed.fieldId &&
+                  asset.ordinal > removed.ordinal)
+                CpdEvidenceItem(
+                  id: asset.id,
+                  fieldId: asset.fieldId,
+                  ordinal: asset.ordinal - 1,
+                  label: asset.label,
+                  target: asset.target,
+                )
+              else
+                asset,
+        ];
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(loc.attachmentRemoved)));
+        }
+        return true;
+      },
+    );
+    if (mounted) await _load();
+  }
+
   Future<DateTimeRange?> _pickRangeSimple(BuildContext context) async {
     if (_entries.isEmpty) return null;
 
@@ -192,7 +328,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     DateTime minD = DateTime(9999);
     DateTime maxD = DateTime(0);
     for (final e in _entries) {
-      final d = dateOnly(e.date);
+      final d = dateOnly(e.entry.date);
       if (d.isBefore(minD)) minD = d;
       if (d.isAfter(maxD)) maxD = d;
     }
@@ -220,12 +356,18 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     setState(() => _lastRange = picked); // remember picked range in AppBar
 
     final app = AppLocalizations.of(context)!;
-    final savedLanguage = await _settings.getReportLanguage();
+    final source = widget.source;
+    final savedLanguage = source == null
+        ? await _settings.getReportLanguage()
+        : ReportLanguage.fromStored(
+            (await source.preferences())['reportLocale'],
+          );
     var reportLanguage = savedLanguage;
     if (!mounted) return;
     final choice = await showShareFormatSheet(
       context,
       initialLanguage: savedLanguage,
+      additionalFormats: widget.additionalFormats,
       onReportLanguageChanged: (choice) => reportLanguage = choice,
     );
     if (!mounted) return;
@@ -246,7 +388,11 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
 
     if (savedLanguage != reportLanguage) {
       try {
-        await _settings.setReportLanguage(reportLanguage);
+        if (source == null) {
+          await _settings.setReportLanguage(reportLanguage);
+        } else {
+          await source.setReportLanguage(reportLanguage);
+        }
       } on Object {
         if (!mounted) return;
         ScaffoldMessenger.of(
@@ -257,7 +403,8 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       if (!mounted) return;
     }
     final sel = choice.trim().toLowerCase();
-    if (reportLanguage == ReportLanguage.hindi && sel != 'csv') {
+    if (reportLanguage == ReportLanguage.hindi &&
+        const {'pdf', 'pdf_evidence', 'pdf_bundle'}.contains(sel)) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(app.reportHindiRequiresShaping)));
@@ -265,11 +412,22 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     }
     debugPrint('Normalized share format choice: $sel');
 
+    final visible = _filteredEntries;
     final exportSelection = CpdExportSelection.fromVisibleRecords(
       profession: widget.profession,
       range: picked,
-      visibleRecords: _filteredEntries,
+      visibleRecords: visible.map((row) => row.entry),
+      evidenceNames: {
+        for (final row in visible)
+          if (row.evidence.isNotEmpty)
+            row.entry.id: row.evidence.map((asset) => asset.label).toList(),
+      },
     );
+    if (sel == CpdRecordsPage.schemeReportFormat &&
+        widget.onAdditionalExport != null) {
+      await _exportAdditional(sel, List.of(_entries), reportLanguage);
+      return;
+    }
     if (exportSelection.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -283,11 +441,23 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       return;
     }
 
+    if (widget.additionalFormats.containsKey(sel) &&
+        widget.onAdditionalExport != null) {
+      final selected = exportSelection.records.toSet();
+      await _exportAdditional(
+        sel,
+        visible.where((row) => selected.contains(row.entry)).toList(),
+        reportLanguage,
+      );
+      return;
+    }
+
     if (sel == 'csv') {
       if (!mounted) return;
       setState(() => _exporting = true);
       // Load user profile (name/company/email) from SettingsStore
-      final Map<String, String> profile = await _settings.loadProfile();
+      final Map<String, String> profile = await _loadProfile();
+      if (!mounted) return;
       final String userName = profile['name']?.trim() ?? '';
       final String company = profile['company']?.trim() ?? '';
       final String email = profile['email']?.trim() ?? '';
@@ -324,7 +494,8 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       if (!mounted) return;
       setState(() => _exporting = true);
       // Load user profile (name/company/email) from SettingsStore
-      final Map<String, String> profile = await _settings.loadProfile();
+      final Map<String, String> profile = await _loadProfile();
+      if (!mounted) return;
       final String userName = profile['name']?.trim() ?? '';
       final String company = profile['company']?.trim() ?? '';
       final String address = profile['address']?.trim() ?? '';
@@ -369,7 +540,8 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     } else if (sel == 'pdf_bundle') {
       if (!mounted) return;
       setState(() => _exporting = true);
-      final Map<String, String> profile = await _settings.loadProfile();
+      final Map<String, String> profile = await _loadProfile();
+      if (!mounted) return;
       final String userName = profile['name']?.trim() ?? '';
       final String company = profile['company']?.trim() ?? '';
       final String address = profile['address']?.trim() ?? '';
@@ -410,8 +582,33 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
     }
   }
 
+  Future<Map<String, String>> _loadProfile() async {
+    final source = widget.source;
+    return source == null ? _settings.loadProfile() : source.preferences();
+  }
+
+  Future<void> _exportAdditional(
+    String format,
+    List<CpdRecordItem> records,
+    ReportLanguage language,
+  ) async {
+    setState(() => _exporting = true);
+    try {
+      await widget.onAdditionalExport!(format, records, language);
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.exportFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filtered = _filteredEntries;
     return Scaffold(
       appBar: AppBar(
         bottom: _showSearch
@@ -420,6 +617,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: TextField(
+                    controller: _searchController,
                     autofocus: true,
                     onChanged: (value) {
                       setState(() {
@@ -435,6 +633,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                               onPressed: () {
                                 setState(() {
                                   _searchQuery = '';
+                                  _searchController.clear();
                                 });
                               },
                               icon: const Icon(Icons.clear),
@@ -452,6 +651,19 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
             onPressed: _toggleSearch,
             icon: Icon(_showSearch ? Icons.close : Icons.search),
           ),
+          if (widget.onEditFields case final editFields?)
+            PopupMenuButton<String>(
+              onSelected: (_) async {
+                await editFields();
+                if (mounted) await _load();
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'edit_fields',
+                  child: Text(AppLocalizations.of(context)!.editFields),
+                ),
+              ],
+            ),
           if (_exporting)
             const Padding(
               padding: EdgeInsets.only(right: 12),
@@ -477,41 +689,23 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                 ? Center(
                     child: Text(AppLocalizations.of(context)!.noCpdRecordsYet),
                   )
-                : _filteredEntries.isEmpty
+                : filtered.isEmpty
                 ? const Center(child: Text('No matching records found'))
                 : ListView.builder(
                     padding: const EdgeInsets.only(top: 4, bottom: 8),
-                    itemCount: _filteredEntries.length,
+                    itemCount: filtered.length,
                     itemBuilder: (context, i) {
-                      final e = _filteredEntries[i];
+                      final item = filtered[i];
                       return RecordCard(
-                        entry: e,
+                        key: ValueKey(item.id),
+                        entry: item.entry,
                         dateFormat: _fmt,
-                        onEdit: () => _edit(e),
-                        onDelete: () => _toggleDelete(e),
-                        onViewAttachments: () => showAttachmentsDialog(
-                          context: context,
-                          attachments: e.attachments,
-                          title: AppLocalizations.of(context)!.attachments,
-                          enableLongPressActions: true,
-                          onShareOne: (path) => _shareAttachmentPath(path),
-                          onRemoveIndex: (idx) async {
-                            if (idx < 0 || idx >= e.attachments.length) return;
-                            e.attachments.removeAt(idx);
-                            await _repo.updateEntry(e);
-                            if (!context.mounted) return;
-                            setState(() {});
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.attachmentRemoved,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                        onEdit: () => _open(item),
+                        onView: widget.source == null
+                            ? null
+                            : () => _open(item, view: true),
+                        onDelete: () => _toggleDelete(item),
+                        onViewAttachments: () => _showAttachments(item),
                       );
                     },
                   ),
@@ -531,8 +725,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 padding: const EdgeInsets.all(6),
                 visualDensity: VisualDensity.compact,
-                onPressed:
-                    (_entries.isEmpty || _filteredEntries.isEmpty || _exporting)
+                onPressed: (filtered.isEmpty || _exporting)
                     ? null
                     : _onShareTapped,
                 icon: const Icon(Icons.ios_share, size: 22),

@@ -353,6 +353,31 @@ void main() {
       }
     });
 
+    test('reports keep the original name for a SQLite-managed PDF', () async {
+      final date = DateTime(2026, 1, 1);
+      final file = File(p.join(documentsDirectory.path, 'managed-id.pdf'))
+        ..writeAsStringSync('fixture');
+      final visible = entry(
+        id: 7,
+        date: date,
+        title: 'Managed evidence',
+        attachments: [file.path],
+      );
+      final selection = CpdExportSelection.fromVisibleRecords(
+        profession: profession,
+        range: DateTimeRange(start: date, end: date),
+        visibleRecords: [visible],
+        evidenceNames: {
+          7: ['Original certificate.pdf'],
+        },
+      );
+      final report = await prepare(selection);
+      expect(
+        report.records.single.evidence.single.label,
+        'Original certificate.pdf',
+      );
+    });
+
     test(
       'keeps text-only and embedded photographic evidence as distinct modes',
       () async {

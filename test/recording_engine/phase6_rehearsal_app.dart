@@ -3,6 +3,11 @@ import 'dart:io';
 
 import 'package:cpd_tracker/cpd_backup/profession_backup_page.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
+import 'package:cpd_tracker/cpd_compatibility/cpd_records_source.dart';
+import 'package:cpd_tracker/cpd_compatibility/report_locale.dart';
+import 'package:cpd_tracker/cpd_records_page.dart';
+import 'package:cpd_tracker/deleted_records_page.dart';
+import 'package:cpd_tracker/global_search_page.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_data_store.dart'
     show cpdProfessionLabel;
 import 'package:cpd_tracker/recording_engine_storage/managed_attachment_files.dart';
@@ -267,6 +272,244 @@ class _HomeState extends State<_Home> {
     }
   }
 
+  bool get _integratedRecords =>
+      widget.store.evaluationsEnabled && widget.originals != null;
+
+  late final _source = SqliteCpdRecordsSource(
+    widget.store.repository,
+    widget.originals!,
+    preferences: widget.store.settings,
+    setReportLanguage: (language) =>
+        widget.store.saveSetting('reportLocale', language.tag),
+  );
+
+  Future<void> _editFields(RecordingCollection profession) async {
+    final store = widget.store;
+    try {
+      final active = (await store.repository.loadLayouts(profession.id)).last;
+      bool canEdit(CreationAccess access) => active.templateId == null
+          ? access.canCustomiseFields
+          : access.hasTemplateAccess(active.templateId);
+      final access = await store.access();
+      if (!mounted) return;
+      if (!canEdit(access)) {
+        if (active.templateId case final template?) {
+          await openTemplateCheckout(context, store, template);
+        } else {
+          await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => RehearsalCheckout(
+                store: store,
+                product: ProfessionCreationStore.customProduct,
+              ),
+            ),
+          );
+        }
+        if (!canEdit(await store.access())) return;
+      }
+      final draft = await store.beginEdit(profession.id);
+      if (!mounted) return;
+      await Navigator.of(context).push<String>(
+        MaterialPageRoute(
+          builder: (_) => ProfessionDraftPage(store: store, draft: draft),
+        ),
+      );
+      _refresh();
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(editorStrings(context).editorSaveError)),
+        );
+      }
+    }
+  }
+
+  Future<void> _openRecord(CpdRecordItem item, {required bool view}) async {
+    final repository = widget.store.repository;
+    final profession = await repository.loadCollection(item.professionId);
+    final record = await repository.loadRecord(item.id);
+    if (!mounted) return;
+    if (profession == null ||
+        profession.deleted ||
+        record == null ||
+        record.deleted ||
+        record.collectionId != item.professionId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(editorStrings(context).recordChangeFailed)),
+      );
+      return;
+    }
+    final history = await repository.loadLayouts(profession.id);
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => RehearsalRecordPage(
+          store: widget.store,
+          collection: profession.id,
+          history: history,
+          record: record,
+          phase7: true,
+          originals: widget.originals,
+          readOnly: view,
+          onEditFields: () => _editFields(profession),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _viewRecords(
+    RecordingCollection profession, {
+    bool search = false,
+    String query = '',
+  }) async {
+    final repository = widget.store.repository;
+    var layout = (await repository.loadLayouts(profession.id)).last;
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => StatefulBuilder(
+          builder: (route, setRouteState) {
+            final s = editorStrings(route);
+            final custom =
+                layout.templateId != null ||
+                layout.version > 1 ||
+                layout.fields.any(
+                  (field) => !cpdFieldKinds.containsKey(field.definition.id),
+                );
+            return CpdRecordsPage(
+              profession: profession.label,
+              professionId: profession.id,
+              source: _source,
+              startInSearchMode: search,
+              initialSearchQuery: query,
+              onOpenRecord: _openRecord,
+              onEditFields: () async {
+                await _editFields(profession);
+                final latest = (await repository.loadLayouts(
+                  profession.id,
+                )).last;
+                if (route.mounted) setRouteState(() => layout = latest);
+              },
+              additionalFormats: {
+                if (custom) 'custom_report': s.customFieldsReport,
+                if (custom) 'field_csv': s.fieldValuesCsv,
+                if (layout.templateId != null)
+                  CpdRecordsPage.schemeReportFormat:
+                      '${s.p6OpenReport} · ${s.p7Period}',
+              },
+              onAdditionalExport: (format, rows, language) =>
+                  _exportRecording(profession, format, rows, language),
+            );
+          },
+        ),
+      ),
+    );
+    _refresh();
+  }
+
+  Future<void> _exportRecording(
+    RecordingCollection profession,
+    String format,
+    List<CpdRecordItem> rows,
+    ReportLanguage language,
+  ) async {
+    final store = widget.store;
+    final (history, records) = await store.repository.transaction((tx) async {
+      final history = await tx.loadLayouts(profession.id);
+      final current = {
+        for (final record in await tx.loadRecords(profession.id))
+          record.id: record,
+      };
+      final selected = rows.map((row) {
+        final record = current[row.id];
+        if (record == null || record.version != row.version) {
+          throw StateError('The export selection has changed.');
+        }
+        return record;
+      }).toList();
+      return (history, selected);
+    });
+    if (!mounted) return;
+    if (format == CpdRecordsPage.schemeReportFormat) {
+      await openSchemeReport(
+        context,
+        store,
+        profession,
+        history,
+        records,
+        history.last.version,
+        originals: widget.originals,
+        requireSavedPeriod: true,
+        language: language,
+      );
+    } else if (format == 'field_csv') {
+      await shareFieldValuesCsv(context, history, records);
+    } else {
+      final report = await store.reportAt(profession.id, history.last.version);
+      if (!mounted) return;
+      await openLayoutReport(
+        context,
+        store,
+        profession,
+        history,
+        records,
+        report.excluded,
+        language: language,
+        evidenceNames: {
+          for (final row in rows)
+            for (final asset in row.evidence) asset.id: asset.label,
+        },
+      );
+    }
+  }
+
+  Future<void> _searchRecords() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => GlobalSearchPage(
+          source: _source,
+          onOpenProfession: (item, query) async {
+            final profession = await widget.store.repository.loadCollection(
+              item.id,
+            );
+            if (mounted && profession != null && !profession.deleted) {
+              await _viewRecords(profession, query: query);
+            }
+          },
+          onOpenRecord: (item) => _openRecord(item, view: true),
+        ),
+      ),
+    );
+    _refresh();
+  }
+
+  Future<void> _showEvaluation(String templateId) => showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheet) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: TemplateEvaluationPanel(
+          store: widget.store,
+          templateId: templateId,
+          purchase: () => openTemplateCheckout(sheet, widget.store, templateId),
+          onStandard: () async {
+            Navigator.pop(sheet);
+            final draft = await widget.store.begin(ProfessionKind.standard);
+            if (!mounted) return;
+            await Navigator.of(context).push<String>(
+              MaterialPageRoute(
+                builder: (_) =>
+                    ProfessionDraftPage(store: widget.store, draft: draft),
+              ),
+            );
+            _refresh();
+          },
+        ),
+      ),
+    ),
+  );
+
   Future<void> _open(
     RecordingCollection profession, {
     bool add = false,
@@ -277,7 +520,9 @@ class _HomeState extends State<_Home> {
       final enabled = await widget.store.canAddToLayout(history.last);
       if (!mounted) return;
       if (!enabled) {
-        if (widget.store.evaluationsEnabled) {
+        if (_integratedRecords && history.last.templateId != null) {
+          await _showEvaluation(history.last.templateId!);
+        } else if (widget.store.evaluationsEnabled) {
           await _open(profession);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -297,6 +542,9 @@ class _HomeState extends State<_Home> {
           ),
         ),
       );
+    } else if (_integratedRecords) {
+      await _viewRecords(profession, search: search);
+      return;
     } else {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
@@ -479,6 +727,9 @@ class _HomeState extends State<_Home> {
                         widget.store,
                         collectionId: profession.id,
                       ),
+                onEditFields: _integratedRecords
+                    ? () => _editFields(profession)
+                    : null,
                 onAdd: () => _open(profession, add: true),
                 onView: () => _open(profession),
                 onSearch: () => _open(profession, search: true),
@@ -519,10 +770,20 @@ class _HomeState extends State<_Home> {
     );
     return widget.phase7
         ? HomeShell(
-            onSearch: _chooseSearchProfession,
+            onSearch: _integratedRecords
+                ? _searchRecords
+                : _chooseSearchProfession,
             onMenuSelected: (action) {
               if (action == 'add_profession') {
                 _addProfession();
+              } else if (action == 'deleted_records' && _integratedRecords) {
+                Navigator.of(context)
+                    .push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => DeletedRecordsPage(source: _source),
+                      ),
+                    )
+                    .then((_) => _refresh());
               } else if (action == 'view_deleted' && widget.backups != null) {
                 _deletedProfessions();
               } else if (action == 'settings' && widget.backups != null) {
@@ -838,14 +1099,6 @@ class _ProfessionPageState extends State<_ProfessionPage> {
                   onPressed: () => _standardReport(history, records),
                   child: Text(s.editorExport),
                 ),
-              if (evaluationUi && records.isNotEmpty)
-                RehearsalExportActions(
-                  store: widget.store,
-                  profession: widget.profession,
-                  history: history,
-                  records: records,
-                  originals: widget.originals,
-                ),
               if (widget.search)
                 TextField(
                   decoration: InputDecoration(labelText: s.editorSearch),
@@ -898,8 +1151,12 @@ class RehearsalRecordPage extends StatefulWidget {
     this.record,
     this.phase7 = false,
     this.originals,
+    this.readOnly = false,
+    this.onEditFields,
   });
   final bool phase7;
+  final bool readOnly;
+  final Future<void> Function()? onEditFields;
   final ProfessionCreationStore store;
   final String collection;
   final List<LayoutRevision> history;
@@ -1069,11 +1326,13 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
               ...?snapshot.data,
               if (realEvidence) ..._recordFiles.pendingLabels,
             },
-            addAttachment: realEvidence ? _addAttachment : null,
+            addAttachment: realEvidence && !widget.readOnly
+                ? _addAttachment
+                : null,
             openAttachment: realEvidence
                 ? (id) => _recordFiles.open(context, id)
                 : null,
-            onChanged: _busy ? null : _edit,
+            onChanged: _busy || widget.readOnly ? null : _edit,
           ),
         );
     return PopScope(
@@ -1081,12 +1340,28 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            widget.record == null ? s.editorNewRecord : s.editorExample,
+            widget.readOnly
+                ? s.viewRecord
+                : widget.store.evaluationsEnabled
+                ? (widget.record == null ? s.newEntry : s.editEntry)
+                : (widget.record == null ? s.editorNewRecord : s.editorExample),
           ),
+          actions: [
+            if (widget.readOnly && widget.onEditFields != null)
+              PopupMenuButton<String>(
+                onSelected: (_) => widget.onEditFields!(),
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: 'edit_fields',
+                    child: Text(s.editFields),
+                  ),
+                ],
+              ),
+          ],
         ),
         body: BoundedList(
           children: [
-            if (_scoped)
+            if (_scoped && !widget.readOnly)
               TemplateEvaluationPanel(
                 key: ValueKey(_allowanceRevision),
                 store: widget.store,
@@ -1107,7 +1382,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
             ],
           ],
         ),
-        bottomNavigationBar: !_maySave
+        bottomNavigationBar: !_maySave || widget.readOnly
             ? null
             : SafeArea(
                 top: false,

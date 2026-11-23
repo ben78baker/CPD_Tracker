@@ -39,6 +39,10 @@
   "addEntry": "Eintrag hinzufügen",
   "scanQr": "QR scannen",
   "viewRecords": "Einträge anzeigen",
+  "viewRecord": "Eintrag ansehen",
+  "recordChangeFailed": "Der Eintrag konnte nicht aktualisiert werden. Bitte neu laden und erneut versuchen.",
+  "customFieldsReport": "Bericht mit benutzerdefinierten Feldern",
+  "fieldValuesCsv": "Feldwerte (CSV)",
 
   "setEditTarget": "Ziel festlegen/bearbeiten",
 

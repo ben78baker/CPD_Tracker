@@ -433,6 +433,7 @@ Future<CpdPdfPresentation> prepareCpdPdfPresentation({
           attachment,
           texts,
           evidenceMode: evidenceMode,
+          displayName: selection.evidenceName(entry, attachmentIndex),
           imageLoader: loadImage,
           pdfRasterizer: pdfRasterizer,
           pdfRasterDirectory: pdfRasterDirectory,
@@ -477,6 +478,7 @@ Future<CpdPdfEvidence> _evidencePresentation(
   ExportAttachment attachment,
   PdfExportTexts texts, {
   required CpdPdfEvidenceMode evidenceMode,
+  String? displayName,
   required CpdPdfImageLoader imageLoader,
   required CpdPdfEvidenceRasterizer? pdfRasterizer,
   required Directory? pdfRasterDirectory,
@@ -502,7 +504,7 @@ Future<CpdPdfEvidence> _evidencePresentation(
       );
     case ExportAttachmentKind.localImage:
       final filename = _cleanEvidenceName(
-        attachment.resolvedPath ?? attachment.storedValue,
+        displayName ?? attachment.resolvedPath ?? attachment.storedValue,
       );
       try {
         final bytes = await imageLoader(attachment.resolvedPath!);
@@ -542,7 +544,7 @@ Future<CpdPdfEvidence> _evidencePresentation(
       }
     case ExportAttachmentKind.localPdf:
       final filename = _cleanEvidenceName(
-        attachment.resolvedPath ?? attachment.storedValue,
+        displayName ?? attachment.resolvedPath ?? attachment.storedValue,
       );
       if (evidenceMode == CpdPdfEvidenceMode.textOnly) {
         return CpdPdfEvidence(
@@ -605,7 +607,7 @@ Future<CpdPdfEvidence> _evidencePresentation(
       }
     case ExportAttachmentKind.localFile:
       final filename = _cleanEvidenceName(
-        attachment.resolvedPath ?? attachment.storedValue,
+        displayName ?? attachment.resolvedPath ?? attachment.storedValue,
       );
       final includesOriginal =
           evidenceMode == CpdPdfEvidenceMode.embeddedImages;
@@ -619,7 +621,7 @@ Future<CpdPdfEvidence> _evidencePresentation(
       );
     case ExportAttachmentKind.missingLocal:
       final filename = _cleanEvidenceName(
-        attachment.resolvedPath ?? attachment.storedValue,
+        displayName ?? attachment.resolvedPath ?? attachment.storedValue,
       );
       return CpdPdfEvidence(
         kind: attachment.kind,

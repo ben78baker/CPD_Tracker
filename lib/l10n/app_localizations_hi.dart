@@ -109,6 +109,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get viewRecords => 'View Records';
 
   @override
+  String get viewRecord => 'रिकॉर्ड देखें';
+
+  @override
+  String get recordChangeFailed =>
+      'रिकॉर्ड अपडेट नहीं हो सका। फिर से लोड करके दोबारा कोशिश करें।';
+
+  @override
+  String get customFieldsReport => 'कस्टम फ़ील्ड रिपोर्ट';
+
+  @override
+  String get fieldValuesCsv => 'फ़ील्ड के मान (CSV)';
+
+  @override
   String get setEditTarget => 'Set/Edit Target';
 
   @override

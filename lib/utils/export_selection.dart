@@ -13,12 +13,15 @@ class CpdExportSelection {
     required this.profession,
     required this.range,
     required List<CpdEntry> records,
-  }) : records = List<CpdEntry>.unmodifiable(records);
+    required Map<int, List<String>> evidenceNames,
+  }) : records = List<CpdEntry>.unmodifiable(records),
+       _evidenceNames = Map.unmodifiable(evidenceNames);
 
   factory CpdExportSelection.fromVisibleRecords({
     required String profession,
     required DateTimeRange range,
     required Iterable<CpdEntry> visibleRecords,
+    Map<int, List<String>> evidenceNames = const {},
   }) {
     final normalizedProfession = profession.trim().toLowerCase();
     final start = dateOnly(range.start);
@@ -44,12 +47,23 @@ class CpdExportSelection {
       profession: profession,
       range: DateTimeRange(start: start, end: end),
       records: selected,
+      evidenceNames: {
+        for (final entry in selected)
+          if (evidenceNames[entry.id] case final names?)
+            entry.id: List.unmodifiable(names),
+      },
     );
   }
 
   final String profession;
   final DateTimeRange range;
   final List<CpdEntry> records;
+  final Map<int, List<String>> _evidenceNames;
+
+  String? evidenceName(CpdEntry record, int index) {
+    final names = _evidenceNames[record.id];
+    return names != null && index < names.length ? names[index] : null;
+  }
 
   bool get isEmpty => records.isEmpty;
 }

@@ -23,6 +23,7 @@ class RecordCard extends StatelessWidget {
     required this.entry,
     required this.dateFormat,
     this.onEdit,
+    this.onView,
     this.onDelete,
     this.onViewAttachments,
     this.onShareAll,
@@ -34,6 +35,7 @@ class RecordCard extends StatelessWidget {
   final CpdEntry entry;
   final String dateFormat;
   final VoidCallback? onEdit;
+  final VoidCallback? onView;
   final VoidCallback? onDelete;
   final VoidCallback? onViewAttachments;
   final VoidCallback? onShareAll;
@@ -68,13 +70,16 @@ class RecordCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    entry.title.isEmpty
-                        ? AppLocalizations.of(context)!.noTitle
-                        : entry.title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  child: GestureDetector(
+                    onTap: onView,
+                    child: Text(
+                      entry.title.isEmpty
+                          ? AppLocalizations.of(context)!.noTitle
+                          : entry.title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
                 Material(
@@ -82,13 +87,25 @@ class RecordCard extends StatelessWidget {
                   child: PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert),
                     onSelected: (v) {
-                      if (v == 'edit') {
+                      if (v == 'view') {
+                        onView?.call();
+                      } else if (v == 'edit') {
                         onEdit?.call();
                       } else if (v == 'delete') {
                         onDelete?.call();
                       }
                     },
                     itemBuilder: (ctx) => [
+                      if (onView != null)
+                        PopupMenuItem(
+                          value: 'view',
+                          child: ListTile(
+                            leading: const Icon(Icons.visibility_outlined),
+                            title: Text(AppLocalizations.of(ctx)!.viewRecord),
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
+                        ),
                       PopupMenuItem(
                         value: 'edit',
                         child: ListTile(

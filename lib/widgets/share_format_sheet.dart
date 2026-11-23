@@ -11,6 +11,7 @@ Future<String?> showShareFormatSheet(
   BuildContext context, {
   ReportLanguage initialLanguage = ReportLanguage.app,
   ValueChanged<ReportLanguage>? onReportLanguageChanged,
+  Map<String, String> additionalFormats = const {},
 }) async {
   var reportLanguage = initialLanguage;
   return showModalBottomSheet<String>(
@@ -72,6 +73,12 @@ Future<String?> showShareFormatSheet(
                   Navigator.pop(ctx, 'pdf_bundle');
                 },
               ),
+              for (final option in additionalFormats.entries)
+                ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: Text(option.value),
+                  onTap: () => Navigator.pop(ctx, option.key),
+                ),
               const SizedBox(height: 8),
             ],
           ),

@@ -109,6 +109,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get viewRecords => 'Ver registros';
 
   @override
+  String get viewRecord => 'Ver registro';
+
+  @override
+  String get recordChangeFailed =>
+      'No se pudo actualizar el registro. Vuelve a cargarlo e inténtalo de nuevo.';
+
+  @override
+  String get customFieldsReport => 'Informe de campos personalizados';
+
+  @override
+  String get fieldValuesCsv => 'Valores de campos (CSV)';
+
+  @override
   String get setEditTarget => 'Definir / editar objetivo';
 
   @override

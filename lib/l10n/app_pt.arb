@@ -39,6 +39,10 @@
   "addEntry": "Adicionar registro",
   "scanQr": "Escanear QR",
   "viewRecords": "Ver registros",
+  "viewRecord": "Ver registro",
+  "recordChangeFailed": "Não foi possível atualizar o registro. Recarregue e tente novamente.",
+  "customFieldsReport": "Relatório de campos personalizados",
+  "fieldValuesCsv": "Valores dos campos (CSV)",
 
   "setEditTarget": "Definir / editar meta",
 

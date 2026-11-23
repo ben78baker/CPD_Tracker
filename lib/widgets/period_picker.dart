@@ -18,13 +18,14 @@ Future<DateTimeRange?> showPeriodPicker({
   required DateTime initialTo,
   String dateFormat = 'dd/MM/yyyy',
 }) {
+  // Android can rebuild the sheet when the nested calendar closes.
+  DateTime from = initialFrom;
+  DateTime to = initialTo;
   return showModalBottomSheet<DateTimeRange>(
     context: context,
     showDragHandle: true,
     builder: (ctx) {
       final loc = AppLocalizations.of(ctx)!;
-      DateTime from = initialFrom;
-      DateTime to = initialTo;
 
       return StatefulBuilder(
         builder: (ctx, setState) => Padding(

@@ -11,6 +11,10 @@
 
   "addEntry": "Ajouter entrée",
   "viewRecords": "Voir registres",
+  "viewRecord": "Voir le dossier",
+  "recordChangeFailed": "Impossible de modifier le dossier. Rechargez-le et réessayez.",
+  "customFieldsReport": "Rapport des champs personnalisés",
+  "fieldValuesCsv": "Valeurs des champs (CSV)",
   "setEditTarget": "Définir / Modifier l’objectif",
 
   "menuTooltip": "Menu",

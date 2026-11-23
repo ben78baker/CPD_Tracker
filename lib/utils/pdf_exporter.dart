@@ -318,7 +318,7 @@ Future<File> buildRecordsBundleZip({
     outputDirectory: outputDirectory,
   );
 
-  final localsByFolder = <String, List<String>>{};
+  final localsByFolder = <String, List<({String path, String? name})>>{};
   final urlsByFolder = <String, List<String>>{};
   var missingCount = 0;
   for (final entry in selection.records) {
@@ -329,7 +329,7 @@ Future<File> buildRecordsBundleZip({
         ? titlePartFull.substring(0, 40)
         : titlePartFull;
     final folder = p.join('attachments', '$datePart - $titlePart');
-    for (final stored in entry.attachments) {
+    for (final (index, stored) in entry.attachments.indexed) {
       final attachment = await ExportAttachment.classify(
         stored,
         pathResolver: attachmentPathResolver,
@@ -338,7 +338,10 @@ Future<File> buildRecordsBundleZip({
       if (attachment.isUrl) {
         (urlsByFolder[folder] ??= <String>[]).add(stored);
       } else if (attachment.isAvailableLocal) {
-        (localsByFolder[folder] ??= <String>[]).add(attachment.resolvedPath!);
+        (localsByFolder[folder] ??= []).add((
+          path: attachment.resolvedPath!,
+          name: selection.evidenceName(entry, index),
+        ));
       } else {
         missingCount++;
         debugPrint(
@@ -367,12 +370,25 @@ Future<File> buildRecordsBundleZip({
   );
 
   for (final entry in localsByFolder.entries) {
-    for (final path in entry.value) {
+    final used = <String>{};
+    for (final file in entry.value) {
+      final storedName = p.basename(file.path);
+      final sanitized = file.name == null
+          ? ''
+          : _safeFileName(p.basename(file.name!.replaceAll('\\', '/')));
+      final preferred = const {'', '.', '..'}.contains(sanitized)
+          ? storedName
+          : sanitized;
+      var name = preferred;
+      if (file.name != null) {
+        for (var index = 2; used.contains(name); index++) {
+          name =
+              '${p.basenameWithoutExtension(preferred)} ($index)${p.extension(preferred)}';
+        }
+      }
+      used.add(name);
       archive.addFile(
-        ArchiveFile.stream(
-          p.join(entry.key, p.basename(path)),
-          InputFileStream(path),
-        ),
+        ArchiveFile.stream(p.join(entry.key, name), InputFileStream(file.path)),
       );
     }
   }

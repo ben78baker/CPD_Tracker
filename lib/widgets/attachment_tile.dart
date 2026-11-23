@@ -11,12 +11,14 @@ class AttachmentTile extends StatelessWidget {
     this.onRemove, // optional delete callback
     this.enableLongPressActions = false,
     this.onShare, // optional share callback
+    this.displayName,
   });
 
   final String value;
   final Future<void> Function()? onRemove;
   final bool enableLongPressActions;
   final Future<void> Function()? onShare;
+  final String? displayName;
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +50,7 @@ class AttachmentTile extends StatelessWidget {
               width: 48,
               height: 48,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  const Icon(Icons.image_not_supported),
+              errorBuilder: (_, _, _) => const Icon(Icons.image_not_supported),
             ),
           );
         } else {
@@ -64,11 +65,13 @@ class AttachmentTile extends StatelessWidget {
         final semanticsLabel = url
             ? loc.link
             : (img ? loc.imageAttachment : loc.fileAttachment);
-        final displayName = () {
-          if (url) return value;
-          if (resolved != null) return p.basename(resolved);
-          return p.basename(value);
-        }();
+        final name =
+            displayName ??
+            () {
+              if (url) return value;
+              if (resolved != null) return p.basename(resolved);
+              return p.basename(value);
+            }();
 
         return Semantics(
           label: semanticsLabel,
@@ -76,11 +79,7 @@ class AttachmentTile extends StatelessWidget {
             dense: true,
             contentPadding: EdgeInsets.zero,
             leading: leading,
-            title: Text(
-              displayName,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+            title: Text(name, maxLines: 2, overflow: TextOverflow.ellipsis),
             trailing: onRemove == null
                 ? null
                 : IconButton(

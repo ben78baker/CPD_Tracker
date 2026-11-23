@@ -100,6 +100,7 @@ class RehearsalProfessionCard extends StatelessWidget {
     required this.onRefresh,
     this.originals,
     this.onCreateBackup,
+    this.onEditFields,
   });
 
   final ProfessionCreationStore store;
@@ -113,6 +114,7 @@ class RehearsalProfessionCard extends StatelessWidget {
       onRefresh;
   final ManagedAttachmentFiles? originals;
   final VoidCallback? onCreateBackup;
+  final VoidCallback? onEditFields;
 
   Future<(ProfessionTemplateBundle?, SchemeProgress?, (int, String)?)>
   _load() async {
@@ -259,6 +261,7 @@ class RehearsalProfessionCard extends StatelessWidget {
       return ProfessionCard(
         name: profession.label,
         onCreateBackup: onCreateBackup,
+        onEditFields: onEditFields,
         onAdd: onAdd,
         onScan: onScan,
         onView: onView,
@@ -607,6 +610,8 @@ Future<void> openSchemeReport(
   List<RecordingRecord> records,
   int version, {
   ManagedAttachmentFiles? originals,
+  bool requireSavedPeriod = false,
+  ReportLanguage? language,
 }) async {
   try {
     final active = history.singleWhere(
@@ -626,7 +631,9 @@ Future<void> openSchemeReport(
     }
     final periods = SchemePeriodStore(store.repository);
     var selection = await periods.load(profession.id);
-    if (selection.selected == null && !historical && current != null) {
+    if (selection.selected == null &&
+        (!historical || requireSavedPeriod) &&
+        current != null) {
       if (!context.mounted) return;
       await pickSchemePeriod(context, store, profession, current);
       selection = await periods.load(profession.id);
@@ -636,11 +643,13 @@ Future<void> openSchemeReport(
         selection.periods
             .where((item) => item.id == selection.selected)
             .firstOrNull ??
-        (historical && current != null
+        (historical && !requireSavedPeriod && current != null
             ? _recordDatePeriod(current, records, history)
             : null);
     if (period == null) {
-      if (historical) throw StateError('No verified historical report period.');
+      if (historical && !requireSavedPeriod) {
+        throw StateError('No verified historical report period.');
+      }
       return;
     }
     final retained = await const HistoricalCpdBundles().read(
@@ -669,7 +678,17 @@ Future<void> openSchemeReport(
     } else {
       await store.requireOwnedReport(baseline);
     }
-    final reportSelection = await store.reportAt(profession.id, version);
+    final reportLayout = requireSavedPeriod
+        ? history.lastWhere(
+            (layout) =>
+                layout.templateId == period.templateId &&
+                layout.templateVersion == period.templateVersion,
+          )
+        : active;
+    final reportSelection = await store.reportAt(
+      profession.id,
+      reportLayout.version,
+    );
     final result = await loadSchemeProgress(
       repository: store.repository,
       bundle: bundle,
@@ -680,7 +699,7 @@ Future<void> openSchemeReport(
     );
     if (!context.mounted) return;
     final s = editorStrings(context);
-    final request = await pickPresentation(context, store);
+    final request = await pickPresentation(context, store, language: language);
     if (request == null || !context.mounted) return;
     final outputFonts = await _schemeFonts();
     final icon = bundle.branding == ReportBranding.standard
@@ -694,7 +713,7 @@ Future<void> openSchemeReport(
       requiredDefinitions: bundle.protectedKeys.map(
         (key) => bundle.field(key).definition.id,
       ),
-    ).assess(baseline, LayoutDraft(active), reportSelection);
+    ).assess(baseline, LayoutDraft(reportLayout), reportSelection);
     final excluded = reportSelection.excluded;
     await Navigator.push<void>(
       context,
@@ -802,12 +821,19 @@ SchemePeriod? _recordDatePeriod(
 
 Future<({ReportLocale locale, String practitioner})?> pickPresentation(
   BuildContext context,
-  ProfessionCreationStore store,
-) async {
+  ProfessionCreationStore store, {
+  ReportLanguage? language,
+}) async {
   final strings = editorStrings(context);
-  final current = ReportLanguage.fromStored(
-    (await store.settings())['reportLocale'],
-  );
+  final preferences = await store.settings();
+  if (!context.mounted) return null;
+  if (language != null) {
+    return (
+      locale: await ReportLocale.resolve(language, strings),
+      practitioner: preferences['name'] ?? '',
+    );
+  }
+  final current = ReportLanguage.fromStored(preferences['reportLocale']);
   if (!context.mounted) return null;
   final request =
       await showDialog<({ReportLanguage language, String practitioner})>(
@@ -887,9 +913,11 @@ Future<void> openLayoutReport(
   RecordingCollection profession,
   List<LayoutRevision> history,
   List<RecordingRecord> records,
-  Set<String> exclusions,
-) async {
-  final request = await pickPresentation(context, store);
+  Set<String> exclusions, {
+  ReportLanguage? language,
+  Map<String, String> evidenceNames = const {},
+}) async {
+  final request = await pickPresentation(context, store, language: language);
   if (request == null || !context.mounted) return;
   final app = editorStrings(context);
   final locale = request.locale;
@@ -904,7 +932,11 @@ Future<void> openLayoutReport(
       FieldKind.duration => locale.duration(value as int),
       FieldKind.integer => locale.integer(value as int),
       FieldKind.decimal => locale.decimal(value as String),
-      FieldKind.attachments => (value as List).join(', '),
+      FieldKind.attachments =>
+        (value as List)
+            .cast<String>()
+            .map((id) => evidenceNames[id] ?? id)
+            .join(', '),
       FieldKind.multipleChoices =>
         (definition.displayValue(value) as List).join(', '),
       _ => definition.displayValue(value).toString(),
@@ -940,12 +972,12 @@ Future<void> openLayoutReport(
         appBar: AppBar(title: Text(app.editorExport)),
         body: PdfPreview(
           initialPageFormat: PdfPageFormat.a4,
-          allowSharing: false,
+          allowSharing: store.evaluationsEnabled,
           allowPrinting: false,
           canChangePageFormat: false,
           canChangeOrientation: false,
           canDebug: false,
-          useActions: false,
+          useActions: store.evaluationsEnabled,
           onError: rehearsalReportError,
           build: (_) => buildActivityDocument(
             ActivityDocumentData(

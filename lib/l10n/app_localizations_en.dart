@@ -109,6 +109,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewRecords => 'View Records';
 
   @override
+  String get viewRecord => 'View Record';
+
+  @override
+  String get recordChangeFailed =>
+      'Could not update the record. Reload and try again.';
+
+  @override
+  String get customFieldsReport => 'Custom Fields report';
+
+  @override
+  String get fieldValuesCsv => 'Field values (CSV)';
+
+  @override
   String get setEditTarget => 'Set/Edit Target';
 
   @override

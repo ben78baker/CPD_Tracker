@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'cpd_compatibility/cpd_data_store.dart';
+import 'cpd_compatibility/cpd_records_source.dart';
 import 'entry_repository.dart';
 import 'models.dart';
 import 'settings_store.dart';
@@ -9,9 +10,10 @@ import 'widgets/branded_headers.dart';
 import 'widgets/tactile_button.dart';
 
 class DeletedRecordsPage extends StatefulWidget {
-  const DeletedRecordsPage({super.key, this.dataStore});
+  const DeletedRecordsPage({super.key, this.dataStore, this.source});
 
   final CpdDataStore? dataStore;
+  final CpdRecordsSource? source;
 
   @override
   State<DeletedRecordsPage> createState() => _DeletedRecordsPageState();
@@ -21,7 +23,7 @@ class _DeletedRecordsPageState extends State<DeletedRecordsPage> {
   late final CpdRecordStore _repo = widget.dataStore ?? EntryRepository();
   late final CpdProfessionStore _professions =
       widget.dataStore ?? SettingsStore.instance;
-  List<CpdEntry> _records = [];
+  List<CpdRecordItem> _records = [];
   String _dateFormat = 'dd/MM/yyyy';
   bool _loading = true;
   bool _busy = false;
@@ -35,8 +37,14 @@ class _DeletedRecordsPageState extends State<DeletedRecordsPage> {
 
   Future<void> _load() async {
     try {
-      final records = await _repo.loadDeleted();
-      final format = await SettingsStore.instance.getDateFormat();
+      final source = widget.source;
+      final records = source == null
+          ? (await _repo.loadDeleted()).map(CpdRecordItem.legacy).toList()
+          : await source.records(deleted: true);
+      records.sort((a, b) => b.entry.date.compareTo(a.entry.date));
+      final format = source == null
+          ? await SettingsStore.instance.getDateFormat()
+          : (await source.preferences())['dateFormat'] ?? 'dd/MM/yyyy';
       if (!mounted) return;
       setState(() {
         _records = records;
@@ -54,15 +62,21 @@ class _DeletedRecordsPageState extends State<DeletedRecordsPage> {
     }
   }
 
-  Future<void> _restore(CpdEntry entry) async {
+  Future<void> _restore(CpdRecordItem item) async {
+    final entry = item.entry;
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      final active = await _professions.loadActiveProfessions();
-      final needsProfession = !active.any(
-        (name) =>
-            name.trim().toLowerCase() == entry.profession.trim().toLowerCase(),
-      );
+      final source = widget.source;
+      final needsProfession = source == null
+          ? !(await _professions.loadActiveProfessions()).any(
+              (name) =>
+                  cpdProfessionKey(name) == cpdProfessionKey(entry.profession),
+            )
+          : !(await source.professions()).any(
+              (profession) =>
+                  profession.id == item.professionId && !profession.deleted,
+            );
       if (!mounted) return;
       final confirmed = await showDialog<bool>(
         context: context,
@@ -88,10 +102,18 @@ class _DeletedRecordsPageState extends State<DeletedRecordsPage> {
         ),
       );
       if (confirmed != true) return;
-      await _professions.restoreRecord(
-        entry.id,
-        recoverProfession: needsProfession,
-      );
+      if (source == null) {
+        await _professions.restoreRecord(
+          entry.id,
+          recoverProfession: needsProfession,
+        );
+      } else {
+        await source.setDeleted(
+          item,
+          false,
+          recoverProfession: needsProfession,
+        );
+      }
       await _load();
     } catch (_) {
       if (mounted) {
@@ -135,7 +157,8 @@ class _DeletedRecordsPageState extends State<DeletedRecordsPage> {
                   padding: const EdgeInsets.all(16),
                   itemCount: _records.length,
                   itemBuilder: (context, index) {
-                    final entry = _records[index];
+                    final item = _records[index];
+                    final entry = item.entry;
                     return Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -151,8 +174,8 @@ class _DeletedRecordsPageState extends State<DeletedRecordsPage> {
                             ),
                             const SizedBox(height: 8),
                             TactileButton.icon(
-                              key: ValueKey('restore-record-${entry.id}'),
-                              onPressed: _busy ? null : () => _restore(entry),
+                              key: ValueKey('restore-record-${item.id}'),
+                              onPressed: _busy ? null : () => _restore(item),
                               icon: const Icon(Icons.restore),
                               label: Text(
                                 AppLocalizations.of(context)!.restore,

@@ -109,6 +109,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get viewRecords => 'Voir registres';
 
   @override
+  String get viewRecord => 'Voir le dossier';
+
+  @override
+  String get recordChangeFailed =>
+      'Impossible de modifier le dossier. Rechargez-le et réessayez.';
+
+  @override
+  String get customFieldsReport => 'Rapport des champs personnalisés';
+
+  @override
+  String get fieldValuesCsv => 'Valeurs des champs (CSV)';
+
+  @override
   String get setEditTarget => 'Définir / Modifier l’objectif';
 
   @override

@@ -23,6 +23,8 @@ Store purchases are associated with the relevant store account. Display store-pr
 
 Open **Edit Fields** from the profession tile overflow, the **View Records** page menu, and the individual **View Record** page menu once that screen exists. Resolve the same stable profession identity from each route. The Home menu uses **Add Profession** to open creation. Where structural editing requires access, explain the applicable scope and provide the applicable purchase or restore route when it is available. Direct original paid-app customers to the owner’s manual grant process once its redemption flow is approved. Refresh verified entitlements as needed and keep regular record work available during store outages.
 
+Standard, Custom and template professions share the existing View Records shell, newest-first cards, search and empty states. A card displays the canonical date, credited duration, title, details and evidence count. **View Record** opens the saved form read-only. **Edit** uses the record’s creation revision and any later fields explicitly applied to older records. Retired values appear under **Historical fields**. Deletion and restoration use the existing confirmations. Unlinking evidence leaves its original available to any other record that references it.
+
 Per-profession company logos and report branding remain a separate premium capability for anyone with at least one owned template, purchased Custom Fields or a verified legacy Custom Fields grant. The logo and inclusion preference are stored per profession, consume no field slots, and apply to eligible standard and evidence PDF exports through the separate branding design.
 
 ## 2. Visual Edit Fields screen
@@ -265,6 +267,8 @@ A report distinguishes recorded, complete and eligible-in-this-log time. Partici
 ## 12. Report language and presentation
 
 Offer **Report language** in the existing export flow for Standard CPD, and use the same control for custom and scheme reports. An explicit choice is independent of app language, device locale, template country and scheme location. Preserve the choice when confirming a report. **Use app language** is the default. The existing Standard CPD date preference continues to apply with that default. Explicit UK and US English options use their own date conventions. CSV retains its existing format.
+
+Keep **Share / Export** at the bottom of View Records. Standard formats and the additional Custom Fields report and field-value CSV use the search results within the inclusive From/To range. The separately labelled scheme activity report uses the full selected saved reporting period and its pinned template and rule versions. If no period is selected, ask the user to select or save one. The manual export range applies to the other formats.
 
 Use the selected report locale for headings, applicable field labels, approved terminology, dates, numbers and durations. Preserve user-entered values as recorded. Preserve original controlled vocabulary meanings and show a source-language note when template text falls back. Explain any recipient language or layout requirement before export and keep the user’s preference. If the installed renderer cannot represent the requested script faithfully, show an actionable export error. The shared renderer requires Devanagari shaping before accepting Hindi text even in a report written in another language.
 

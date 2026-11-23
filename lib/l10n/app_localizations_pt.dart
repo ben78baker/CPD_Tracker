@@ -108,6 +108,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get viewRecords => 'Ver registros';
 
   @override
+  String get viewRecord => 'Ver registro';
+
+  @override
+  String get recordChangeFailed =>
+      'Não foi possível atualizar o registro. Recarregue e tente novamente.';
+
+  @override
+  String get customFieldsReport => 'Relatório de campos personalizados';
+
+  @override
+  String get fieldValuesCsv => 'Valores dos campos (CSV)';
+
+  @override
   String get setEditTarget => 'Definir / editar meta';
 
   @override

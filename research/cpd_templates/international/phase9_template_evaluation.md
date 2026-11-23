@@ -75,6 +75,20 @@ On 23 November 2026, the debug APK installed on the OPPO CPH2371 running Android
 
 The UI still labels saved-entry flows “New sample record” and “Example entry.” Returning from the field editor can reopen the phone keyboard over the creation buttons. Dismissing the keyboard allowed creation to finish. The run did not cover a share destination, password-protected backup entry, TalkBack or the full colour and locale matrix.
 
+### Shared View Records follow-up
+
+The isolated app now uses `CpdRecordsPage`, `RecordCard`, `GlobalSearchPage` and `DeletedRecordsPage`. The optional SQLite source projects the canonical fields from each record’s saved layout and uses stable IDs for mutations. Evidence removal unlinks the exact field occurrence while retaining managed originals. The legacy startup, SharedPreferences writer and verified migration paths are unchanged.
+
+The three record types share the same branded list and Share / Export flow. Standard formats and the additional Custom Fields report and field-value CSV use the visible rows and inclusive export dates. The scheme activity report uses the selected saved period and its pinned rules. Template evaluation controls appear in entry and checkout, leaving history, search, exports and recovery available at the cap.
+
+The same-signed OPPO upgrade kept all four existing synthetic professions, 13 records and test attachment files byte for byte. The original CPD package kept its installation metadata. Focused analysis reported no issues and 50 tests passed, including shared-original retention, search routing, recovery, range selection, report labels and template evaluation.
+
+On the OPPO, a filename query opened the correct Standard record and carried through to the filtered record list. Android opened the individual evidence share sheet. The Custom record still showed its retired field value. The NMC activity report rendered the saved 1 January 2024 to 31 December 2026 period with template and reporting rules version 1. The Android period sheet initially reset its date after returning from the calendar. Keeping the selected dates for the lifetime of the sheet fixed the issue. The retested export included records on 20 August and 29 September 2026 and excluded the October records.
+
+A new Standard smoke record was created and edited. Its evidence link was removed via confirmation, then the record was soft-deleted and restored through **Deleted Records**. The original deleted NMC record remained in recovery. The OPPO’s existing simulated ownership was preserved. Cap enforcement was covered by the focused tests and the original physical evaluation run. The device share sheet was dismissed and no external delivery was tested.
+
+A cold-store comparison confirmed the 13 baseline records, values, evidence links and original file hashes were unchanged. The new smoke record was active after restoration, with its removed link absent. SQLite integrity and foreign-key checks passed.
+
 ### iPhone XR preparation
 
 Xcode detected the XR on iOS 18.7.10. The local wildcard profile includes the XR but has no matching valid local signing identity. For a later build, choose a separate debug-only bundle ID and display name and obtain a development profile covering the test bundle ID and XR, with a matching Apple Development identity in the keychain. Build the same Flutter entry point and verify the distinct container before installation. This Android smoke test did not change iOS signing or install anything on the XR.

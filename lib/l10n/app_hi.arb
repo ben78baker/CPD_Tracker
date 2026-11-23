@@ -39,6 +39,10 @@
   "addEntry": "Add Entry",
   "scanQr": "QR स्कैन करें",
   "viewRecords": "View Records",
+  "viewRecord": "रिकॉर्ड देखें",
+  "recordChangeFailed": "रिकॉर्ड अपडेट नहीं हो सका। फिर से लोड करके दोबारा कोशिश करें।",
+  "customFieldsReport": "कस्टम फ़ील्ड रिपोर्ट",
+  "fieldValuesCsv": "फ़ील्ड के मान (CSV)",
 
   "setEditTarget": "Set/Edit Target",
 

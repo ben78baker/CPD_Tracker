@@ -3,17 +3,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cpd_tracker/cpd_backup/backup_cache.dart';
-import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
-import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
-import 'package:cpd_tracker/models.dart';
 import 'package:cpd_tracker/recording_editor/strings.dart';
 import 'package:cpd_tracker/recording_engine/models.dart';
 import 'package:cpd_tracker/recording_engine/record_export.dart';
 import 'package:cpd_tracker/recording_engine_storage/managed_attachment_files.dart';
 import 'package:cpd_tracker/recording_engine_storage/sqlite_recording_repository.dart';
-import 'package:cpd_tracker/utils/csv_exporter.dart';
-import 'package:cpd_tracker/utils/export_selection.dart';
-import 'package:cpd_tracker/utils/pdf_exporter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
@@ -227,175 +221,44 @@ class RehearsalRecordFiles {
   }
 }
 
-/// The ordinary exports are independent of trial status. The legacy exporters
-/// keep their PDF/evidence compatibility, and the field CSV carries all values.
-class RehearsalExportActions extends StatelessWidget {
-  const RehearsalExportActions({
-    super.key,
-    required this.store,
-    required this.profession,
-    required this.history,
-    required this.records,
-    this.originals,
-  });
-
-  final ProfessionCreationStore store;
-  final RecordingCollection profession;
-  final List<LayoutRevision> history;
-  final List<RecordingRecord> records;
-  final ManagedAttachmentFiles? originals;
-
-  Future<CpdExportSelection> _ordinary() async {
-    final entries = <CpdEntry>[];
-    for (final (index, record) in records.indexed) {
-      if (record.deleted) continue;
-      final fields = resolveFields(record.layoutVersion, history);
-      final binding = cpdFieldBindings(fields);
-      final evidence = <String>[];
-      for (final id in _attachmentIds(fields, record.values)) {
-        final attachment = await store.repository.loadAttachment(id);
-        if (attachment == null) continue;
-        if (attachment.kind == AttachmentKind.link) {
-          evidence.add(attachment.locator);
-        } else {
-          final file = await originals?.resolveOriginal(attachment);
-          evidence.add(
-            file?.path ??
-                p.join(
-                  Directory.systemTemp.path,
-                  'unavailable-$id',
-                  p.basename(attachment.name),
-                ),
-          );
-        }
-      }
-      final total = record.values[binding['cpd.creditedDuration']] as int? ?? 0;
-      entries.add(
-        CpdEntry(
-          id: index + 1,
-          profession: profession.label,
-          date: DateTime.parse(
-            record.values[binding['cpd.activityDate']] as String,
-          ),
-          title: record.values[binding['cpd.title']] as String? ?? '',
-          details: record.values[binding['cpd.details']] as String? ?? '',
-          hours: total ~/ 60,
-          minutes: total % 60,
-          attachments: evidence,
-        ),
-      );
-    }
-    final dates = entries.map((entry) => entry.date).toList()..sort();
-    return CpdExportSelection.fromVisibleRecords(
-      profession: profession.label,
-      range: DateTimeRange(start: dates.first, end: dates.last),
-      visibleRecords: entries,
-    );
-  }
-
-  Future<void> _run(
-    BuildContext context,
-    Future<void> Function() action,
-  ) async {
-    try {
-      await action();
-    } on Object {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(editorStrings(context).exportFailed)),
-        );
-      }
-    }
-  }
-
-  Future<void> _fieldsCsv(BuildContext context) async {
-    final bounds = context.findRenderObject()! as RenderBox;
-    final anchor = bounds.localToGlobal(Offset.zero) & bounds.size;
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final rows = [
-      recordExportHeader,
-      for (final record in records.where((record) => !record.deleted))
-        ...recordExportRows(
-          record,
-          resolveFields(record.layoutVersion, history),
-          locale: locale,
-        ),
-    ];
-    final csv = rows
-        .map(
-          (row) => row
-              .map((cell) {
-                final safe = RegExp(r'^\s*[=+@-]').hasMatch(cell)
-                    ? "'$cell"
-                    : cell;
-                return '"${safe.replaceAll('"', '""')}"';
-              })
-              .join(','),
-        )
-        .join('\r\n');
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [
-          XFile.fromData(
-            Uint8List.fromList(utf8.encode(csv)),
-            mimeType: 'text/csv',
-          ),
-        ],
-        fileNameOverrides: ['CPD-fields.csv'],
-        sharePositionOrigin: anchor,
+Future<void> shareFieldValuesCsv(
+  BuildContext context,
+  List<LayoutRevision> history,
+  List<RecordingRecord> records,
+) async {
+  const anchor = Rect.fromLTWH(0, 0, 1, 1);
+  final locale = Localizations.localeOf(context).toLanguageTag();
+  final rows = [
+    recordExportHeader,
+    for (final record in records.where((record) => !record.deleted))
+      ...recordExportRows(
+        record,
+        resolveFields(record.layoutVersion, history),
+        locale: locale,
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final s = editorStrings(context);
-    const format = 'dd/MM/yyyy';
-    return Wrap(
-      children: [
-        TextButton(
-          onPressed: () => _run(context, () async {
-            final selection = await _ordinary();
-            if (context.mounted) {
-              await exportRecordsCsv(
-                context: context,
-                selection: selection,
-                dateFormat: format,
-              );
-            }
-          }),
-          child: Text(s.csvEditable),
-        ),
-        TextButton(
-          onPressed: () => _run(context, () => _fieldsCsv(context)),
-          child: Text('${s.csvEditable} · ${s.editFields}'),
-        ),
-        for (final (mode, label) in [
-          (CpdPdfEvidenceMode.textOnly, s.pdfWithoutEvidence),
-          (CpdPdfEvidenceMode.embeddedImages, s.pdfWithEvidence),
-        ])
-          TextButton(
-            onPressed: () => _run(context, () async {
-              await exportRecordsPdf(
-                selection: await _ordinary(),
-                dateFormat: format,
-                texts: PdfExportTexts.fromLoc(s),
-                evidenceMode: mode,
-              );
-            }),
-            child: Text(label),
-          ),
-        TextButton(
-          onPressed: () => _run(context, () async {
-            await exportRecordsBundleZip(
-              selection: await _ordinary(),
-              dateFormat: format,
-              texts: PdfExportTexts.fromLoc(s),
-            );
-          }),
-          child: Text(s.pdfAttachmentsBundle),
+  ];
+  final csv = rows
+      .map(
+        (row) => row
+            .map((cell) {
+              final safe = RegExp(r'^\s*[=+@-]').hasMatch(cell)
+                  ? "'$cell"
+                  : cell;
+              return '"${safe.replaceAll('"', '""')}"';
+            })
+            .join(','),
+      )
+      .join('\r\n');
+  await SharePlus.instance.share(
+    ShareParams(
+      files: [
+        XFile.fromData(
+          Uint8List.fromList(utf8.encode(csv)),
+          mimeType: 'text/csv',
         ),
       ],
-    );
-  }
+      fileNameOverrides: ['CPD-fields.csv'],
+      sharePositionOrigin: anchor,
+    ),
+  );
 }
