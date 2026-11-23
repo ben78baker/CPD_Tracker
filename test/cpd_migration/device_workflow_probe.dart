@@ -30,15 +30,19 @@ import 'package:printing/printing.dart';
 
 import 'native_rehearsal_media.dart' show RehearsalMedia;
 
-typedef XrLog = void Function(String event, [Map<String, Object?> data]);
+typedef RehearsalLog = void Function(String event, [Map<String, Object?> data]);
 
 const _profession = 'Migration verification';
-const _title = 'XR verification record';
+String _title(String label) => '$label verification record';
 const _detail = 'Edited after the SQLite migration';
 
 /// Invoke the same callbacks as the visible controls after the actual screens
 /// have rendered on the phone. The write probe exercises their shared store.
-Future<void> xrScreenProbe(SqliteCpdStore store, XrLog log) async {
+Future<void> deviceScreenProbe(
+  String label,
+  SqliteCpdStore store,
+  RehearsalLog log,
+) async {
   final homeTile = await _visible<ProfessionCard>();
   (homeTile.widget as ProfessionCard).onView();
   final profession = await _visible<CpdRecordsPage>();
@@ -62,7 +66,9 @@ Future<void> xrScreenProbe(SqliteCpdStore store, XrLog log) async {
   final result = (await _visible<TactileButton>()).widget as TactileButton;
   result.onPressed!();
   final row =
-      (await _visible<RecordCard>((row) => row.entry.title == _title)).widget
+      (await _visible<RecordCard>(
+            (row) => row.entry.title == _title(label),
+          )).widget
           as RecordCard;
   row.onEdit!();
   final editor = await _visible<AddEntryPage>();
@@ -81,7 +87,8 @@ Future<void> xrScreenProbe(SqliteCpdStore store, XrLog log) async {
     'deleted_records',
   );
   final deleted = await _visible<DeletedRecordsPage>();
-  final deletedId = (await store.loadDeleted()).single.id;
+  final deletedRows = await store.loadDeleted();
+  final deletedId = deletedRows.first.id;
   await _visible<Widget>(
     (widget) => widget.key == ValueKey('restore-record-$deletedId'),
   );
@@ -89,7 +96,7 @@ Future<void> xrScreenProbe(SqliteCpdStore store, XrLog log) async {
     identical((deleted.widget as DeletedRecordsPage).dataStore, store),
     'The deleted-records screen did not use SQLite.',
   );
-  log('ui_routes_pass', {'deletedRecoveryControls': 1});
+  log('ui_routes_pass', {'deletedRecords': deletedRows.length});
   await Navigator.of(deleted).maybePop();
 }
 
@@ -114,19 +121,22 @@ Future<Element> _visible<T extends Widget>([bool Function(T)? matches]) async {
     if (found != null) return found!;
     await Future<void>.delayed(const Duration(milliseconds: 50));
   }
-  throw XrProbeFailure('Visible screen control timed out ($T).');
+  throw RehearsalProbeFailure('Visible screen control timed out ($T).');
 }
 
-Future<void> xrWorkflowProbe(
+Future<void> deviceWorkflowProbe(
+  String label,
   SqliteCpdStore store,
   SqliteRecordingRepository repository,
   Directory root,
   Future<Map<String, Object?>> Function() readLegacy,
   Map<String, Object?> original,
-  XrLog log, {
+  RehearsalLog log, {
   required bool write,
 }) async {
   final timer = Stopwatch()..start();
+  final evidenceUri =
+      'https://example.com/cpd-${label.toLowerCase()}-verification';
   try {
     await LegacyWriteGate.instance.write(() async {});
     throw const FormatException('Legacy record writer remained open.');
@@ -138,7 +148,9 @@ Future<void> xrWorkflowProbe(
       .map(CpdEntry.fromJson)
       .toList();
   List<CpdEntry> probes(List<CpdEntry> rows) => rows
-      .where((row) => row.title == _title && row.profession == _profession)
+      .where(
+        (row) => row.title == _title(label) && row.profession == _profession,
+      )
       .toList();
   var entries = await store.loadAll();
   if (write && probes(entries).isEmpty) {
@@ -153,14 +165,11 @@ Future<void> xrWorkflowProbe(
       await store.createAndSave(
         profession: _profession,
         date: DateTime(2026, 11, 20),
-        title: _title,
+        title: _title(label),
         details: 'Initial entry',
         hours: 1,
         minutes: 15,
-        attachments: [
-          ...attachments,
-          'https://example.com/cpd-xr-verification',
-        ],
+        attachments: [...attachments, evidenceUri],
       );
       final bytesMatch =
           await backupDigest(media.photo) ==
@@ -289,7 +298,7 @@ Future<void> xrWorkflowProbe(
     texts: strings,
   ).text;
   _check(
-    csv.contains(_title) && csv.contains(_detail),
+    csv.contains(_title(label)) && csv.contains(_detail),
     'CSV missed persisted values.',
   );
   await File(
@@ -365,8 +374,7 @@ Future<void> xrWorkflowProbe(
   );
   final evidencePdf = latin1.decode(await withEvidence.pdfFile.readAsBytes());
   _check(
-    evidencePdf.contains('/URI') &&
-        evidencePdf.contains('https://example.com/cpd-xr-verification'),
+    evidencePdf.contains('/URI') && evidencePdf.contains(evidenceUri),
     'Evidence PDF is missing its link annotation.',
   );
   final missing = CpdExportSelection.fromVisibleRecords(
@@ -378,7 +386,7 @@ Future<void> xrWorkflowProbe(
         profession: record.profession,
         date: record.date,
         title: record.title,
-        attachments: ['attachments/xr-probe-missing.pdf'],
+        attachments: ['attachments/device-probe-missing.pdf'],
         details: record.details,
         hours: record.hours,
         minutes: record.minutes,
@@ -400,7 +408,7 @@ Future<void> xrWorkflowProbe(
     'The report did not flag missing evidence.',
   );
   final supplementaryOriginal = await File(
-    p.join(exportRoot.path, 'xr-evidence.txt'),
+    p.join(exportRoot.path, 'device-evidence.txt'),
   ).writeAsString('Unrenderable evidence fixture');
   final supplementary = CpdExportSelection.fromVisibleRecords(
     profession: _profession,
@@ -439,7 +447,7 @@ Future<void> xrWorkflowProbe(
   _check(
     listEquals(
       extra.files
-          .singleWhere((file) => file.name.endsWith('xr-evidence.txt'))
+          .singleWhere((file) => file.name.endsWith('device-evidence.txt'))
           .content,
       await supplementaryOriginal.readAsBytes(),
     ),
@@ -458,12 +466,12 @@ Future<void> xrWorkflowProbe(
   });
 }
 
-class XrProbeFailure implements Exception {
-  const XrProbeFailure(this.check);
+class RehearsalProbeFailure implements Exception {
+  const RehearsalProbeFailure(this.check);
 
   final String check;
 }
 
 void _check(bool condition, String message) {
-  if (!condition) throw XrProbeFailure(message);
+  if (!condition) throw RehearsalProbeFailure(message);
 }

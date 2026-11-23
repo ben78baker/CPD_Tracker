@@ -38,6 +38,7 @@
 - [Phases 1–8 release-readiness assessment](international/phase8_release_readiness.md) · verification results, release gates, and physical-device and purchase restoration plans.
 - [Phase 9 profession template evaluation](international/phase9_template_evaluation.md) · five-record accounting, import rules, enforcement options and physical-device checklist.
 - [iPhone XR in-place migration rehearsal](international/xr_in_place_migration.md) · device upgrade, source parity, SQLite workflows and recovery verification.
+- [OPPO Android in-place migration rehearsal](international/android_in_place_migration.md) · Android package update, live staging interruption, parity and native document workflows.
 - [Legal review and acceptance plan](../../docs/custom_fields_ui.md#14-terms-privacy-and-release-readiness-review) · first-launch agreement, existing-user notices and Settings access. The draft legal copy is held for private review.
 - [Open questions and validation](international/validation_plan.md).
 - [Custom Fields UI specification](../../docs/custom_fields_ui.md) · the agreed editor and Field Library design.
