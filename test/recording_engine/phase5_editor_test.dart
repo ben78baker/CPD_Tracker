@@ -42,7 +42,7 @@ EditFieldsPage _editor(Future<LayoutRevision> Function(LayoutDraft) save) =>
     EditFieldsPage(
       title: 'Workshop and professional development',
       layout: _initial,
-      save: save,
+      save: (draft, _) async => (await save(draft)).collectionId,
       library: phase5Library,
       maxActiveFields: 20,
       protectedDefinitionIds: {_base.fields.first.definition.id},
@@ -141,6 +141,101 @@ void main() {
     );
   }
 
+  testWidgets('delete confirms stored history and field settings keep the ID', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 940);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final field = _initial.fields[1];
+    final menu = find.byKey(ValueKey('menu-${field.id}'));
+    List<LayoutField>? saved;
+    await tester.pumpWidget(
+      _app(
+        EditFieldsPage(
+          title: 'Existing profession',
+          layout: _initial,
+          library: phase5Library,
+          fieldsWithValues: {field.id},
+          save: (draft, _) async {
+            saved = draft.fields;
+            return _initial.collectionId;
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _tap(tester, menu);
+    await _tap(tester, find.text('Field settings'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Field name'),
+      'Activity label',
+    );
+    await _tap(tester, find.widgetWithText(FilledButton, 'Save'));
+    expect(find.text('Activity label'), findsOneWidget);
+    await _tap(tester, menu);
+    await _tap(tester, find.text('Delete field'));
+    final strings = lookupAppLocalizations(const Locale('en'));
+    expect(find.text(strings.editorRemoveHint), findsOneWidget);
+    await _tap(tester, find.widgetWithText(TextButton, 'Cancel').last);
+    expect(find.text('Activity label'), findsOneWidget);
+    await _tap(tester, menu);
+    await _tap(tester, find.text('Delete field'));
+    await _tap(tester, find.widgetWithText(FilledButton, 'Delete field'));
+    expect(find.byKey(ValueKey('menu-${field.id}')), findsNothing);
+    await _tap(tester, find.widgetWithText(FilledButton, 'Save'));
+    expect(saved!.map((field) => field.id), isNot(contains(field.id)));
+  });
+
+  testWidgets('back protects an unsaved report inclusion change', (
+    tester,
+  ) async {
+    var discarded = false;
+    final initialReports = <String>{};
+    await tester.pumpWidget(
+      _app(
+        Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => Navigator.of(context).push<String>(
+                MaterialPageRoute(
+                  builder: (_) => EditFieldsPage(
+                    title: 'Existing profession',
+                    layout: _initial,
+                    library: phase5Library,
+                    reportExclusions: initialReports,
+                    onCancel: () async => discarded = true,
+                    save: (_, _) async => throw StateError('Unexpected save'),
+                  ),
+                ),
+              ),
+              child: const Text('Open editor'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await _tap(tester, find.text('Open editor'));
+    await _tap(
+      tester,
+      find.byKey(ValueKey('menu-${_initial.fields.first.id}')),
+    );
+    await _tap(tester, find.text('Remove from reports'));
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Discard changes?'), findsOneWidget);
+    expect(discarded, isFalse);
+    final s = lookupAppLocalizations(const Locale('en'));
+    await _tap(
+      tester,
+      find.widgetWithText(FilledButton, s.editorDiscardAction),
+    );
+    expect(discarded, isTrue);
+    expect(initialReports, isEmpty);
+    expect(find.text('Open editor'), findsOneWidget);
+  });
+
   testWidgets(
     'creates a custom field and a configured library copy then moves, previews and saves',
     (tester) async {
@@ -163,7 +258,19 @@ void main() {
         ),
       );
       await _tap(tester, find.byKey(ValueKey('menu-${_base.fields.first.id}')));
-      expect(find.text('Remove field'), findsNothing);
+      expect(
+        tester
+            .widget<PopupMenuItem>(
+              find.ancestor(
+                of: find.text('Delete field'),
+                matching: find.byWidgetPredicate(
+                  (widget) => widget is PopupMenuItem,
+                ),
+              ),
+            )
+            .enabled,
+        isFalse,
+      );
       await _tap(tester, find.text('Move down'));
       await _tap(tester, find.byKey(const Key('open-add-field')));
       await _tap(tester, find.text('Create custom field'));

@@ -21,7 +21,7 @@ Retain stable field identities, canonical activity date and credited duration, a
 
 Store purchases are associated with the relevant store account. Display store-provided localised prices in the eventual shop and entitlement flows. Each tile retains its own applied layout and history. Template ownership grants layout and report controls to placements of that template. App-wide Custom Fields supplies general editing independently of template ownership.
 
-Open **Edit Fields** from the profession tile overflow, the **View Records** page menu, and the individual **View Record** page menu once that screen exists. Resolve the same stable profession identity from each route. The Home menu uses **Add Profession** to open creation. Where structural editing requires access, explain the applicable scope and provide the applicable purchase or restore route when it is available. Direct original paid-app customers to the owner’s manual grant process once its redemption flow is approved. Refresh verified entitlements as needed and keep regular record work available during store outages.
+Open **Edit Fields** directly from the profession tile overflow, the **View Records** page menu and the individual **View Record** page menu. All three routes open the visual editor for the same profession. The Home menu uses **Add Profession** to open creation. Where structural editing requires access, explain the applicable scope and provide the applicable purchase or restore route when it is available. Direct original paid-app customers to the owner’s manual grant process once its redemption flow is approved. Refresh verified entitlements as needed and keep regular record work available during store outages.
 
 Standard, Custom and template professions share the existing View Records shell, newest-first cards, search and empty states. A card displays the canonical date, credited duration, title, details and evidence count. **View Record** opens the saved form read-only. **Edit** uses the record’s creation revision and any later fields explicitly applied to older records. Retired values appear under **Historical fields**. Deletion and restoration use the existing confirmations. Unlinking evidence leaves its original available to any other record that references it.
 
@@ -58,14 +58,10 @@ Put **+ Add Field** in the top-right area. On smaller phones, place it at the ri
 
 | Menu item | Configuration |
 |---|---|
-| Rename | Edit the display label and preview how it wraps. The field ID and history follow the field. |
-| Required or optional | Change requiredness for applicable new records. Explain how historical blanks are handled. Respect canonical field rules. |
-| Placeholder or help text | Provide type-appropriate guidance. A placeholder is a hint and should never be saved as a value. |
-| Change field type | Offer supported conversions. Explain preservation and replacement for incompatible types before adding the change to the draft. |
-| Configure choices | For an enabled controlled-selection type, edit labels and order, add choices, and retire used choices without disconnecting stored selections. |
-| Display and formatting | Offer constrained options appropriate to the type, such as a unit label or supported date/time display. Keep labels and values readable in both the entry form and exports. |
-| Move up or down | Provide an accessible alternative to dragging, omitting or disabling unavailable directions. |
-| Remove | Stage removal. Show the historical preservation decision when values or evidence exist. Protect canonical fields. |
+| Delete field | Retire the field from the active layout. Confirm if any saved or deleted record has values or evidence for it. Historical values and evidence remain available. Essential and mandatory fields have this action disabled. |
+| Remove from reports / Include in reports | Toggle inclusion in configurable reports independently of the recording form and raw exports. Required scheme fields remain included. |
+| Field settings | Open the field’s allowed label, help, formatting, validation and choice controls. Template-only access keeps supplied definitions fixed. |
+| Move up / Move down | Move the entire tile one position. Disable the unavailable direction at either end. |
 
 Use a dedicated drag handle to lift and move the **whole tile**. Only the handle starts a drag. The tile’s menu and preview keep their own gestures. Recommend vertical movement with a visible insertion position and edge auto-scroll. After dropping or using a move action, keep focus on the moved tile, announce its new position and update the visual order immediately. Apply changes to the pending revision.
 
@@ -256,7 +252,7 @@ In the isolated test app, existing profession tiles open the same catalogue from
 | App-wide Custom Fields, including verified original paid customers | Standard and Custom CPD | Configure any standard or custom layout, with canonical protections | Add from the full library, create fields, configure permitted presentation and validation | Configure inclusion for own layouts |
 | Both | Standard, Custom CPD and owned templates | Full editor on an owned copy while preserving protected CPD bindings | Full authorised field configuration | Owned specialised report, with compatibility checks and warnings after relevant edits |
 
-Use the same editor with controls appropriate to the current access. Check permission again in the CPD service before committing. Show form inclusion and report inclusion separately. A change to optional content is distinct from a report that lacks needed inputs. Explain the missing input and recovery path before saving an incompatible setup. Label incomplete outputs clearly. Reinstatement and restoring defaults leave historical values intact. A report-setting change belongs to a versioned configuration. Updated templates never replace local arrangements or report preferences automatically. Pre-purchase layout previews operate on disposable sample state.
+Use the same editor with controls appropriate to the current access. Check permission again in the CPD service before committing. Show form inclusion and report inclusion separately. A change to optional content is distinct from a report that lacks needed inputs. Keep mandatory scheme fields in both the layout and the scheme report. Explain any historical incompleteness and allow users to restore supplied fields or re-include them. Label incomplete outputs clearly. Reinstatement and restoring defaults leave historical values intact. A report-setting change belongs to a versioned configuration. Updated templates never replace local arrangements or report preferences automatically. Pre-purchase layout previews operate on disposable sample state.
 
 ## 11. Profession cards and reporting periods
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:cpd_tracker/cpd_backup/profession_backup_page.dart';
 import 'package:cpd_tracker/recording_engine_storage/sqlite_recording_repository.dart';
@@ -462,16 +463,16 @@ TemplatePreviewPage nursingPilotPreview(
       library: phase5Library,
       maxActiveFields: cpdActiveFieldLimit,
       protectedDefinitionIds: cpdFieldKinds.keys.toSet(),
-      suppliedFields: recipe.fields,
+      suppliedLayout: layout,
       arrangementOnly: true,
-      save: (draft) async {
+      save: (draft, _) async {
         checkTemplateArrangement(
           layout,
           draft,
           ReportSelection(),
           nursingReportRules,
         );
-        return layout;
+        return layout.collectionId;
       },
     ),
   );
@@ -655,6 +656,15 @@ class ProfessionDraftPage extends StatefulWidget {
   State<ProfessionDraftPage> createState() => _ProfessionDraftPageState();
 }
 
+typedef _DraftContext = ({
+  LayoutRevision baseline,
+  LayoutRevision published,
+  CreationAccess access,
+  Set<String> knownFields,
+  Set<String> fieldsWithValues,
+  ReportSelection report,
+});
+
 class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
   late ProfessionDraft _draft = widget.draft;
   late final _name = TextEditingController(text: _draft.name);
@@ -662,12 +672,33 @@ class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
   String? _problem;
   bool _busy = false;
 
-  Future<(LayoutRevision, CreationAccess)> _load() async => (
-    await widget.store.supplied(_draft),
-    _draft.kind == ProfessionKind.standard
+  Future<_DraftContext> _load() async {
+    final store = widget.store;
+    final baseline = await store.supplied(_draft);
+    final access = _draft.kind == ProfessionKind.standard
         ? CreationAccess()
-        : await widget.store.access(),
-  );
+        : await store.access();
+    final collection = _draft.editing;
+    final history = collection == null
+        ? [baseline]
+        : await store.repository.loadLayouts(collection);
+    final published = history.last;
+    return (
+      baseline: baseline,
+      published: published,
+      access: access,
+      knownFields: {
+        for (final revision in history)
+          ...revision.fields.map((field) => field.id),
+      },
+      fieldsWithValues: collection == null
+          ? const <String>{}
+          : await store.repository.fieldsWithValues(collection),
+      report: collection == null
+          ? ReportSelection()
+          : await store.reportAt(collection, published.version),
+    );
+  }
 
   @override
   void dispose() {
@@ -689,104 +720,77 @@ class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
     unawaited(_persist(draft).catchError((Object _) {}));
   }
 
-  Future<void> _edit(LayoutRevision baseline, CreationAccess access) async {
-    final rules = widget.store.rulesFor(_draft);
-    final restricted = !access.canCustomiseFields;
-    final layout = LayoutRevision(
-      collectionId: _draft.layout.collectionId,
-      version: _draft.layout.baseVersion,
-      fields: _draft.layout.fields,
-      headings: _draft.layout.headings,
-    );
-    Future<void> keep(LayoutDraft draft) async {
-      final ids = {
-        ...baseline.fields.map((f) => f.id),
-        ...draft.fields.map((f) => f.id),
-      };
-      await _persist(
-        _draft.withChanges(
-          layout: draft,
-          report: ReportSelection(
-            excluded: _draft.report.excluded.where(ids.contains),
-          ),
-        ),
-      );
-    }
-
-    await Navigator.of(context).push(
-      MaterialPageRoute<LayoutRevision>(
-        builder: (_) => EditFieldsPage(
-          title: _draft.name.isEmpty
-              ? editorStrings(context).p6Layout
-              : _draft.name,
-          layout: layout,
-          initialDraft: _draft.layout,
-          library: phase5Library,
-          maxActiveFields: cpdActiveFieldLimit,
-          protectedDefinitionIds: cpdFieldKinds.keys.toSet(),
-          arrangementOnly: restricted,
-          suppliedFields: rules == null ? const [] : baseline.fields,
-          onDraftChanged: keep,
-          onExit: () => keep(_draft.layout),
-          save: (draft) async {
-            if (restricted && rules != null) {
-              checkTemplateArrangement(baseline, draft, _draft.report, rules);
-            }
-            await keep(draft);
-            return layout;
-          },
-        ),
-      ),
-    );
+  Future<void> _edit(_DraftContext data) async {
+    FocusScope.of(context).unfocus();
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<String>(builder: (_) => _editor(data)));
     if (mounted) setState(() {});
   }
 
-  Future<void> _reset(LayoutRevision baseline) async {
-    final s = editorStrings(context);
-    if (!await editorConfirmation(
-          context,
-          s.p6RestoreDefaults,
-          s.p6ResetHint,
-          s.p6RestoreDefaults,
-        ) ||
-        !mounted) {
-      return;
+  EditFieldsPage _editor(_DraftContext data) {
+    final store = widget.store;
+    final checkpoint = _draft;
+    final editing = checkpoint.editing != null;
+    final rules = store.rulesFor(checkpoint);
+    final restricted = !data.access.canCustomiseFields;
+    ProfessionDraft changed(LayoutDraft draft, Set<String> excluded) {
+      final known = {
+        ...data.knownFields,
+        ...draft.fields.map((field) => field.id),
+      };
+      return checkpoint.withChanges(
+        layout: draft,
+        report: ReportSelection(excluded: excluded.where(known.contains)),
+      );
     }
-    final draft = LayoutDraft(
-      LayoutRevision(
-        collectionId: _draft.layout.collectionId,
-        version: _draft.layout.baseVersion,
-        fields: const [],
-      ),
+
+    return EditFieldsPage(
+      title: checkpoint.name.isEmpty
+          ? editorStrings(context).p6Layout
+          : checkpoint.name,
+      layout: data.published,
+      initialDraft: checkpoint.layout,
+      initiallyDirty:
+          editing &&
+          (jsonEncode(checkpoint.layout.toJson()) !=
+                  jsonEncode(LayoutDraft(data.published).toJson()) ||
+              jsonEncode(checkpoint.report.toJson()) !=
+                  jsonEncode(data.report.toJson())),
+      library: phase5Library,
       maxActiveFields: cpdActiveFieldLimit,
+      protectedDefinitionIds: cpdFieldKinds.keys.toSet(),
+      requiredReportDefinitions: rules?.requiredDefinitions ?? const {},
+      arrangementOnly: restricted,
+      suppliedLayout: rules == null ? null : data.baseline,
+      reportExclusions: checkpoint.report.excluded,
+      fieldsWithValues: data.fieldsWithValues,
+      onDraftChanged: (draft, excluded) =>
+          store.persist(changed(draft, excluded)),
+      onCancel: editing
+          ? () => store.discard(checkpoint.id)
+          : () => store.persist(checkpoint),
+      onReviewTemplate: editing && rules != null
+          ? (_) => _reviewUpdate(data.baseline)
+          : null,
+      save: (draft, excluded) async {
+        final updated = changed(draft, excluded);
+        if (restricted && rules != null) {
+          checkTemplateArrangement(data.baseline, draft, updated.report, rules);
+        }
+        if (editing) {
+          await store.persist(updated);
+          return store.commit(updated.id, acceptIncomplete: true);
+        }
+        await _persist(updated);
+        return updated.layout.collectionId;
+      },
     );
-    for (final field in baseline.fields) {
-      draft.reinstate(field);
-    }
-    draft.setHeadings(baseline.headings);
-    setState(
-      () =>
-          _draft = _draft.withChanges(layout: draft, report: ReportSelection()),
-    );
-    _autosave(_draft);
   }
 
-  Future<void> _save(LayoutRevision baseline) async {
+  Future<void> _save() async {
     if (_busy) return;
     final s = editorStrings(context);
-    final compatibility = widget.store
-        .rulesFor(_draft)
-        ?.assess(baseline, _draft.layout, _draft.report);
-    final accept = compatibility?.incomplete == true;
-    if (accept &&
-        !await editorConfirmation(
-          context,
-          s.p6Incomplete,
-          _warning(compatibility!, context),
-          s.save,
-        )) {
-      return;
-    }
     if (!mounted) return;
     setState(() {
       _problem = null;
@@ -797,7 +801,6 @@ class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
       final id = await widget.store.commit(
         _draft.id,
         firstProfession: widget.first,
-        acceptIncomplete: accept,
       );
       if (mounted) Navigator.of(context).pop(id);
     } on ProfessionNameException catch (error) {
@@ -900,33 +903,45 @@ class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
     return FutureBuilder(
       future: _context,
       builder: (context, snapshot) {
-        final baseline = snapshot.data?.$1;
-        final access = snapshot.data?.$2;
+        final data = snapshot.data;
         if (snapshot.hasError) {
           return Scaffold(
             appBar: AppBar(),
             body: Center(child: Text(s.editorSaveError)),
           );
         }
-        if (baseline == null || access == null) {
+        if (data == null) {
           return Scaffold(
             appBar: AppBar(),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
-        final rules = widget.store.rulesFor(_draft);
-        final report = rules?.assess(baseline, _draft.layout, _draft.report);
+        final access = data.access;
         final fieldAccess = access.allows(_draft.kind, _draft.templateId);
-        final reportFields = {
-          for (final field in baseline.fields) field.id: field,
-          for (final field in _draft.layout.fields) field.id: field,
-        };
-        final language = Localizations.localeOf(context).toLanguageTag();
+        if (_draft.editing != null) {
+          if (fieldAccess) return _editor(data);
+          return Scaffold(
+            appBar: AppBar(title: Text(s.editFields)),
+            body: Center(
+              child: Text(
+                _draft.kind == ProfessionKind.template
+                    ? s.p6TemplateScope
+                    : s.p6CustomScope,
+              ),
+            ),
+          );
+        }
+        final rules = widget.store.rulesFor(_draft);
+        final report = rules?.assess(
+          data.baseline,
+          _draft.layout,
+          _draft.report,
+        );
         return PopScope(
           canPop: !_busy,
           child: Scaffold(
             appBar: AppBar(
-              title: Text(_draft.editing == null ? s.p6Create : s.editFields),
+              title: Text(s.p6Create),
               actions: [
                 IconButton(
                   tooltip: s.p6Discard,
@@ -959,7 +974,7 @@ class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
                   )
                 else if (_draft.kind != ProfessionKind.standard) ...[
                   OutlinedButton.icon(
-                    onPressed: () => _edit(baseline, access),
+                    onPressed: () => _edit(data),
                     icon: const Icon(Icons.tune),
                     label: Text(
                       access.canCustomiseFields ? s.editFields : s.p6Layout,
@@ -976,44 +991,7 @@ class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
                     ),
                     if (report.incomplete) Text(_warning(report, context)),
                   ],
-                  const SizedBox(height: 12),
-                  Text(
-                    s.p6ReportFields,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  Text(s.p6ReportHint),
-                  for (final field in reportFields.values)
-                    SwitchListTile(
-                      title: Text(field.localizedLabel(language)),
-                      value: !_draft.report.excluded.contains(field.id),
-                      onChanged:
-                          rules?.needs(field) == true &&
-                              !access.canCustomiseFields
-                          ? null
-                          : (included) => setState(() {
-                              final ids = {..._draft.report.excluded};
-                              included
-                                  ? ids.remove(field.id)
-                                  : ids.add(field.id);
-                              _autosave(
-                                _draft.withChanges(
-                                  report: ReportSelection(excluded: ids),
-                                ),
-                              );
-                            }),
-                    ),
-                  if (rules != null)
-                    TextButton.icon(
-                      onPressed: () => _reset(baseline),
-                      icon: const Icon(Icons.settings_backup_restore),
-                      label: Text(s.p6RestoreDefaults),
-                    ),
                 ],
-                if (_draft.editing != null && rules != null)
-                  TextButton(
-                    onPressed: () => _reviewUpdate(baseline),
-                    child: Text(s.p6TemplateUpdate),
-                  ),
               ],
             ),
             bottomNavigationBar: SafeArea(
@@ -1032,10 +1010,8 @@ class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
                     ),
                     FilledButton(
                       key: const Key('phase6-commit'),
-                      onPressed: _busy || !fieldAccess
-                          ? null
-                          : () => _save(baseline),
-                      child: Text(_draft.editing == null ? s.p6Create : s.save),
+                      onPressed: _busy || !fieldAccess ? null : _save,
+                      child: Text(s.p6Create),
                     ),
                   ],
                 ),

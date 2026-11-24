@@ -1108,6 +1108,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get editorDuplicate => 'Duplicar campo';
 
   @override
+  String get editorDeleteField => 'Eliminar campo';
+
+  @override
+  String get editorRemoveFromReports => 'Quitar de los informes';
+
+  @override
+  String get editorIncludeInReports => 'Incluir en los informes';
+
+  @override
   String get editorRemove => 'Quitar campo';
 
   @override

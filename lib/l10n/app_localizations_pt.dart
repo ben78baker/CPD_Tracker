@@ -1107,6 +1107,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get editorDuplicate => 'Duplicar campo';
 
   @override
+  String get editorDeleteField => 'Eliminar campo';
+
+  @override
+  String get editorRemoveFromReports => 'Retirar dos relatórios';
+
+  @override
+  String get editorIncludeInReports => 'Incluir nos relatórios';
+
+  @override
   String get editorRemove => 'Remover campo';
 
   @override

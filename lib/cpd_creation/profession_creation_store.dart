@@ -617,6 +617,9 @@ class ProfessionCreationStore {
     _authorise(access, draft.kind, draft.templateId);
     final recipe = recipeFor(draft);
     final baseline = await _supplied(tx, draft);
+    final history = draft.editing == null
+        ? const <LayoutRevision>[]
+        : await tx.loadLayouts(draft.editing!);
     if (draft.editing == null) {
       final problem = await _checkName(tx, draft.name);
       if (problem != null) throw ProfessionNameException(problem);
@@ -645,13 +648,40 @@ class ProfessionCreationStore {
       if (!access.canCustomiseFields) {
         checkTemplateArrangement(baseline, draft.layout, draft.report, rules);
       }
-      if (!acceptIncomplete &&
-          rules.assess(baseline, draft.layout, draft.report).incomplete) {
+      final proposed = rules.assess(baseline, draft.layout, draft.report);
+      final published = history.lastOrNull;
+      final previouslyMissing = published == null
+          ? const <String>{}
+          : {
+              for (final field
+                  in rules
+                      .assess(
+                        baseline,
+                        LayoutDraft(published),
+                        await _report(
+                          tx,
+                          published.collectionId,
+                          published.version,
+                        ),
+                      )
+                      .missing)
+                field.id,
+            };
+      if (proposed.missing.any(
+        (field) => !previouslyMissing.contains(field.id),
+      )) {
+        throw StateError(
+          'A required scheme field cannot be removed from the layout or report.',
+        );
+      }
+      if (!acceptIncomplete && proposed.incomplete) {
         throw StateError('An incomplete report needs explicit confirmation.');
       }
     }
     final reportFieldIds = {
       ...baseline.fields.map((field) => field.id),
+      for (final revision in history)
+        ...revision.fields.map((field) => field.id),
       ...draft.layout.fields.map((field) => field.id),
     };
     if (draft.report.excluded.any((id) => !reportFieldIds.contains(id))) {

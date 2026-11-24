@@ -2056,6 +2056,24 @@ abstract class AppLocalizations {
   /// **'Duplicate field'**
   String get editorDuplicate;
 
+  /// No description provided for @editorDeleteField.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete field'**
+  String get editorDeleteField;
+
+  /// No description provided for @editorRemoveFromReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from reports'**
+  String get editorRemoveFromReports;
+
+  /// No description provided for @editorIncludeInReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Include in reports'**
+  String get editorIncludeInReports;
+
   /// No description provided for @editorRemove.
   ///
   /// In en, this message translates to:

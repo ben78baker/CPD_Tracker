@@ -1106,6 +1106,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get editorDuplicate => 'Feld duplizieren';
 
   @override
+  String get editorDeleteField => 'Feld löschen';
+
+  @override
+  String get editorRemoveFromReports => 'Aus Berichten entfernen';
+
+  @override
+  String get editorIncludeInReports => 'In Berichte aufnehmen';
+
+  @override
   String get editorRemove => 'Feld entfernen';
 
   @override

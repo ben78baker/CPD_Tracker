@@ -35,18 +35,28 @@ Widget _app(
 );
 
 class _EmptyDrafts implements SqliteRecordingRepository {
+  _EmptyDrafts([this.layout]);
+  final LayoutRevision? layout;
+
   @override
   Future<Map<String, String>> loadHostState(String namespace) async => {};
+  @override
+  Future<List<LayoutRevision>> loadLayouts(String collectionId) async => [
+    layout!,
+  ];
+  @override
+  Future<Set<String>> fieldsWithValues(String collectionId) async => {};
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _CustomDraftStore extends ProfessionCreationStore {
   _CustomDraftStore(this.baseline)
-    : super(_EmptyDrafts(), templates: {}, reportRules: {});
+    : super(_EmptyDrafts(baseline), templates: {}, reportRules: {});
 
   final LayoutRevision baseline;
   ProfessionDraft? saved;
+  String? committed;
 
   @override
   Future<CreationAccess> access() async => CreationAccess(customFields: true);
@@ -56,6 +66,16 @@ class _CustomDraftStore extends ProfessionCreationStore {
 
   @override
   Future<void> persist(ProfessionDraft draft) async => saved = draft;
+
+  @override
+  Future<String> commit(
+    String requestId, {
+    bool firstProfession = false,
+    bool acceptIncomplete = false,
+  }) async {
+    committed = requestId;
+    return baseline.collectionId;
+  }
 }
 
 void main() {
@@ -125,12 +145,46 @@ void main() {
           report: ReportSelection(),
           editing: editing ? baseline.collectionId : null,
         );
+        final page = ProfessionDraftPage(store: store, draft: draft);
+        String? result;
         await tester.pumpWidget(
-          _app(ProfessionDraftPage(store: store, draft: draft)),
+          _app(
+            editing
+                ? Scaffold(
+                    body: Builder(
+                      builder: (context) => PopupMenuButton<String>(
+                        onSelected: (_) async {
+                          result = await Navigator.of(context).push(
+                            MaterialPageRoute<String>(builder: (_) => page),
+                          );
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Text('Edit fields'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : page,
+          ),
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(OutlinedButton, 'Edit fields'));
-        await tester.pumpAndSettle();
+        if (editing) {
+          await tester.tap(find.byType(PopupMenuButton<String>));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Edit fields'));
+          await tester.pumpAndSettle();
+          expect(find.byType(EditFieldsPage), findsOneWidget);
+          expect(
+            find.widgetWithText(OutlinedButton, 'Edit fields'),
+            findsNothing,
+          );
+        } else {
+          await tester.tap(find.widgetWithText(OutlinedButton, 'Edit fields'));
+          await tester.pumpAndSettle();
+        }
         await tester.tap(find.byKey(const Key('open-add-field')));
         await tester.pumpAndSettle();
         expect(find.text('Field Library'), findsOneWidget);
@@ -145,17 +199,39 @@ void main() {
         await tester.tap(find.widgetWithText(FilledButton, 'Add field'));
         await tester.pumpAndSettle();
         expect(find.text('6 of 20 fields'), findsOneWidget);
-        await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+        final menu = find.byTooltip('Menu: Project code');
+        await tester.scrollUntilVisible(
+          menu,
+          250,
+          scrollable: find
+              .descendant(
+                of: find.byType(ReorderableListView),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
+        await tester.tap(menu);
         await tester.pumpAndSettle();
-        final report = find.widgetWithText(SwitchListTile, 'Project code');
-        await tester.ensureVisible(report);
-        expect(tester.widget<SwitchListTile>(report).value, isTrue);
-        await tester.tap(report);
+        await tester.tap(find.text('Remove from reports'));
+        await tester.pumpAndSettle();
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+        expect(find.text('Include in reports'), findsOneWidget);
+        await tester.tap(find.text('Include in reports'));
+        await tester.pumpAndSettle();
+        expect(store.saved!.report.excluded, isEmpty);
+        await tester.tap(menu);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Remove from reports'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Save'));
         await tester.pumpAndSettle();
         final field = store.saved!.layout.fields.last;
         expect(field.definition.kind, FieldKind.text);
         expect(field.label, 'Project code');
         expect(store.saved!.report.excluded, contains(field.id));
+        expect(store.committed, editing ? draft.id : isNull);
+        expect(result, editing ? baseline.collectionId : isNull);
       },
     );
   }
@@ -205,9 +281,13 @@ void main() {
   );
 
   testWidgets(
-    'template layout mode hides field settings, library and duplication',
+    'template-only field menus protect required fields and allow reordering',
     (tester) async {
-      final fields = nursingPilot.fields;
+      final required = nursingPilot.fields.firstWhere(nursingReportRules.needs);
+      final fields = [
+        required,
+        ...nursingPilot.fields.where((f) => f != required),
+      ];
       final active = LayoutRevision(
         collectionId: 'demo',
         version: 1,
@@ -217,19 +297,33 @@ void main() {
         title: 'Nursing',
         layout: active,
         arrangementOnly: true,
-        suppliedFields: fields,
+        suppliedLayout: active,
         library: FieldLibrary([], categories: {}),
         maxActiveFields: 20,
-        save: (_) async => active,
+        reportExclusions: const {},
+        requiredReportDefinitions: nursingReportRules.requiredDefinitions,
+        save: (_, _) async => active.collectionId,
       );
       await tester.pumpWidget(_app(editor));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('open-add-field')), findsNothing);
       await tester.tap(find.byKey(ValueKey('menu-${fields.first.id}')));
       await tester.pumpAndSettle();
-      expect(find.text('Field settings'), findsNothing);
-      expect(find.text('Duplicate field'), findsNothing);
-      expect(find.text('Move down'), findsOneWidget);
+      bool enabled(String name) => tester
+          .widget<PopupMenuItem>(
+            find.ancestor(
+              of: find.text(name),
+              matching: find.byWidgetPredicate(
+                (widget) => widget is PopupMenuItem,
+              ),
+            ),
+          )
+          .enabled;
+      expect(enabled('Field settings'), isFalse);
+      expect(enabled('Delete field'), isFalse);
+      expect(enabled('Remove from reports'), isFalse);
+      expect(enabled('Move up'), isFalse);
+      expect(enabled('Move down'), isTrue);
     },
   );
 }

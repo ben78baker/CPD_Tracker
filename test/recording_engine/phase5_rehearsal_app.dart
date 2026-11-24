@@ -93,7 +93,7 @@ class _RehearsalState extends State<_Rehearsal> {
 
   Future<void> _editor(_CollectionView contents) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute<LayoutRevision>(
+      MaterialPageRoute<String>(
         builder: (_) => EditFieldsPage(
           title: phase5Templates[_selected].localizedLabel(
             Localizations.localeOf(context).toLanguageTag(),
@@ -104,11 +104,11 @@ class _RehearsalState extends State<_Rehearsal> {
           protectedDefinitionIds: contents.isCpd
               ? cpdFieldKinds.keys.toSet()
               : const {},
-          save: (draft) => contents.db.transaction((tx) async {
+          save: (draft, _) => contents.db.transaction((tx) async {
             if (contents.isCpd) {
               checkCpdLayoutEdit(contents.active.fields, draft.fields);
             }
-            return tx.saveLayoutDraft(draft);
+            return (await tx.saveLayoutDraft(draft)).collectionId;
           }),
         ),
       ),

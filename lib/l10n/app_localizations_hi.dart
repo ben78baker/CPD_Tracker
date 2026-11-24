@@ -1097,6 +1097,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get editorDuplicate => 'फ़ील्ड की प्रतिलिपि';
 
   @override
+  String get editorDeleteField => 'फ़ील्ड हटाएँ';
+
+  @override
+  String get editorRemoveFromReports => 'रिपोर्ट से हटाएँ';
+
+  @override
+  String get editorIncludeInReports => 'रिपोर्ट में शामिल करें';
+
+  @override
   String get editorRemove => 'फ़ील्ड हटाएँ';
 
   @override

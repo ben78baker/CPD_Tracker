@@ -282,6 +282,10 @@ Future<void> _verify(String path) async {
       'historic values survive removal and reinstatement',
     );
     _check(
+      (await db.fieldsWithValues(placement)).contains(optional.id),
+      'The editor can detect a historical value before retiring a field.',
+    );
+    _check(
       (await db.loadLayouts(other)).last.version == otherLayout.version,
       'second placement unaffected',
     );
@@ -301,13 +305,34 @@ Future<void> _verify(String path) async {
     edit.layout.retire(required.id);
     await host.persist(edit);
     await _reject<StateError>(() => host.commit(edit.id));
-    await host.commit(edit.id, acceptIncomplete: true);
+    await _reject<StateError>(
+      () => host.commit(edit.id, acceptIncomplete: true),
+    );
+    await host.discard(edit.id);
+    edit = await host.beginEdit(placement);
+    await host.persist(
+      edit.withChanges(report: ReportSelection(excluded: [required.id])),
+    );
+    await _reject<StateError>(
+      () => host.commit(edit.id, acceptIncomplete: true),
+    );
+    await host.discard(edit.id);
+    edit = await host.beginEdit(placement);
+    await host.persist(
+      edit.withChanges(report: ReportSelection(excluded: [optional.id])),
+    );
+    await host.commit(edit.id);
     final combined = (await db.loadLayouts(placement)).last;
     _check(
-      nursingReportRules
-          .assess(original, LayoutDraft(combined), ReportSelection())
-          .incomplete,
-      'combined access preserves incompatible report status',
+      !nursingReportRules
+              .assess(original, LayoutDraft(combined), ReportSelection())
+              .incomplete &&
+          (await host.reportAt(
+            placement,
+            combined.version,
+          )).excluded.contains(optional.id) &&
+          combined.fields.any((field) => field.id == optional.id),
+      'Combined access preserves required fields and can exclude optional fields from reports.',
     );
     _check(
       await host.requireOwnedReport(combined) == nursingReportRules,

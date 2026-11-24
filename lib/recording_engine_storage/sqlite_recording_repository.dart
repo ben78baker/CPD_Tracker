@@ -578,6 +578,19 @@ class SqliteRecordingRepository {
   Future<RecordingRecord?> loadRecord(String id) =>
       _transaction((tx) => _loadRecord(tx, id));
 
+  /// Field instances with stored values or evidence, including deleted records.
+  Future<Set<String>> fieldsWithValues(String collectionId) =>
+      _transaction((tx) async {
+        final rows = await tx.rawQuery(
+          'SELECT v.field_id AS field_id FROM record_values v JOIN records r '
+          'ON r.id = v.record_id WHERE r.collection_id = ? '
+          'UNION SELECT l.field_id AS field_id FROM attachment_links l JOIN records r '
+          'ON r.id = l.record_id WHERE r.collection_id = ?',
+          [collectionId, collectionId],
+        );
+        return {for (final row in rows) row['field_id'] as String};
+      });
+
   Future<List<RecordingRecord>> loadRecords(
     String collectionId, {
     bool includeDeleted = false,
