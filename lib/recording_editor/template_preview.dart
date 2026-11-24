@@ -254,7 +254,11 @@ class BoundedList extends StatelessWidget {
   Widget build(BuildContext context) => Center(
     child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 640),
-      child: ListView(padding: const EdgeInsets.all(16), children: children),
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        children: children,
+      ),
     ),
   );
 }

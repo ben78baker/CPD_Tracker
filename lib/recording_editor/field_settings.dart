@@ -263,6 +263,7 @@ class _FieldSettingsPageState extends State<FieldSettingsPage> {
             constraints: const BoxConstraints(maxWidth: 640),
             child: ListView(
               padding: const EdgeInsets.all(16),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               children: [
                 if (widget.libraryDescription case final description?)
                   Padding(

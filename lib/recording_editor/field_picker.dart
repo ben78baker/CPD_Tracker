@@ -201,6 +201,8 @@ class _LibraryPageState extends State<_LibraryPage> {
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   children: [
                     if (visible.isEmpty)
                       Padding(

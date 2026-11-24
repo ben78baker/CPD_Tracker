@@ -512,6 +512,19 @@ void main() {
         find.widgetWithText(TextFormField, details),
         newDetails,
       );
+      await tester.binding.setSurfaceSize(const Size(390, 600));
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isTrue);
+      final list = find.byType(ListView);
+      await tester.dragFrom(
+        tester.getTopLeft(list) + const Offset(8, 240),
+        const Offset(0, -180),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isFalse);
+      expect(find.text('Edit Record'), findsOneWidget);
+      await tester.binding.setSurfaceSize(const Size(390, 1050));
+      await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(FilledButton, 'Save'));
       await tester.pumpAndSettle();
       expect(find.text('View Record'), findsOneWidget);
@@ -534,6 +547,40 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.widgetWithText(TextFormField, newDetails), findsOneWidget);
       expect(find.text('View Record'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'scrolling record results dismisses the keyboard and keeps the query',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await tester.binding.setSurfaceSize(const Size(390, 600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        app(
+          CpdRecordsPage(
+            profession: standard.label,
+            professionId: standard.id,
+            source: FixtureSource([
+              for (var day = 1; day <= 10; day++)
+                row(standard, day, 'Workshop $day'),
+              row(standard, 11, 'Other activity'),
+            ]),
+            startInSearchMode: true,
+            onOpenRecord: (_, {required view}) async {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final search = find.byType(TextField);
+      await tester.enterText(search, 'Workshop');
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isTrue);
+      await tester.drag(find.byType(ListView), const Offset(0, -180));
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isFalse);
+      expect(tester.widget<TextField>(search).controller!.text, 'Workshop');
+      expect(find.text('Other activity'), findsNothing);
     },
   );
 

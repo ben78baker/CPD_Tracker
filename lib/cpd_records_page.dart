@@ -700,6 +700,8 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                 ? const Center(child: Text('No matching records found'))
                 : ListView.builder(
                     key: const PageStorageKey('profession-records'),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.only(top: 4, bottom: 8),
                     itemCount: filtered.length,
                     itemBuilder: (context, i) {

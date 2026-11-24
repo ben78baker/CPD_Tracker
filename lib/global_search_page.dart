@@ -180,6 +180,8 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
                                 child: Text('No matching records found'),
                               )
                             : ListView.separated(
+                                keyboardDismissBehavior:
+                                    ScrollViewKeyboardDismissBehavior.onDrag,
                                 padding: const EdgeInsets.fromLTRB(
                                   16,
                                   0,
