@@ -100,6 +100,7 @@ class RehearsalProfessionCard extends StatefulWidget {
     required this.onRename,
     required this.onDelete,
     required this.onRefresh,
+    required this.onOpenReviewRecord,
     this.refreshToken = 0,
     this.originals,
     this.onCreateBackup,
@@ -117,6 +118,7 @@ class RehearsalProfessionCard extends StatefulWidget {
       onDelete,
       onRefresh;
   final ManagedAttachmentFiles? originals;
+  final ValueChanged<String> onOpenReviewRecord;
   final VoidCallback? onCreateBackup;
   final VoidCallback? onEditFields;
   final VoidCallback? onTemplates;
@@ -138,13 +140,10 @@ class RehearsalProfessionCard extends StatefulWidget {
         await SqliteCpdStore.collectionTarget(store.repository, profession),
       );
     }
-    final periods = await SchemePeriodStore(
+    final selected = await SchemePeriodStore(
       store.repository,
-    ).load(profession.id);
-    if (periods.selected == null) return (bundle, null, null);
-    final selected = periods.periods.singleWhere(
-      (period) => period.id == periods.selected,
-    );
+    ).loadSelected(profession.id);
+    if (selected == null) return (bundle, null, null);
     final pinned =
         phase7Bundles[(selected.templateId, selected.templateVersion)]!;
     final result = await loadSchemeProgress(
@@ -322,6 +321,7 @@ class _RehearsalProfessionCardState extends State<RehearsalProfessionCard>
                   bundle: bundle,
                   progress: progress,
                   onPeriods: period,
+                  onOpenRecord: widget.onOpenReviewRecord,
                 ),
         );
       },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../cpd_compatibility/cpd_layout_policy.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/profession_card.dart';
 import '../widgets/tactile_button.dart';
@@ -13,11 +14,77 @@ class SchemeProgressPanel extends StatelessWidget {
     required this.bundle,
     required this.progress,
     required this.onPeriods,
+    required this.onOpenRecord,
   });
 
   final ProfessionTemplateBundle bundle;
   final SchemeProgress? progress;
   final VoidCallback onPeriods;
+  final ValueChanged<String> onOpenRecord;
+
+  Future<void> _review(
+    BuildContext context,
+    List<ActivityResult> activities,
+  ) async {
+    final recordId = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        final s = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(s.p7ReviewLog),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ),
+          content: SizedBox(
+            width: 440,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.46,
+              ),
+              child: ListView.builder(
+                primary: false,
+                shrinkWrap: true,
+                itemCount: activities.length,
+                itemBuilder: (context, index) {
+                  final entry = activities[index];
+                  final titleId = cpdFieldBindings(
+                    entry.activity.fields,
+                  )['cpd.title'];
+                  final title = entry.activity.values[titleId];
+                  return ListTile(
+                    title: Text(
+                      title is String && title.trim().isNotEmpty
+                          ? title
+                          : s.noTitle,
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (entry.day case final day?)
+                          Text(formatSchemeDate(day, s)),
+                        for (final issue in entry.issues)
+                          Text(schemeIssueLabel(issue, s)),
+                      ],
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).pop(entry.activity.id),
+                  );
+                },
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(MaterialLocalizations.of(context).closeButtonLabel),
+            ),
+          ],
+        );
+      },
+    );
+    if (context.mounted && recordId != null) onOpenRecord(recordId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +98,9 @@ class SchemeProgressPanel extends StatelessWidget {
         label: Text(periodLabel),
       );
     }
+    final flagged = result.activities
+        .where((entry) => entry.issues.isNotEmpty)
+        .toList();
     final text = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -57,9 +127,7 @@ class SchemeProgressPanel extends StatelessWidget {
             ],
           ),
         ),
-        if (bundle.showDeadline ||
-            result.incomplete > 0 ||
-            result.activities.isEmpty) ...[
+        if (bundle.showDeadline || result.activities.isEmpty) ...[
           const SizedBox(height: 7),
           Wrap(
             spacing: 12,
@@ -72,17 +140,69 @@ class SchemeProgressPanel extends StatelessWidget {
                       : '${s.p7Deadline} · ${formatSchemeDate(result.period.deadline!, s)}',
                   style: text.bodySmall,
                 ),
-              if (result.incomplete > 0)
-                Text(
-                  '${s.p7ReviewLog} · ${result.incomplete}',
-                  style: text.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-                )
-              else if (result.activities.isEmpty)
+              if (result.activities.isEmpty)
                 Text(s.noRecordsInSelectedPeriod, style: text.bodySmall),
             ],
           ),
         ],
+        if (flagged.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TactileButton.icon(
+              minimumSize: const Size(64, 44),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              icon: const Icon(Icons.fact_check_outlined, size: 19),
+              label: Text('${s.p7ReviewLog} · ${flagged.length}'),
+              onPressed: () => _review(context, flagged),
+            ),
+          ),
+        ],
       ],
+    );
+  }
+}
+
+class SchemeRecordAdvisory extends StatelessWidget {
+  const SchemeRecordAdvisory({super.key, required this.issues});
+
+  final Set<ActivityIssue> issues;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final error = theme.colorScheme.error;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: error, width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.error_outline, color: error, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final issue in issues)
+                    Text(
+                      schemeIssueLabel(issue, s),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: error),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

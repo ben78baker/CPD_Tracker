@@ -30,6 +30,14 @@ class SchemePeriodStore {
     );
   }
 
+  Future<SchemePeriod?> loadSelected(String collectionId) async {
+    final state = await load(collectionId);
+    final selected = state.selected;
+    return selected == null
+        ? null
+        : state.periods.singleWhere((period) => period.id == selected);
+  }
+
   Future<void> select(String collectionId, SchemePeriod period) =>
       repository.transaction((tx) async {
         final collection = await tx.loadCollection(collectionId);

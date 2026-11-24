@@ -20,13 +20,14 @@ String formatSchemePeriod(SchemePeriod period, AppLocalizations strings) =>
 String formatSchemeMinutes(int minutes, AppLocalizations strings) =>
     ReportLocale(strings).duration(minutes);
 
-String _issue(ActivityIssue issue, AppLocalizations s) => switch (issue) {
-  ActivityIssue.unknownDate => s.p7IssueDate,
-  ActivityIssue.missingValues => s.p7IssueMissing,
-  ActivityIssue.invalidValues => s.p7IssueInvalid,
-  ActivityIssue.unavailableEvidence => s.p7IssueEvidence,
-  ActivityIssue.splitAcrossPeriod => s.p7IssueSplit,
-};
+String schemeIssueLabel(ActivityIssue issue, AppLocalizations s) =>
+    switch (issue) {
+      ActivityIssue.unknownDate => s.p7IssueDate,
+      ActivityIssue.missingValues => s.p7IssueMissing,
+      ActivityIssue.invalidValues => s.p7IssueInvalid,
+      ActivityIssue.unavailableEvidence => s.p7IssueEvidence,
+      ActivityIssue.splitAcrossPeriod => s.p7IssueSplit,
+    };
 
 Future<Uint8List> buildSchemeReport({
   required ProfessionTemplateBundle bundle,
@@ -181,7 +182,9 @@ Future<ActivityDocumentData> prepareSchemeReport({
             title,
           _ => s.noTitle,
         },
-        status: result.issues.map((issue) => _issue(issue, s)).join(' · '),
+        status: result.issues
+            .map((issue) => schemeIssueLabel(issue, s))
+            .join(' · '),
         fields: [
           for (final field in result.activity.fields)
             if (!excluded.contains(field.id) &&

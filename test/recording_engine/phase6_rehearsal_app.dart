@@ -16,6 +16,9 @@ import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_bundle.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_pilot.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
+import 'package:cpd_tracker/cpd_creation/scheme_period_store.dart';
+import 'package:cpd_tracker/cpd_creation/scheme_progress.dart';
+import 'package:cpd_tracker/cpd_creation/scheme_progress_panel.dart';
 import 'package:cpd_tracker/cpd_creation/template_evaluation.dart';
 import 'package:cpd_tracker/l10n/app_localizations.dart';
 import 'package:cpd_tracker/onboarding_page.dart';
@@ -374,15 +377,21 @@ class _HomeState extends State<_Home> {
   }
 
   Future<void> _openRecord(CpdRecordItem item, {required bool view}) =>
-      RehearsalRecordPage.open(
-        context,
-        store: widget.store,
-        professionId: item.professionId,
-        recordId: item.id,
-        view: view,
-        originals: widget.originals,
-        onEditFields: _editFields,
-      );
+      _openRecordById(item.professionId, item.id, view: view);
+
+  Future<void> _openRecordById(
+    String professionId,
+    String recordId, {
+    required bool view,
+  }) => RehearsalRecordPage.open(
+    context,
+    store: widget.store,
+    professionId: professionId,
+    recordId: recordId,
+    view: view,
+    originals: widget.originals,
+    onEditFields: _editFields,
+  );
 
   Future<void> _viewRecords(
     RecordingCollection profession, {
@@ -768,6 +777,10 @@ class _HomeState extends State<_Home> {
                 profession: profession,
                 originals: widget.originals,
                 onRefresh: _refresh,
+                onOpenReviewRecord: (recordId) async {
+                  await _openRecordById(profession.id, recordId, view: true);
+                  _refresh();
+                },
                 refreshToken: _refreshToken,
                 onCreateBackup: widget.backups == null
                     ? null
@@ -1325,6 +1338,31 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
   late bool _maySave = !_scoped || widget.record != null;
   int _allowanceRevision = 0;
   late final _fields = resolveFields(_version, widget.history);
+  late final _reviewIssues = _loadReviewIssues(widget.record!);
+
+  Future<Set<ActivityIssue>> _loadReviewIssues(RecordingRecord record) async {
+    final repository = widget.store.repository;
+    final period = await SchemePeriodStore(
+      repository,
+    ).loadSelected(record.collectionId);
+    if (period == null ||
+        _layout.templateId != period.templateId ||
+        _layout.templateVersion != period.templateVersion) {
+      return const {};
+    }
+    final bundle = phase7Bundles[(period.templateId, period.templateVersion)];
+    if (bundle == null) return const {};
+    final result = await loadSchemeProgress(
+      repository: repository,
+      bundle: bundle,
+      period: period,
+      history: widget.history,
+      records: [record],
+      originals: widget.originals,
+    );
+    return result.progress.activities.firstOrNull?.issues ?? const {};
+  }
+
   late final _display = () {
     if (!widget.phase7) return _fields;
     final layout = widget.history.firstWhere(
@@ -1614,6 +1652,18 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
         body: BoundedList(
           key: widget.readOnly ? const PageStorageKey('view-record') : null,
           children: [
+            if (widget.phase7 &&
+                widget.record != null &&
+                _layout.templateId != null)
+              FutureBuilder<Set<ActivityIssue>>(
+                future: _reviewIssues,
+                builder: (context, snapshot) => switch (snapshot.data) {
+                  final issues? when issues.isNotEmpty => SchemeRecordAdvisory(
+                    issues: issues,
+                  ),
+                  _ => const SizedBox.shrink(),
+                },
+              ),
             if (_scoped && !widget.readOnly)
               TemplateEvaluationPanel(
                 key: ValueKey(_allowanceRevision),

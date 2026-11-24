@@ -365,6 +365,7 @@ void main() {
                           bundle: _bundle,
                           progress: _progress([_activity('one')]),
                           onPeriods: () => opened++,
+                          onOpenRecord: (_) {},
                         ),
                       ),
                       card('Standard CPD'),

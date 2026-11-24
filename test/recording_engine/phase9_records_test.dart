@@ -280,6 +280,7 @@ void main() {
                 onRename: () {},
                 onDelete: () {},
                 onRefresh: () {},
+                onOpenReviewRecord: (_) {},
                 refreshToken: token,
               );
             },
