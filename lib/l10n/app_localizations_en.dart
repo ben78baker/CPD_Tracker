@@ -115,6 +115,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editRecord => 'Edit Record';
 
   @override
+  String get deleteRecord => 'Delete Record';
+
+  @override
   String get recordChangeFailed =>
       'Could not update the record. Reload and try again.';
 

@@ -16,10 +16,10 @@ import 'utils/date_utils.dart';
 import 'utils/csv_exporter.dart';
 import 'utils/pdf_exporter.dart';
 import 'widgets/record_card.dart';
+import 'widgets/record_delete_dialog.dart';
 import 'widgets/attachments_dialog.dart';
 import 'widgets/share_format_sheet.dart';
 import 'widgets/branded_headers.dart';
-import 'widgets/tactile_button.dart';
 import 'l10n/app_localizations.dart';
 
 class CpdRecordsPage extends StatefulWidget {
@@ -146,40 +146,8 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
 
   Future<void> _toggleDelete(CpdRecordItem item) async {
     final e = item.entry;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(
-          e.deleted
-              ? AppLocalizations.of(ctx)!.restoreRecordTitle
-              : AppLocalizations.of(ctx)!.deleteRecordTitle,
-        ),
-        content: Text(
-          e.deleted
-              ? AppLocalizations.of(ctx)!.restoreRecordConfirm
-              : AppLocalizations.of(ctx)!.deleteRecordConfirm,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(ctx)!.cancel),
-          ),
-          TactileButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            variant: e.deleted
-                ? TactileButtonVariant.primary
-                : TactileButtonVariant.destructive,
-            child: Text(
-              e.deleted
-                  ? AppLocalizations.of(ctx)!.restore
-                  : AppLocalizations.of(ctx)!.delete,
-            ),
-          ),
-        ],
-      ),
-    );
-    if (!context.mounted) return;
-    if (confirm != true) return;
+    final confirmed = await confirmRecordDeletion(context, restore: e.deleted);
+    if (!mounted || !confirmed) return;
     if (widget.source case final source?) {
       try {
         await source.setDeleted(item, !e.deleted);

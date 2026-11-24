@@ -114,6 +114,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get editRecord => 'Eintrag bearbeiten';
 
   @override
+  String get deleteRecord => 'Eintrag löschen';
+
+  @override
   String get recordChangeFailed =>
       'Der Eintrag konnte nicht aktualisiert werden. Bitte neu laden und erneut versuchen.';
 

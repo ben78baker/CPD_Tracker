@@ -115,6 +115,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get editRecord => 'रिकॉर्ड संपादित करें';
 
   @override
+  String get deleteRecord => 'रिकॉर्ड हटाएं';
+
+  @override
   String get recordChangeFailed =>
       'रिकॉर्ड अपडेट नहीं हो सका। फिर से लोड करके दोबारा कोशिश करें।';
 

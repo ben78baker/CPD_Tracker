@@ -115,6 +115,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get editRecord => 'Editar registro';
 
   @override
+  String get deleteRecord => 'Eliminar registro';
+
+  @override
   String get recordChangeFailed =>
       'No se pudo actualizar el registro. Vuelve a cargarlo e inténtalo de nuevo.';
 

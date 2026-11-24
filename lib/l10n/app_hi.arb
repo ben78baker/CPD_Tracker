@@ -41,6 +41,7 @@
   "viewRecords": "View Records",
   "viewRecord": "रिकॉर्ड देखें",
   "editRecord": "रिकॉर्ड संपादित करें",
+  "deleteRecord": "रिकॉर्ड हटाएं",
   "recordChangeFailed": "रिकॉर्ड अपडेट नहीं हो सका। फिर से लोड करके दोबारा कोशिश करें।",
   "customFieldsReport": "कस्टम फ़ील्ड रिपोर्ट",
   "fieldValuesCsv": "फ़ील्ड के मान (CSV)",

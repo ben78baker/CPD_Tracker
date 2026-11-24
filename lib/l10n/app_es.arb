@@ -14,6 +14,7 @@
   "viewRecords": "Ver registros",
   "viewRecord": "Ver registro",
   "editRecord": "Editar registro",
+  "deleteRecord": "Eliminar registro",
   "recordChangeFailed": "No se pudo actualizar el registro. Vuelve a cargarlo e inténtalo de nuevo.",
   "customFieldsReport": "Informe de campos personalizados",
   "fieldValuesCsv": "Valores de campos (CSV)",

@@ -32,6 +32,7 @@ import 'package:cpd_tracker/settings_page.dart' show WeekStartSettingsRow;
 import 'package:cpd_tracker/theme/app_accent.dart';
 import 'package:cpd_tracker/theme/app_theme.dart';
 import 'package:cpd_tracker/widgets/home_shell.dart';
+import 'package:cpd_tracker/widgets/record_delete_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:path/path.dart' as p;
@@ -1406,12 +1407,35 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
   bool _openingEditor = false;
 
   Future<void> _editRecord() async {
-    if (_openingEditor) return;
+    if (_busy || _openingEditor) return;
     setState(() => _openingEditor = true);
     try {
       await widget.onEditRecord!();
     } finally {
       if (mounted) setState(() => _openingEditor = false);
+    }
+  }
+
+  Future<void> _deleteRecord(RecordingRecord record) async {
+    if (_busy || _openingEditor) return;
+    setState(() => _busy = true);
+    try {
+      final confirmed = await confirmRecordDeletion(context);
+      if (!mounted || !confirmed) return;
+      await widget.store.repository.setRecordDeleted(
+        record.id,
+        true,
+        expectedVersion: record.version,
+      );
+      if (mounted) Navigator.of(context).pop();
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(editorStrings(context).recordChangeFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -1555,14 +1579,34 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
                 : (widget.record == null ? s.editorNewRecord : s.editorExample),
           ),
           actions: [
-            if (widget.readOnly && widget.onEditFields != null)
+            if (widget.record case final record? when widget.readOnly)
               PopupMenuButton<String>(
-                onSelected: (_) => widget.onEditFields!(),
+                enabled: !_busy && !_openingEditor,
+                onSelected: (action) async {
+                  switch (action) {
+                    case 'edit_record':
+                      await _editRecord();
+                    case 'delete_record':
+                      await _deleteRecord(record);
+                    case 'edit_fields':
+                      await widget.onEditFields!();
+                  }
+                },
                 itemBuilder: (_) => [
+                  if (widget.onEditRecord != null)
+                    PopupMenuItem(
+                      value: 'edit_record',
+                      child: Text(s.editRecord),
+                    ),
                   PopupMenuItem(
-                    value: 'edit_fields',
-                    child: Text(s.editFields),
+                    value: 'delete_record',
+                    child: Text(s.deleteRecord),
                   ),
+                  if (widget.onEditFields != null)
+                    PopupMenuItem(
+                      value: 'edit_fields',
+                      child: Text(s.editFields),
+                    ),
                 ],
               ),
           ],
@@ -1599,7 +1643,9 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
                   padding: const EdgeInsets.all(12),
                   child: widget.readOnly
                       ? FilledButton.icon(
-                          onPressed: _openingEditor ? null : _editRecord,
+                          onPressed: _busy || _openingEditor
+                              ? null
+                              : _editRecord,
                           icon: const Icon(Icons.edit_outlined),
                           label: Text(s.editRecord),
                         )

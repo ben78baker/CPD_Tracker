@@ -41,6 +41,7 @@
   "viewRecords": "Einträge anzeigen",
   "viewRecord": "Eintrag ansehen",
   "editRecord": "Eintrag bearbeiten",
+  "deleteRecord": "Eintrag löschen",
   "recordChangeFailed": "Der Eintrag konnte nicht aktualisiert werden. Bitte neu laden und erneut versuchen.",
   "customFieldsReport": "Bericht mit benutzerdefinierten Feldern",
   "fieldValuesCsv": "Feldwerte (CSV)",

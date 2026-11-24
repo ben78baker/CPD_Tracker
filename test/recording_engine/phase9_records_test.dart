@@ -149,10 +149,34 @@ class EvidenceRepository implements SqliteRecordingRepository {
   Future<List<RecordingRecord>> loadRecords(
     String id, {
     bool includeDeleted = false,
-  }) async => rows.values.toList();
+  }) async => rows.values
+      .where(
+        (record) =>
+            record.collectionId == id && (includeDeleted || !record.deleted),
+      )
+      .toList();
 
   @override
   Future<RecordingRecord?> loadRecord(String id) async => rows[id];
+
+  @override
+  Future<void> setRecordDeleted(
+    String id,
+    bool deleted, {
+    required int expectedVersion,
+  }) async {
+    final record = rows[id]!;
+    if (record.version != expectedVersion) throw StateError('Stale edit');
+    if (record.deleted == deleted) return;
+    rows[id] = RecordingRecord(
+      id: record.id,
+      collectionId: record.collectionId,
+      layoutVersion: record.layoutVersion,
+      version: record.version + 1,
+      deleted: deleted,
+      values: record.values,
+    );
+  }
 
   @override
   Future<Map<String, String>> loadHostState(String namespace) async =>
@@ -482,6 +506,7 @@ void main() {
                 recordId: item.id,
                 view: view,
                 originals: originals,
+                onEditFields: (_) async {},
               ),
             ),
           ),
@@ -536,6 +561,20 @@ void main() {
         repository.link.id,
       ]);
       expect(file.readAsStringSync(), 'Original bytes');
+
+      await tester.tap(find.byType(PopupMenuButton<String>));
+      await tester.pumpAndSettle();
+      expect(find.text('Edit fields'), findsOneWidget);
+      expect(find.text('Delete Record'), findsOneWidget);
+      await tester.tap(
+        find.widgetWithText(PopupMenuItem<String>, 'Edit Record'),
+      );
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextFormField, newDetails), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(FilledButton, 'Edit Record'), findsOneWidget);
+
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.text('Workshop'), findsOneWidget);
@@ -547,6 +586,91 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.widgetWithText(TextFormField, newDetails), findsOneWidget);
       expect(find.text('View Record'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'View Record confirms soft deletion and returns to filtered records',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      const recordId = 'delete-from-view';
+      const title = 'Workshop to delete';
+      final repository = EvidenceRepository();
+      final fields = cpdFieldBindings(repository.layout.fields);
+      final record = RecordingRecord(
+        id: recordId,
+        collectionId: standard.id,
+        layoutVersion: 1,
+        version: 1,
+        deleted: false,
+        values: {
+          fields['cpd.title']!: title,
+          fields['cpd.activityDate']!: '2026-01-01',
+          fields['cpd.evidence']!: [repository.link.id],
+        },
+      );
+      repository.rows[recordId] = record;
+      final originals = ManagedAttachmentFiles(Directory.systemTemp);
+      final source = SqliteCpdRecordsSource(
+        repository,
+        originals,
+        preferences: () async => {},
+        setReportLanguage: (_) async {},
+      );
+      final store = ProfessionCreationStore(
+        repository,
+        templates: const {},
+        reportRules: const {},
+      );
+      await tester.pumpWidget(
+        app(
+          Builder(
+            builder: (context) => CpdRecordsPage(
+              profession: standard.label,
+              professionId: standard.id,
+              source: source,
+              initialSearchQuery: 'Workshop',
+              onOpenRecord: (item, {required view}) => RehearsalRecordPage.open(
+                context,
+                store: store,
+                professionId: item.professionId,
+                recordId: item.id,
+                view: view,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(title));
+      await tester.pumpAndSettle();
+
+      Future<void> requestDelete() async {
+        await tester.tap(find.byType(PopupMenuButton<String>));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Delete Record'));
+        await tester.pumpAndSettle();
+        expect(find.text('Delete record?'), findsOneWidget);
+      }
+
+      await requestDelete();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('View Record'), findsOneWidget);
+      expect(repository.rows[recordId], same(record));
+
+      await requestDelete();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+      expect(find.text('View Record'), findsNothing);
+      expect(find.text(title), findsNothing);
+      expect(find.text('Workshop'), findsOneWidget);
+      final deleted = (await source.records(deleted: true)).single;
+      expect(deleted.id, record.id);
+      expect(repository.rows[recordId]!.values, record.values);
+      expect(deleted.evidence.single.id, repository.link.id);
+      await source.setDeleted(deleted, false);
+      expect((await source.records()).single.id, record.id);
     },
   );
 

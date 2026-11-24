@@ -316,6 +316,12 @@ abstract class AppLocalizations {
   /// **'Edit Record'**
   String get editRecord;
 
+  /// No description provided for @deleteRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Record'**
+  String get deleteRecord;
+
   /// No description provided for @recordChangeFailed.
   ///
   /// In en, this message translates to:
