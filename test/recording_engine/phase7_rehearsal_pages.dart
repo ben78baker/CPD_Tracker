@@ -88,7 +88,7 @@ Widget rehearsalReportError(BuildContext context, Object error) => Center(
   ),
 );
 
-class RehearsalProfessionCard extends StatelessWidget {
+class RehearsalProfessionCard extends StatefulWidget {
   const RehearsalProfessionCard({
     super.key,
     required this.store,
@@ -121,6 +121,10 @@ class RehearsalProfessionCard extends StatelessWidget {
   final VoidCallback? onEditFields;
   final VoidCallback? onTemplates;
   final int refreshToken;
+
+  @override
+  State<RehearsalProfessionCard> createState() =>
+      _RehearsalProfessionCardState();
 
   Future<(ProfessionTemplateBundle?, SchemeProgress?, (int, String)?)>
   _load() async {
@@ -235,62 +239,94 @@ class RehearsalProfessionCard extends StatelessWidget {
       );
     }
   }
+}
+
+class _RehearsalProfessionCardState extends State<RehearsalProfessionCard>
+    with AutomaticKeepAliveClientMixin<RehearsalProfessionCard> {
+  late var _summary = widget._load();
+
+  // Retain the measured card so the scroll list doesn't replace it with a
+  // much shorter loading tile when scrolling back to this profession.
+  @override
+  bool get wantKeepAlive => true;
 
   @override
-  Widget build(BuildContext context) => FutureBuilder(
-    future: _load(),
-    builder: (context, snapshot) {
-      final s = editorStrings(context);
-      final (bundle, progress, target) = snapshot.data ?? (null, null, null);
-      void period() async {
-        if (bundle == null) {
-          await _editStandardTarget(context, target);
-          onRefresh();
-          return;
-        }
-        await pickSchemePeriod(context, store, profession, bundle);
-        onRefresh();
-      }
+  void didUpdateWidget(covariant RehearsalProfessionCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final before = oldWidget.profession;
+    final current = widget.profession;
+    if (oldWidget.refreshToken != widget.refreshToken ||
+        oldWidget.store != widget.store ||
+        before.id != current.id ||
+        before.label != current.label ||
+        before.layoutVersion != current.layoutVersion ||
+        oldWidget.originals != widget.originals) {
+      _summary = widget._load();
+    }
+  }
 
-      if (snapshot.hasError) {
-        return ListTile(
-          title: Text(profession.label),
-          subtitle: Text(s.editorSaveError),
-          onTap: onView,
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return FutureBuilder(
+      future: _summary,
+      builder: (context, snapshot) {
+        final s = editorStrings(context);
+        final (bundle, progress, target) = snapshot.data ?? (null, null, null);
+        void period() async {
+          if (bundle == null) {
+            await widget._editStandardTarget(context, target);
+          } else {
+            await pickSchemePeriod(
+              context,
+              widget.store,
+              widget.profession,
+              bundle,
+            );
+          }
+          if (mounted) widget.onRefresh();
+        }
+
+        if (snapshot.hasError) {
+          return ListTile(
+            title: Text(widget.profession.label),
+            subtitle: Text(s.editorSaveError),
+            onTap: widget.onView,
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return ProfessionCard(
+          name: widget.profession.label,
+          onCreateBackup: widget.onCreateBackup,
+          onEditFields: widget.onEditFields,
+          onTemplates: widget.onTemplates,
+          onAdd: widget.onAdd,
+          onScan: widget.onScan,
+          onView: widget.onView,
+          onSearch: widget.onSearch,
+          onRename: widget.onRename,
+          onDelete: widget.onDelete,
+          target: target,
+          computeCompleted: (cycle) => widget._standardCompleted(
+            cycle,
+            MaterialLocalizations.of(context).firstDayOfWeekIndex,
+          ),
+          onSetTarget: period,
+          refreshToken: widget.refreshToken,
+          targetMenuLabel: bundle?.label('period', s.p7Period, s.localeName),
+          progressContent: bundle == null
+              ? null
+              : SchemeProgressPanel(
+                  bundle: bundle,
+                  progress: progress,
+                  onPeriods: period,
+                ),
         );
-      }
-      if (!snapshot.hasData) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      return ProfessionCard(
-        name: profession.label,
-        onCreateBackup: onCreateBackup,
-        onEditFields: onEditFields,
-        onTemplates: onTemplates,
-        onAdd: onAdd,
-        onScan: onScan,
-        onView: onView,
-        onSearch: onSearch,
-        onRename: onRename,
-        onDelete: onDelete,
-        target: target,
-        computeCompleted: (cycle) => _standardCompleted(
-          cycle,
-          MaterialLocalizations.of(context).firstDayOfWeekIndex,
-        ),
-        onSetTarget: period,
-        refreshToken: refreshToken,
-        targetMenuLabel: bundle?.label('period', s.p7Period, s.localeName),
-        progressContent: bundle == null
-            ? null
-            : SchemeProgressPanel(
-                bundle: bundle,
-                progress: progress,
-                onPeriods: period,
-              ),
-      );
-    },
-  );
+      },
+    );
+  }
 }
 
 Future<void> pickSchemePeriod(
