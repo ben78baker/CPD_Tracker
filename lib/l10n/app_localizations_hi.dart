@@ -983,7 +983,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addField => 'फ़ील्ड जोड़ें';
 
   @override
-  String get customField => 'कस्टम फ़ील्ड';
+  String get customField => 'कस्टम फ़ील्ड बनाएँ';
 
   @override
   String get fieldLibrary => 'फ़ील्ड लाइब्रेरी';
@@ -1380,6 +1380,21 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get p6OpenReport => 'गतिविधि रिपोर्ट खोलें';
+
+  @override
+  String get applyProfessionTemplate => 'टेम्पलेट लागू करें';
+
+  @override
+  String get applyProfessionTemplateHint =>
+      'नए रिकॉर्ड इस टेम्पलेट का उपयोग करेंगे। पुराने रिकॉर्ड के फ़ील्ड और मान बने रहेंगे और वे मानक निर्यात में उपलब्ध रहेंगे। इस टेम्पलेट की योजना रिपोर्ट में केवल इससे बनाए गए रिकॉर्ड गिने जाएँगे।';
+
+  @override
+  String get applyProfessionTemplatePending =>
+      'टेम्पलेट लागू करने से पहले मौजूदा लेआउट ड्राफ़्ट सहेजें या हटाएँ।';
+
+  @override
+  String get appliedProfessionTemplate =>
+      'यह पेशा पहले से एक टेम्पलेट का उपयोग करता है।';
 
   @override
   String get p6TemplateUpdate => 'टेम्पलेट अपडेट देखें';

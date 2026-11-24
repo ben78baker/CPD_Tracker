@@ -991,7 +991,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get addField => 'Feld hinzufügen';
 
   @override
-  String get customField => 'Eigenes Feld';
+  String get customField => 'Eigenes Feld erstellen';
 
   @override
   String get fieldLibrary => 'Feldbibliothek';
@@ -1394,6 +1394,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get p6OpenReport => 'Aktivitätsbericht öffnen';
+
+  @override
+  String get applyProfessionTemplate => 'Vorlage anwenden';
+
+  @override
+  String get applyProfessionTemplateHint =>
+      'Neue Einträge verwenden diese Vorlage. Bestehende Einträge behalten ihre Felder und Werte und bleiben in Standardexporten verfügbar. Nur mit der Vorlage erstellte Einträge zählen für ihre Programmberichte.';
+
+  @override
+  String get applyProfessionTemplatePending =>
+      'Speichern oder verwerfen Sie den vorhandenen Layoutentwurf, bevor Sie eine Vorlage anwenden.';
+
+  @override
+  String get appliedProfessionTemplate =>
+      'Dieser Beruf verwendet bereits eine Vorlage.';
 
   @override
   String get p6TemplateUpdate => 'Vorlagenupdate prüfen';

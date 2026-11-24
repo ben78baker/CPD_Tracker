@@ -37,6 +37,7 @@ class TemplateEvaluationPanel extends StatefulWidget {
     this.onUse,
     this.onStandard,
     this.onStatus,
+    this.ownedOnly = false,
   });
 
   final ProfessionCreationStore store;
@@ -44,6 +45,7 @@ class TemplateEvaluationPanel extends StatefulWidget {
   final Future<void> Function() purchase;
   final VoidCallback? onUse, onStandard;
   final ValueChanged<TemplateEvaluationStatus>? onStatus;
+  final bool ownedOnly;
 
   @override
   State<TemplateEvaluationPanel> createState() =>
@@ -87,11 +89,13 @@ class _TemplateEvaluationPanelState extends State<TemplateEvaluationPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        EvaluationSummary(
-          status,
-          explain: widget.onUse != null || !status.canCreate,
-        ),
-        if (widget.onUse != null && status.canCreate)
+        if (!widget.ownedOnly || status.owned)
+          EvaluationSummary(
+            status,
+            explain: widget.onUse != null || !status.canCreate,
+          ),
+        if (widget.onUse != null &&
+            (widget.ownedOnly ? status.owned : status.canCreate))
           FilledButton(
             onPressed: _busy ? null : widget.onUse,
             child: Text(s.p6ChooseTemplate),
@@ -100,7 +104,9 @@ class _TemplateEvaluationPanelState extends State<TemplateEvaluationPanel> {
           OutlinedButton(
             onPressed: _busy ? null : () => _refresh(purchase: true),
             child: Text(
-              status.exhausted ? s.evaluationExhausted : s.evaluationBuy,
+              status.exhausted && !widget.ownedOnly
+                  ? s.evaluationExhausted
+                  : s.evaluationBuy,
             ),
           ),
         if (!status.canCreate && widget.onStandard != null)

@@ -1,3 +1,4 @@
+import 'package:cpd_tracker/cpd_compatibility/report_locale.dart';
 import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_pilot.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
@@ -60,6 +61,49 @@ Future<void> _consume(_TestRepository repository, int count) =>
     });
 
 void main() {
+  testWidgets('existing profession catalogue only applies verified purchases', (
+    tester,
+  ) async {
+    final repository = _TestRepository();
+    final store = _store(repository);
+    await _ledger.initialise(repository);
+    final s = lookupAppLocalizations(const Locale('en'));
+    Future<void> open() async {
+      await tester.pumpWidget(
+        _app(
+          Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => chooseNursingTemplate(
+                  context,
+                  store,
+                  phase7: false,
+                  reportLanguage: ReportLanguage.app,
+                  existingProfession: true,
+                ),
+                child: Text(s.p6Templates),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text(s.p6Templates));
+      await tester.pumpAndSettle();
+    }
+
+    await open();
+    expect(find.text(s.p6ChooseTemplate), findsNothing);
+    expect(find.text(s.evaluationBuy), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await store.acceptSimulatedPurchase(
+      'template:${nursingPilot.id}',
+      PurchaseState.verified,
+    );
+    await open();
+    expect(find.text(s.p6ChooseTemplate), findsOneWidget);
+  });
+
   test(
     'declared allowance is absent until provisioned and malformed usage cannot grant records',
     () async {

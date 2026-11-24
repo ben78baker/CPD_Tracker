@@ -13,38 +13,46 @@ Future<FieldSettingsResult?> showFieldPicker(
   required FieldLibrary library,
   required Set<String> usedLibraryIds,
   bool atCapacity = false,
-}) async {
-  final s = editorStrings(context);
-  final useLibrary = await showModalBottomSheet<bool>(
-    context: context,
-    builder: (context) => SafeArea(
-      child: Wrap(
-        children: [
-          ListTile(
-            title: Text(s.customField),
-            leading: const Icon(Icons.edit_note),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.pop(context, false),
-          ),
-          ListTile(
-            title: Text(s.fieldLibrary),
-            leading: const Icon(Icons.library_books_outlined),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: atCapacity ? null : () => Navigator.pop(context, true),
-          ),
-        ],
+}) => showModalBottomSheet<FieldSettingsResult>(
+  context: context,
+  builder: (context) {
+    final s = editorStrings(context);
+    Future<void> open(Widget page) async {
+      final result = await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<FieldSettingsResult>(builder: (_) => page));
+      if (context.mounted && result != null) Navigator.pop(context, result);
+    }
+
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              key: const Key('create-custom-field'),
+              title: Text(atCapacity ? s.editorHeading : s.customField),
+              leading: const Icon(Icons.edit_note),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => open(_TypePage(headingOnly: atCapacity)),
+            ),
+            ListTile(
+              title: Text(s.fieldLibrary),
+              leading: const Icon(Icons.library_books_outlined),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: atCapacity
+                  ? null
+                  : () => open(
+                      _LibraryPage(library: library, usedIds: usedLibraryIds),
+                    ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-  if (useLibrary == null || !context.mounted) return null;
-  return Navigator.of(context).push(
-    MaterialPageRoute<FieldSettingsResult>(
-      builder: (_) => useLibrary
-          ? _LibraryPage(library: library, usedIds: usedLibraryIds)
-          : _TypePage(headingOnly: atCapacity),
-    ),
-  );
-}
+    );
+  },
+);
 
 class _TypePage extends StatelessWidget {
   const _TypePage({required this.headingOnly});

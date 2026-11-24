@@ -81,6 +81,10 @@ enum NameProblem { blank, exists, deleted }
 
 enum CreationStartup { welcome, resumeCreation, home }
 
+class PendingProfessionDraftException implements Exception {
+  const PendingProfessionDraftException();
+}
+
 /// The CPD application boundary. Only the disposable Phase 6 entry point
 /// constructs this service. Purchases and drafts have independent lifetimes.
 class ProfessionCreationStore {
@@ -386,6 +390,72 @@ class ProfessionCreationStore {
     String name,
   ) async => await _checkName(tx, name) == null;
 
+  /// Publish a purchased layout for future records on an existing profession.
+  Future<LayoutRevision> applyOwnedTemplate(
+    String collectionId,
+    (String, int) templateKey, {
+    required int expectedLayoutVersion,
+  }) => repository.transaction((tx) async {
+    final recipe = templates[templateKey];
+    if (recipe == null ||
+        !(await _permanentAccess(tx)).templates.contains(recipe.id)) {
+      throw StateError('An owned profession template is required.');
+    }
+    final history = await tx.loadLayouts(collectionId);
+    final active = history.last;
+    if (active.version != expectedLayoutVersion || active.templateId != null) {
+      throw StateError(
+        'The profession layout changed or already uses a template.',
+      );
+    }
+    final previousReport = await _report(tx, collectionId, active.version);
+    final emptyDraft = jsonEncode(LayoutDraft(active).toJson());
+    final editing = _decodeDrafts(
+      await tx.loadHostState(draftsNamespace),
+    ).where((draft) => draft.editing == collectionId);
+    for (final draft in editing) {
+      if (jsonEncode(draft.layout.toJson()) != emptyDraft ||
+          jsonEncode(draft.report.toJson()) !=
+              jsonEncode(previousReport.toJson())) {
+        throw const PendingProfessionDraftException();
+      }
+      await tx.removeHostValue(draftsNamespace, draft.id);
+    }
+    final adoption = await _installRecipe(
+      tx,
+      collectionId,
+      recipe,
+      expectedVersion: expectedLayoutVersion,
+    );
+    await tx.saveHostValue(
+      reportsNamespace,
+      '$collectionId:${adoption.version}',
+      '[]',
+    );
+    return adoption;
+  });
+
+  Future<LayoutRevision> _installRecipe(
+    SqliteRecordingRepository tx,
+    String collectionId,
+    TemplateVersion recipe, {
+    required int expectedVersion,
+  }) async {
+    cpdFieldBindings(recipe.fields);
+    if (await tx.loadTemplate(recipe.id, recipe.version) == null) {
+      await tx.saveTemplate(recipe, maxActiveFields: cpdActiveFieldLimit);
+    }
+    if (bundles[(recipe.id, recipe.version)] case final bundle?) {
+      await const HistoricalCpdBundles().retain(tx, bundle);
+    }
+    return tx.applyTemplate(
+      collectionId,
+      recipe,
+      expectedVersion: expectedVersion,
+      maxActiveFields: cpdActiveFieldLimit,
+    );
+  }
+
   /// Historical records can be read even when the store cannot verify ownership.
   Future<bool> canAddToLayout(LayoutRevision layout) async =>
       layout.templateId == null ||
@@ -608,22 +678,15 @@ class ProfessionCreationStore {
       collectionId = collection.id;
       revision = collection.layoutVersion;
     } else {
-      final pinned = await tx.loadTemplate(recipe.id, recipe.version);
-      if (pinned == null) {
-        await tx.saveTemplate(recipe, maxActiveFields: cpdActiveFieldLimit);
-      }
-      if (bundles[(recipe.id, recipe.version)] case final bundle?) {
-        await const HistoricalCpdBundles().retain(tx, bundle);
-      }
       final collection = await tx.createCollection(
         cpdProfessionLabel(draft.name),
       );
       collectionId = collection.id;
-      final adoption = await tx.applyTemplate(
+      final adoption = await _installRecipe(
+        tx,
         collectionId,
         recipe,
         expectedVersion: 1,
-        maxActiveFields: cpdActiveFieldLimit,
       );
       final ids = {
         for (final (index, field) in recipe.fields.indexed)

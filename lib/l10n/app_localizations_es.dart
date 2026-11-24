@@ -993,7 +993,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addField => 'Añadir campo';
 
   @override
-  String get customField => 'Campo personalizado';
+  String get customField => 'Crear campo personalizado';
 
   @override
   String get fieldLibrary => 'Biblioteca de campos';
@@ -1394,6 +1394,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get p6OpenReport => 'Abrir informe de actividades';
+
+  @override
+  String get applyProfessionTemplate => 'Aplicar plantilla';
+
+  @override
+  String get applyProfessionTemplateHint =>
+      'Los nuevos registros usarán esta plantilla. Los registros existentes conservarán sus campos y valores y seguirán disponibles en las exportaciones estándar. Solo los registros creados con la plantilla se incluirán en los informes del programa.';
+
+  @override
+  String get applyProfessionTemplatePending =>
+      'Guarda o descarta el borrador de diseño antes de aplicar una plantilla.';
+
+  @override
+  String get appliedProfessionTemplate =>
+      'Esta profesión ya utiliza una plantilla.';
 
   @override
   String get p6TemplateUpdate => 'Revisar actualización';

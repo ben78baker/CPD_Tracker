@@ -88,9 +88,18 @@ loadSchemeProgress({
     );
   }
   final bindings = adoptedRecipeFields(bundle, baseline);
+  final reportingVersions = {
+    for (final revision in history)
+      if (revision.templateId == period.templateId &&
+          revision.templateVersion == period.templateVersion)
+        revision.version,
+  };
   final resolved = <SchemeActivity>[];
   final evidence = <String, SchemeEvidence>{};
-  for (final record in records.where((record) => !record.deleted)) {
+  for (final record in records) {
+    if (record.deleted || !reportingVersions.contains(record.layoutVersion)) {
+      continue;
+    }
     final fields = resolveFields(record.layoutVersion, history);
     resolved.add(SchemeActivity(record.id, fields, record.values));
     for (final field in fields.where(

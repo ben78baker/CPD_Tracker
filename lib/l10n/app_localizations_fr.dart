@@ -1000,7 +1000,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get addField => 'Ajouter un champ';
 
   @override
-  String get customField => 'Champ personnalisé';
+  String get customField => 'Créer un champ personnalisé';
 
   @override
   String get fieldLibrary => 'Bibliothèque de champs';
@@ -1401,6 +1401,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get p6OpenReport => 'Ouvrir le rapport d’activité';
+
+  @override
+  String get applyProfessionTemplate => 'Appliquer le modèle';
+
+  @override
+  String get applyProfessionTemplateHint =>
+      'Les nouvelles entrées utiliseront ce modèle. Les entrées existantes garderont leurs champs et valeurs et resteront disponibles dans les exports standard. Seules les entrées créées avec le modèle compteront dans les rapports du programme.';
+
+  @override
+  String get applyProfessionTemplatePending =>
+      'Enregistrez ou annulez le brouillon de mise en page existant avant d’appliquer un modèle.';
+
+  @override
+  String get appliedProfessionTemplate =>
+      'Cette profession utilise déjà un modèle.';
 
   @override
   String get p6TemplateUpdate => 'Examiner la mise à jour';

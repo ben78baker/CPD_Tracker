@@ -1837,7 +1837,7 @@ abstract class AppLocalizations {
   /// No description provided for @customField.
   ///
   /// In en, this message translates to:
-  /// **'Custom field'**
+  /// **'Create custom field'**
   String get customField;
 
   /// No description provided for @fieldLibrary.
@@ -2595,6 +2595,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open activity report'**
   String get p6OpenReport;
+
+  /// No description provided for @applyProfessionTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply template'**
+  String get applyProfessionTemplate;
+
+  /// No description provided for @applyProfessionTemplateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New records will use this template. Existing records keep their fields and values and remain available in standard exports. Only records created with the template count towards its scheme reports.'**
+  String get applyProfessionTemplateHint;
+
+  /// No description provided for @applyProfessionTemplatePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Save or discard the existing layout draft before applying a template.'**
+  String get applyProfessionTemplatePending;
+
+  /// No description provided for @appliedProfessionTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'This profession already uses a template.'**
+  String get appliedProfessionTemplate;
 
   /// No description provided for @p6TemplateUpdate.
   ///

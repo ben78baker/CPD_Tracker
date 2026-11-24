@@ -421,14 +421,18 @@ class _EditFieldsPageState extends State<EditFieldsPage> {
                                 ),
                                 Tooltip(
                                   message: s.editorDrag,
+                                  triggerMode: TooltipTriggerMode.manual,
                                   child: ReorderableDragStartListener(
                                     enabled: !_saving,
                                     key: ValueKey('drag-${item.id}'),
                                     index: index,
-                                    child: const SizedBox(
-                                      width: 48,
-                                      height: 48,
-                                      child: Icon(Icons.drag_handle),
+                                    child: const ColoredBox(
+                                      color: Colors.transparent,
+                                      child: SizedBox(
+                                        width: 48,
+                                        height: 48,
+                                        child: Icon(Icons.drag_handle),
+                                      ),
                                     ),
                                   ),
                                 ),

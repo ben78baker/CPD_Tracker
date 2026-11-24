@@ -1,9 +1,13 @@
+import 'package:cpd_tracker/cpd_creation/creation_policy.dart';
 import 'package:cpd_tracker/cpd_creation/nursing_pilot.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
+import 'package:cpd_tracker/cpd_migration/legacy_migration.dart'
+    show cpdStandardFields;
 import 'package:cpd_tracker/l10n/app_localizations.dart';
 import 'package:cpd_tracker/onboarding_page.dart';
 import 'package:cpd_tracker/recording_editor/edit_fields_page.dart';
 import 'package:cpd_tracker/recording_engine/field_library.dart';
+import 'package:cpd_tracker/recording_engine/layout_draft.dart';
 import 'package:cpd_tracker/recording_engine/models.dart';
 import 'package:cpd_tracker/recording_engine_storage/sqlite_recording_repository.dart';
 import 'package:cpd_tracker/theme/app_accent.dart';
@@ -35,6 +39,23 @@ class _EmptyDrafts implements SqliteRecordingRepository {
   Future<Map<String, String>> loadHostState(String namespace) async => {};
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _CustomDraftStore extends ProfessionCreationStore {
+  _CustomDraftStore(this.baseline)
+    : super(_EmptyDrafts(), templates: {}, reportRules: {});
+
+  final LayoutRevision baseline;
+  ProfessionDraft? saved;
+
+  @override
+  Future<CreationAccess> access() async => CreationAccess(customFields: true);
+
+  @override
+  Future<LayoutRevision> supplied(ProfessionDraft draft) async => baseline;
+
+  @override
+  Future<void> persist(ProfessionDraft draft) async => saved = draft;
 }
 
 void main() {
@@ -78,6 +99,63 @@ void main() {
           }
           await tester.pumpWidget(const SizedBox.shrink());
         }
+      },
+    );
+  }
+
+  for (final editing in [false, true]) {
+    testWidgets(
+      'Custom CPD can create a field and configure reports when ${editing ? 'editing' : 'setting up'}',
+      (tester) async {
+        tester.view.physicalSize = const Size(400, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetPhysicalSize);
+        final baseline = LayoutRevision(
+          collectionId: 'custom-cpd',
+          version: 1,
+          fields: cpdStandardFields('custom-cpd'),
+        );
+        final store = _CustomDraftStore(baseline);
+        final draft = ProfessionDraft(
+          id: 'draft',
+          kind: ProfessionKind.custom,
+          name: 'Engineering',
+          layout: LayoutDraft(baseline, maxActiveFields: 20),
+          report: ReportSelection(),
+          editing: editing ? baseline.collectionId : null,
+        );
+        await tester.pumpWidget(
+          _app(ProfessionDraftPage(store: store, draft: draft)),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(OutlinedButton, 'Edit fields'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('open-add-field')));
+        await tester.pumpAndSettle();
+        expect(find.text('Field Library'), findsOneWidget);
+        await tester.tap(find.text('Create custom field'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Short text'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Field name'),
+          'Project code',
+        );
+        await tester.tap(find.widgetWithText(FilledButton, 'Add field'));
+        await tester.pumpAndSettle();
+        expect(find.text('6 of 20 fields'), findsOneWidget);
+        await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+        await tester.pumpAndSettle();
+        final report = find.widgetWithText(SwitchListTile, 'Project code');
+        await tester.ensureVisible(report);
+        expect(tester.widget<SwitchListTile>(report).value, isTrue);
+        await tester.tap(report);
+        await tester.pumpAndSettle();
+        final field = store.saved!.layout.fields.last;
+        expect(field.definition.kind, FieldKind.text);
+        expect(field.label, 'Project code');
+        expect(store.saved!.report.excluded, contains(field.id));
       },
     );
   }

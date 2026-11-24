@@ -24,10 +24,12 @@ class ProfessionCard extends StatelessWidget {
     this.targetMenuLabel,
     this.onCreateBackup,
     this.onEditFields,
+    this.onTemplates,
   });
 
   final VoidCallback? onCreateBackup;
   final VoidCallback? onEditFields;
+  final VoidCallback? onTemplates;
   final Widget? progressContent;
   final String? targetMenuLabel;
   final int refreshToken;
@@ -64,6 +66,7 @@ class ProfessionCard extends StatelessWidget {
                 if (value == 'set_target') onSetTarget();
                 if (value == 'search_records') onSearch();
                 if (value == 'edit_fields') onEditFields?.call();
+                if (value == 'profession_templates') onTemplates?.call();
                 if (value == 'backup') onCreateBackup?.call();
                 if (value == 'rename') onRename();
                 if (value == 'delete') onDelete();
@@ -81,6 +84,11 @@ class ProfessionCard extends StatelessWidget {
                   PopupMenuItem(
                     value: 'edit_fields',
                     child: Text(loc.editFields),
+                  ),
+                if (onTemplates != null)
+                  PopupMenuItem(
+                    value: 'profession_templates',
+                    child: Text(loc.p6Templates),
                   ),
                 if (onCreateBackup != null)
                   PopupMenuItem(value: 'backup', child: Text(loc.p8Create)),

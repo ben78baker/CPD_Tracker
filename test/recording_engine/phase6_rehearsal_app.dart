@@ -19,6 +19,8 @@ import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
 import 'package:cpd_tracker/cpd_creation/template_evaluation.dart';
 import 'package:cpd_tracker/l10n/app_localizations.dart';
 import 'package:cpd_tracker/onboarding_page.dart';
+import 'package:cpd_tracker/recording_editor/field_settings.dart'
+    show editorConfirmation;
 import 'package:cpd_tracker/recording_editor/record_form.dart';
 import 'package:cpd_tracker/recording_editor/strings.dart';
 import 'package:cpd_tracker/recording_editor/template_preview.dart';
@@ -328,6 +330,48 @@ class _HomeState extends State<_Home> {
     }
   }
 
+  Future<void> _professionTemplates(RecordingCollection profession) async {
+    final store = widget.store;
+    final s = editorStrings(context);
+    try {
+      final active = (await store.repository.loadLayouts(profession.id)).last;
+      final settings = await store.settings();
+      if (!mounted) return;
+      final chosen = await chooseNursingTemplate(
+        context,
+        store,
+        phase7: widget.phase7,
+        reportLanguage: ReportLanguage.fromStored(settings['reportLocale']),
+        existingProfession: true,
+        alreadyApplied: active.templateId != null,
+      );
+      if (!mounted || chosen != true || active.templateId != null) return;
+      final confirmed = await editorConfirmation(
+        context,
+        s.applyProfessionTemplate,
+        '${profession.label}\n\n${s.applyProfessionTemplateHint}',
+        s.applyProfessionTemplate,
+      );
+      if (!mounted || !confirmed) return;
+      await store.applyOwnedTemplate(profession.id, (
+        nursingPilot.id,
+        nursingPilot.version,
+      ), expectedLayoutVersion: active.version);
+      _refresh();
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is PendingProfessionDraftException
+                ? s.applyProfessionTemplatePending
+                : s.recordChangeFailed,
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _openRecord(CpdRecordItem item, {required bool view}) async {
     final repository = widget.store.repository;
     final profession = await repository.loadCollection(item.professionId);
@@ -449,7 +493,20 @@ class _HomeState extends State<_Home> {
     } else if (format == 'field_csv') {
       await shareFieldValuesCsv(context, history, records);
     } else {
-      final report = await store.reportAt(profession.id, history.last.version);
+      final active = history.last;
+      final report = await store.reportAt(profession.id, active.version);
+      final beforeAdoption = history.where(
+        (layout) => layout.templateId == null,
+      );
+      final previousReport =
+          active.templateId != null && beforeAdoption.isNotEmpty
+          ? await store.reportAt(profession.id, beforeAdoption.last.version)
+          : null;
+      final historicalExclusions = {
+        if (previousReport != null)
+          for (final revision in beforeAdoption)
+            revision.version: previousReport.excluded,
+      };
       if (!mounted) return;
       await openLayoutReport(
         context,
@@ -458,6 +515,7 @@ class _HomeState extends State<_Home> {
         history,
         records,
         report.excluded,
+        historicalExclusions: historicalExclusions,
         language: language,
         evidenceNames: {
           for (final row in rows)
@@ -741,6 +799,9 @@ class _HomeState extends State<_Home> {
                       ),
                 onEditFields: _integratedRecords
                     ? () => _editFields(profession)
+                    : null,
+                onTemplates: _integratedRecords
+                    ? () => _professionTemplates(profession)
                     : null,
                 onAdd: () => _open(profession, add: true),
                 onView: () => _open(profession),

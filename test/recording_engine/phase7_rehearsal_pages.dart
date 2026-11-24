@@ -104,6 +104,7 @@ class RehearsalProfessionCard extends StatelessWidget {
     this.originals,
     this.onCreateBackup,
     this.onEditFields,
+    this.onTemplates,
   });
 
   final ProfessionCreationStore store;
@@ -118,6 +119,7 @@ class RehearsalProfessionCard extends StatelessWidget {
   final ManagedAttachmentFiles? originals;
   final VoidCallback? onCreateBackup;
   final VoidCallback? onEditFields;
+  final VoidCallback? onTemplates;
   final int refreshToken;
 
   Future<(ProfessionTemplateBundle?, SchemeProgress?, (int, String)?)>
@@ -264,6 +266,7 @@ class RehearsalProfessionCard extends StatelessWidget {
         name: profession.label,
         onCreateBackup: onCreateBackup,
         onEditFields: onEditFields,
+        onTemplates: onTemplates,
         onAdd: onAdd,
         onScan: onScan,
         onView: onView,
@@ -921,6 +924,7 @@ Future<void> openLayoutReport(
   Set<String> exclusions, {
   ReportLanguage? language,
   Map<String, String> evidenceNames = const {},
+  Map<int, Set<String>> historicalExclusions = const {},
 }) async {
   final request = await pickPresentation(context, store, language: language);
   if (request == null || !context.mounted) return;
@@ -948,20 +952,23 @@ Future<void> openLayoutReport(
     };
   }
 
+  Set<String> excludedFor(RecordingRecord record) =>
+      historicalExclusions[record.layoutVersion] ?? exclusions;
+
   final activities = [
     for (final record in records.where((record) => !record.deleted))
       (
         title:
             resolveFields(record.layoutVersion, history)
                 .where((field) => field.definition.id == 'cpd.title')
-                .where((field) => !exclusions.contains(field.id))
+                .where((field) => !excludedFor(record).contains(field.id))
                 .map((field) => record.values[field.id] as String?)
                 .firstOrNull ??
             s.noTitle,
         status: '',
         fields: [
           for (final field in resolveFields(record.layoutVersion, history))
-            if (!exclusions.contains(field.id) &&
+            if (!excludedFor(record).contains(field.id) &&
                 field.definition.id != 'cpd.title')
               if (record.values[field.id] case final value?)
                 (

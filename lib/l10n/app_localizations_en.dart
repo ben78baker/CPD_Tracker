@@ -984,7 +984,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addField => 'Add field';
 
   @override
-  String get customField => 'Custom field';
+  String get customField => 'Create custom field';
 
   @override
   String get fieldLibrary => 'Field Library';
@@ -1386,6 +1386,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get p6OpenReport => 'Open activity report';
+
+  @override
+  String get applyProfessionTemplate => 'Apply template';
+
+  @override
+  String get applyProfessionTemplateHint =>
+      'New records will use this template. Existing records keep their fields and values and remain available in standard exports. Only records created with the template count towards its scheme reports.';
+
+  @override
+  String get applyProfessionTemplatePending =>
+      'Save or discard the existing layout draft before applying a template.';
+
+  @override
+  String get appliedProfessionTemplate =>
+      'This profession already uses a template.';
 
   @override
   String get p6TemplateUpdate => 'Review template update';

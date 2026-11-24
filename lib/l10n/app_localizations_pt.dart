@@ -992,7 +992,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get addField => 'Adicionar campo';
 
   @override
-  String get customField => 'Campo personalizado';
+  String get customField => 'Criar campo personalizado';
 
   @override
   String get fieldLibrary => 'Biblioteca de campos';
@@ -1393,6 +1393,21 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get p6OpenReport => 'Abrir relatório de atividades';
+
+  @override
+  String get applyProfessionTemplate => 'Aplicar modelo';
+
+  @override
+  String get applyProfessionTemplateHint =>
+      'Os novos registos usarão este modelo. Os registos existentes mantêm os seus campos e valores e continuam disponíveis nas exportações padrão. Só os registos criados com o modelo contam para os relatórios do programa.';
+
+  @override
+  String get applyProfessionTemplatePending =>
+      'Guarde ou elimine o rascunho do esquema antes de aplicar um modelo.';
+
+  @override
+  String get appliedProfessionTemplate =>
+      'Esta profissão já utiliza um modelo.';
 
   @override
   String get p6TemplateUpdate => 'Rever atualização do modelo';

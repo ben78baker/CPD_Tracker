@@ -55,6 +55,47 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 }
 
 void main() {
+  for (final hold in [false, true]) {
+    testWidgets('touch drag from the edge of a field handle (hold=$hold)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(430, 940);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      List<LayoutField>? savedFields;
+      await tester.pumpWidget(
+        _app(
+          _editor((draft) async {
+            savedFields = draft.fields;
+            return _initial;
+          }),
+        ),
+      );
+      final first = find.byKey(ValueKey('drag-${_initial.fields[0].id}'));
+      final second = find.byKey(ValueKey('drag-${_initial.fields[1].id}'));
+      final origin = tester.getCenter(second) - const Offset(19, 0);
+      final destination = tester.getCenter(first).dy - 12;
+      final gesture = await tester.startGesture(origin);
+      await tester.pump(
+        hold
+            ? const Duration(milliseconds: 650)
+            : const Duration(milliseconds: 50),
+      );
+      for (var step = 1; step <= 12; step++) {
+        await gesture.moveTo(
+          Offset(origin.dx, origin.dy + (destination - origin.dy) * step / 12),
+        );
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+      await _tap(tester, find.widgetWithText(FilledButton, 'Save'));
+      expect(savedFields?.first.id, _initial.fields[1].id);
+      expect(savedFields?[1].id, _initial.fields[0].id);
+    });
+  }
+
   for (final (index, locale) in [
     ...AppLocalizations.supportedLocales,
     const Locale('en'),
@@ -84,6 +125,7 @@ void main() {
         expect(find.text(s.editorFullCount(5, 20)), findsOneWidget);
         expect(find.bySemanticsLabel(s.addField), findsOneWidget);
         await _tap(tester, find.byKey(const Key('open-add-field')));
+        expect(find.bySemanticsLabel(s.customField), findsOneWidget);
         expect(find.text(s.fieldLibrary), findsOneWidget);
         await _tap(tester, find.text(s.fieldLibrary));
         expect(find.text(s.editorAll), findsOneWidget);
@@ -120,8 +162,15 @@ void main() {
           }),
         ),
       );
+      await _tap(tester, find.byKey(ValueKey('menu-${_base.fields.first.id}')));
+      expect(find.text('Remove field'), findsNothing);
+      await _tap(tester, find.text('Move down'));
       await _tap(tester, find.byKey(const Key('open-add-field')));
-      await _tap(tester, find.text('Custom field'));
+      await _tap(tester, find.text('Create custom field'));
+      expect(find.text('Choose a field type'), findsOneWidget);
+      await _tap(tester, find.byTooltip('Back'));
+      expect(find.text('Field Library'), findsOneWidget);
+      await _tap(tester, find.text('Create custom field'));
       await _tap(tester, find.text('Short text'));
       await tester.enterText(
         find.widgetWithText(TextField, 'Field name'),
@@ -147,9 +196,20 @@ void main() {
       await _tap(tester, find.text('Future records only'));
       await _tap(tester, find.widgetWithText(FilledButton, 'Add field'));
       expect(find.text('7 of 20 fields'), findsOneWidget);
-      await _tap(tester, find.byKey(ValueKey('menu-${_base.fields.first.id}')));
-      expect(find.text('Remove field'), findsNothing);
-      await _tap(tester, find.text('Move down'));
+      final tiles = find
+          .descendant(
+            of: find.byType(ReorderableListView),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.scrollUntilVisible(
+        find.text('Work order'),
+        250,
+        scrollable: tiles,
+      );
+      await _tap(tester, find.byTooltip('Menu: Work order'));
+      expect(find.text('Field settings'), findsOneWidget);
+      await _tap(tester, find.text('Move up'));
       await _tap(tester, find.widgetWithText(OutlinedButton, 'Preview'));
       expect(
         find.text('Try sample values here. They are discarded when you leave.'),
@@ -162,6 +222,7 @@ void main() {
       await _tap(tester, find.widgetWithText(FilledButton, 'Save'));
       expect(saved, hasLength(1));
       expect(saved.single.fields[1].id, _base.fields.first.id);
+      expect(saved.single.fields[4].label, 'Work order');
       expect(
         saved.single.fields
             .singleWhere((f) => f.label == 'Work order')

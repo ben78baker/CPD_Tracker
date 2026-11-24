@@ -69,14 +69,11 @@ class _ProfessionCreationPageState extends State<ProfessionCreationPage> {
               )
             : ReportLanguage.app;
         if (!mounted) return;
-        final chosen = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(
-            builder: (_) => _PilotCatalogue(
-              store: widget.store,
-              phase7: widget.phase7,
-              reportLanguage: reportLanguage,
-            ),
-          ),
+        final chosen = await chooseNursingTemplate(
+          context,
+          widget.store,
+          phase7: widget.phase7,
+          reportLanguage: reportLanguage,
         );
         if (!mounted || chosen != true) return;
       }
@@ -272,15 +269,37 @@ class DraftChoices extends StatelessWidget {
   }
 }
 
+Future<bool?> chooseNursingTemplate(
+  BuildContext context,
+  ProfessionCreationStore store, {
+  required bool phase7,
+  required ReportLanguage reportLanguage,
+  bool existingProfession = false,
+  bool alreadyApplied = false,
+}) => Navigator.of(context).push<bool>(
+  MaterialPageRoute(
+    builder: (_) => _PilotCatalogue(
+      store: store,
+      phase7: phase7,
+      reportLanguage: reportLanguage,
+      existingProfession: existingProfession,
+      alreadyApplied: alreadyApplied,
+    ),
+  ),
+);
+
 class _PilotCatalogue extends StatefulWidget {
   const _PilotCatalogue({
     required this.store,
     required this.phase7,
     required this.reportLanguage,
+    required this.existingProfession,
+    required this.alreadyApplied,
   });
   final ProfessionCreationStore store;
   final ReportLanguage reportLanguage;
   final bool phase7;
+  final bool existingProfession, alreadyApplied;
 
   @override
   State<_PilotCatalogue> createState() => _PilotCatalogueState();
@@ -313,6 +332,7 @@ class _PilotCatalogueState extends State<_PilotCatalogue> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(s.p6TemplateScope),
+                if (widget.alreadyApplied) Text(s.appliedProfessionTemplate),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: () async {
@@ -358,9 +378,12 @@ class _PilotCatalogueState extends State<_PilotCatalogue> {
         key: key,
         store: widget.store,
         templateId: nursingPilot.id,
+        ownedOnly: widget.existingProfession,
         purchase: () =>
             openTemplateCheckout(context, widget.store, nursingPilot.id),
-        onUse: () => Navigator.pop(context, true),
+        onUse: widget.alreadyApplied
+            ? null
+            : () => Navigator.pop(context, true),
       );
 }
 
@@ -938,7 +961,9 @@ class _ProfessionDraftPageState extends State<ProfessionDraftPage> {
                   OutlinedButton.icon(
                     onPressed: () => _edit(baseline, access),
                     icon: const Icon(Icons.tune),
-                    label: Text(s.p6Layout),
+                    label: Text(
+                      access.canCustomiseFields ? s.editFields : s.p6Layout,
+                    ),
                   ),
                   if (report != null) ...[
                     Text(
