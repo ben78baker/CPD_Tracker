@@ -66,6 +66,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
   late final TextEditingController _searchController;
   String _fmt = 'dd/MM/yyyy';
   bool _exporting = false;
+  bool _openingRecord = false;
   bool _showSearch = false;
   String _searchQuery = '';
   DateTimeRange? _lastRange; // NEW: remember picked range
@@ -108,21 +109,27 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
       _entries.where((record) => record.matches(_searchQuery)).toList();
 
   Future<void> _open(CpdRecordItem item, {bool view = false}) async {
-    if (widget.onOpenRecord case final open?) {
-      await open(item, view: view);
-    } else {
-      final e = item.entry;
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => AddEntryPage(
-            profession: e.profession,
-            existingEntry: e,
-            recordStore: _repo,
+    if (_openingRecord) return;
+    _openingRecord = true;
+    try {
+      if (widget.onOpenRecord case final open?) {
+        await open(item, view: view);
+      } else {
+        final e = item.entry;
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AddEntryPage(
+              profession: e.profession,
+              existingEntry: e,
+              recordStore: _repo,
+            ),
           ),
-        ),
-      );
+        );
+      }
+      if (mounted) await _load();
+    } finally {
+      _openingRecord = false;
     }
-    if (mounted) await _load();
   }
 
   void _toggleSearch() {
@@ -692,6 +699,7 @@ class _CpdRecordsPageState extends State<CpdRecordsPage> {
                 : filtered.isEmpty
                 ? const Center(child: Text('No matching records found'))
                 : ListView.builder(
+                    key: const PageStorageKey('profession-records'),
                     padding: const EdgeInsets.only(top: 4, bottom: 8),
                     itemCount: filtered.length,
                     itemBuilder: (context, i) {

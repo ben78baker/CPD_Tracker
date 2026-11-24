@@ -310,6 +310,12 @@ abstract class AppLocalizations {
   /// **'View Record'**
   String get viewRecord;
 
+  /// No description provided for @editRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Record'**
+  String get editRecord;
+
   /// No description provided for @recordChangeFailed.
   ///
   /// In en, this message translates to:

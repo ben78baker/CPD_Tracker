@@ -60,18 +60,19 @@ class RecordCard extends StatelessWidget {
     return Card(
       elevation: elevation ?? 1.5,
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title row + overflow menu
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: onView,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onView,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title row + overflow menu
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
                     child: Text(
                       entry.title.isEmpty
                           ? AppLocalizations.of(context)!.noTitle
@@ -81,105 +82,107 @@ class RecordCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-                Material(
-                  color: Colors.transparent,
-                  child: PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert),
-                    onSelected: (v) {
-                      if (v == 'view') {
-                        onView?.call();
-                      } else if (v == 'edit') {
-                        onEdit?.call();
-                      } else if (v == 'delete') {
-                        onDelete?.call();
-                      }
-                    },
-                    itemBuilder: (ctx) => [
-                      if (onView != null)
+                  Material(
+                    color: Colors.transparent,
+                    child: PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert),
+                      onSelected: (v) {
+                        if (v == 'view') {
+                          onView?.call();
+                        } else if (v == 'edit') {
+                          onEdit?.call();
+                        } else if (v == 'delete') {
+                          onDelete?.call();
+                        }
+                      },
+                      itemBuilder: (ctx) => [
+                        if (onView != null)
+                          PopupMenuItem(
+                            value: 'view',
+                            child: ListTile(
+                              leading: const Icon(Icons.visibility_outlined),
+                              title: Text(AppLocalizations.of(ctx)!.viewRecord),
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                            ),
+                          ),
                         PopupMenuItem(
-                          value: 'view',
+                          value: 'edit',
                           child: ListTile(
-                            leading: const Icon(Icons.visibility_outlined),
-                            title: Text(AppLocalizations.of(ctx)!.viewRecord),
+                            leading: const Icon(Icons.edit_outlined),
+                            title: Text(AppLocalizations.of(ctx)!.editRecord),
                             contentPadding: EdgeInsets.zero,
                             dense: true,
                           ),
                         ),
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: ListTile(
-                          leading: const Icon(Icons.edit_outlined),
-                          title: Text(AppLocalizations.of(ctx)!.edit),
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: ListTile(
+                            leading: const Icon(Icons.delete_outline),
+                            title: Text(AppLocalizations.of(ctx)!.delete),
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
                         ),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: ListTile(
-                          leading: const Icon(Icons.delete_outline),
-                          title: Text(AppLocalizations.of(ctx)!.delete),
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Date + Duration
-            Wrap(
-              spacing: 12,
-              runSpacing: 6,
-              children: [
-                _Chip(icon: Icons.event, label: dateStr),
-                _Chip(
-                  icon: Icons.timer_outlined,
-                  label: _formatDuration(context, entry.hours, entry.minutes),
-                ),
-              ],
-            ),
-
-            if (entry.details.trim().isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Text(
-                entry.details,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-
-            if (showAttachmentsButton && hasAttachments) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  TactileButton.icon(
-                    onPressed: onViewAttachments,
-                    icon: const Icon(Icons.attach_file),
-                    label: Text(
-                      AppLocalizations.of(
-                        context,
-                      )!.attachmentsCount(entry.attachments.length),
+                      ],
                     ),
                   ),
-                  if (onShareAll != null)
-                    IconButton(
-                      tooltip: AppLocalizations.of(
-                        context,
-                      )!.shareAllAttachments,
-                      icon: const Icon(Icons.ios_share),
-                      onPressed: onShareAll,
-                    ),
                 ],
               ),
+              const SizedBox(height: 8),
+
+              // Date + Duration
+              Wrap(
+                spacing: 12,
+                runSpacing: 6,
+                children: [
+                  _Chip(icon: Icons.event, label: dateStr),
+                  _Chip(
+                    icon: Icons.timer_outlined,
+                    label: _formatDuration(context, entry.hours, entry.minutes),
+                  ),
+                ],
+              ),
+
+              if (entry.details.trim().isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  entry.details,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+
+              if (showAttachmentsButton && hasAttachments) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    TactileButton.icon(
+                      onPressed: onViewAttachments,
+                      icon: const Icon(Icons.attach_file),
+                      label: Text(
+                        AppLocalizations.of(
+                          context,
+                        )!.attachmentsCount(entry.attachments.length),
+                      ),
+                    ),
+                    if (onShareAll != null)
+                      IconButton(
+                        tooltip: AppLocalizations.of(
+                          context,
+                        )!.shareAllAttachments,
+                        icon: const Icon(Icons.ios_share),
+                        onPressed: onShareAll,
+                      ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -219,7 +222,11 @@ class _Chip extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [Icon(icon, size: 16), const SizedBox(width: 6), Text(label)],
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 6),
+          Flexible(child: Text(label)),
+        ],
       ),
     );
   }

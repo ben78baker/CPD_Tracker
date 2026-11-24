@@ -40,6 +40,7 @@
   "scanQr": "Scan QR",
   "viewRecords": "View Records",
   "viewRecord": "View Record",
+  "editRecord": "Edit Record",
   "recordChangeFailed": "Could not update the record. Reload and try again.",
   "customFieldsReport": "Custom Fields report",
   "fieldValuesCsv": "Field values (CSV)",

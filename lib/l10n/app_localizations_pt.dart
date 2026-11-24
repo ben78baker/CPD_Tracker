@@ -111,6 +111,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get viewRecord => 'Ver registro';
 
   @override
+  String get editRecord => 'Editar registro';
+
+  @override
   String get recordChangeFailed =>
       'Não foi possível atualizar o registro. Recarregue e tente novamente.';
 

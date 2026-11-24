@@ -112,6 +112,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewRecord => 'View Record';
 
   @override
+  String get editRecord => 'Edit Record';
+
+  @override
   String get recordChangeFailed =>
       'Could not update the record. Reload and try again.';
 

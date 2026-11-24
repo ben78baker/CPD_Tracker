@@ -4,6 +4,7 @@ import 'package:cpd_tracker/cpd_compatibility/cpd_records_source.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_layout_policy.dart';
 import 'package:cpd_tracker/cpd_compatibility/cpd_targets.dart';
 import 'package:cpd_tracker/cpd_creation/profession_creation_store.dart';
+import 'package:cpd_tracker/cpd_creation/template_evaluation.dart';
 import 'package:cpd_tracker/cpd_migration/legacy_migration.dart';
 import 'package:cpd_tracker/recording_engine/models.dart';
 import 'package:cpd_tracker/recording_engine_storage/managed_attachment_files.dart';
@@ -16,9 +17,12 @@ import 'package:cpd_tracker/l10n/app_localizations.dart';
 import 'package:cpd_tracker/models.dart';
 import 'package:cpd_tracker/widgets/record_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'phase6_rehearsal_app.dart';
 import 'phase7_rehearsal_pages.dart';
 
 const standard = (id: 'standard-id', label: 'Standard', deleted: false);
@@ -31,6 +35,7 @@ CpdRecordItem row(
   String title, {
   bool deleted = false,
   List<String> terms = const [],
+  String details = 'Synthetic notes',
 }) => CpdRecordItem(
   id: '${profession.id}-$day',
   professionId: profession.id,
@@ -39,7 +44,7 @@ CpdRecordItem row(
     profession: profession.label,
     date: DateTime(2026, 1, day),
     title: title,
-    details: 'Synthetic notes',
+    details: details,
     hours: 1,
     minutes: 15,
     attachments: [],
@@ -115,6 +120,12 @@ class EvidenceRepository implements SqliteRecordingRepository {
     locator: 'shared.pdf',
     name: 'Original certificate.pdf',
   );
+  final link = RecordingAttachment(
+    id: 'evidence-link',
+    kind: AttachmentKind.link,
+    locator: 'https://example.test/certificate',
+    name: 'Certificate website',
+  );
 
   @override
   Future<T> transaction<T>(Future<T> Function(SqliteRecordingRepository) run) =>
@@ -124,6 +135,12 @@ class EvidenceRepository implements SqliteRecordingRepository {
   Future<List<RecordingCollection>> loadCollections() async => [
     RecordingCollection(standard.id, standard.label, 1),
   ];
+
+  @override
+  Future<RecordingCollection?> loadCollection(String id) async =>
+      id == standard.id
+      ? RecordingCollection(standard.id, standard.label, 1)
+      : null;
 
   @override
   Future<List<LayoutRevision>> loadLayouts(String id) async => [layout];
@@ -143,7 +160,7 @@ class EvidenceRepository implements SqliteRecordingRepository {
 
   @override
   Future<RecordingAttachment?> loadAttachment(String id) async =>
-      id == asset.id ? asset : null;
+      id == asset.id ? asset : (id == link.id ? link : null);
 
   @override
   Future<RecordingRecord> updateValues(
@@ -323,11 +340,17 @@ void main() {
   testWidgets('shared cards put real dates first and use stable action IDs', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(360, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    const longDetails =
+        'Started the activity.\nReflected on the result.\nPlanned a follow-up.';
     final source = FixtureSource([
-      row(standard, 1, 'First activity'),
-      row(standard, 2, 'Latest activity'),
+      row(standard, 1, 'First activity', details: 'Brief'),
+      row(standard, 2, 'Latest activity', details: longDetails),
     ]);
-    (String, bool)? opened;
+    final opened = <(String, bool)>[];
     await tester.pumpWidget(
       app(
         CpdRecordsPage(
@@ -335,7 +358,7 @@ void main() {
           professionId: standard.id,
           source: source,
           onOpenRecord: (item, {required view}) async =>
-              opened = (item.id, view),
+              opened.add((item.id, view)),
         ),
       ),
     );
@@ -347,18 +370,44 @@ void main() {
     );
     expect(find.text('02/01/2026'), findsOneWidget);
     expect(find.text('1 hour 15 minutes'), findsWidgets);
-    await tester.tap(find.text('Latest activity'));
-    await tester.pumpAndSettle();
-    expect(opened, ('standard-id-2', true));
+    final description = find.text(longDetails);
+    expect(tester.widget<Text>(description).maxLines, 2);
+    expect(tester.widget<Text>(description).overflow, TextOverflow.ellipsis);
+    expect(
+      tester.renderObject<RenderParagraph>(description).didExceedMaxLines,
+      isTrue,
+    );
+    expect(
+      tester
+          .renderObject<RenderParagraph>(find.text('Brief'))
+          .didExceedMaxLines,
+      isFalse,
+    );
+    for (final part in [
+      find.text('Latest activity'),
+      find.text('02/01/2026'),
+      description,
+    ]) {
+      await tester.tap(part);
+      await tester.pumpAndSettle();
+    }
+    expect(opened, List.filled(3, ('standard-id-2', true)));
     final menu = find.descendant(
       of: find.byKey(const ValueKey('standard-id-2')),
       matching: find.byType(PopupMenuButton<String>),
     );
     await tester.tap(menu);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit').last);
+    expect(opened, hasLength(3));
+    await tester.tap(find.text('View Record'));
     await tester.pumpAndSettle();
-    expect(opened, ('standard-id-2', false));
+    expect(opened.last, ('standard-id-2', true));
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+    expect(opened, hasLength(4));
+    await tester.tap(find.text('Edit Record').last);
+    await tester.pumpAndSettle();
+    expect(opened.last, ('standard-id-2', false));
     await tester.tap(menu);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete').last);
@@ -369,6 +418,124 @@ void main() {
     expect(source.lastDelete, ('standard-id-2', true, false));
     expect(find.text('Latest activity'), findsNothing);
   });
+
+  testWidgets(
+    'view opens evidence and refreshes after the shared editor saves',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await tester.binding.setSurfaceSize(const Size(390, 1050));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final root = Directory.systemTemp.createTempSync('cpd-view-record-');
+      addTearDown(() => root.deleteSync(recursive: true));
+      final repository = EvidenceRepository();
+      final originals = ManagedAttachmentFiles(root);
+      final file = File('${root.path}/${repository.asset.locator}')
+        ..writeAsStringSync('Original bytes');
+      final calls = <MethodCall>[];
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      const channel = MethodChannel('plugins.flutter.io/url_launcher');
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call);
+        return true;
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+      const title = 'Workshop with evidence';
+      const details = 'First line\nSecond line\nThird line\nLast line';
+      const newDetails = 'Updated notes\nEvidence still intact';
+      final bindings = cpdFieldBindings(repository.layout.fields);
+      final evidenceId = bindings['cpd.evidence']!;
+      final item = row(standard, 1, title, details: details);
+      repository.rows[item.id] = RecordingRecord(
+        id: item.id,
+        collectionId: item.professionId,
+        layoutVersion: 1,
+        version: 1,
+        deleted: false,
+        values: {
+          bindings['cpd.title']!: title,
+          bindings['cpd.details']!: details,
+          bindings['cpd.activityDate']!: '2026-01-01',
+          bindings['cpd.creditedDuration']!: 75,
+          evidenceId: [repository.asset.id, repository.link.id],
+        },
+      );
+      final store = ProfessionCreationStore(
+        repository,
+        templates: const {},
+        reportRules: const {},
+        evaluationLedger: const TemplateEvaluationLedger(),
+      );
+      await tester.pumpWidget(
+        app(
+          Builder(
+            builder: (context) => CpdRecordsPage(
+              profession: standard.label,
+              professionId: standard.id,
+              source: FixtureSource([item, row(standard, 2, 'Other activity')]),
+              initialSearchQuery: 'Workshop',
+              onOpenRecord: (item, {required view}) => RehearsalRecordPage.open(
+                context,
+                store: store,
+                professionId: item.professionId,
+                recordId: item.id,
+                view: view,
+                originals: originals,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Other activity'), findsNothing);
+      await tester.tap(find.text(details));
+      await tester.pumpAndSettle();
+      expect(find.text('View Record'), findsOneWidget);
+      expect(tester.widget<Text>(find.text(details)).maxLines, isNull);
+      expect(find.byType(InputChip), findsNothing);
+      expect(find.byType(OutlinedButton), findsNothing);
+      expect(find.byType(TextFormField), findsNothing);
+      final attachment = find.widgetWithText(ActionChip, repository.asset.name);
+      expect(attachment, findsOneWidget);
+      await tester.tap(find.widgetWithText(ActionChip, repository.link.name));
+      await tester.pumpAndSettle();
+      expect(calls.single.method, 'launch');
+      expect(calls.single.arguments['url'], repository.link.locator);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Edit Record'));
+      await tester.pumpAndSettle();
+      final evidence = find.widgetWithText(InputChip, repository.asset.name);
+      expect(tester.widget<InputChip>(evidence).onDeleted, isNotNull);
+      expect(find.byType(OutlinedButton), findsWidgets);
+      await tester.enterText(
+        find.widgetWithText(TextFormField, details),
+        newDetails,
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pumpAndSettle();
+      expect(find.text('View Record'), findsOneWidget);
+      expect(find.text(newDetails), findsOneWidget);
+      expect(find.text(details), findsNothing);
+      expect(attachment, findsOneWidget);
+      expect(repository.rows[item.id]!.values[evidenceId], [
+        repository.asset.id,
+        repository.link.id,
+      ]);
+      expect(file.readAsStringSync(), 'Original bytes');
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.text('Workshop'), findsOneWidget);
+      expect(find.text('Other activity'), findsNothing);
+
+      await tester.tap(find.byType(PopupMenuButton<String>).last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit Record'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextFormField, newDetails), findsOneWidget);
+      expect(find.text('View Record'), findsNothing);
+    },
+  );
 
   testWidgets('global evidence search opens the right record and profession', (
     tester,

@@ -372,38 +372,16 @@ class _HomeState extends State<_Home> {
     }
   }
 
-  Future<void> _openRecord(CpdRecordItem item, {required bool view}) async {
-    final repository = widget.store.repository;
-    final profession = await repository.loadCollection(item.professionId);
-    final record = await repository.loadRecord(item.id);
-    if (!mounted) return;
-    if (profession == null ||
-        profession.deleted ||
-        record == null ||
-        record.deleted ||
-        record.collectionId != item.professionId) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(editorStrings(context).recordChangeFailed)),
+  Future<void> _openRecord(CpdRecordItem item, {required bool view}) =>
+      RehearsalRecordPage.open(
+        context,
+        store: widget.store,
+        professionId: item.professionId,
+        recordId: item.id,
+        view: view,
+        originals: widget.originals,
+        onEditFields: _editFields,
       );
-      return;
-    }
-    final history = await repository.loadLayouts(profession.id);
-    if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => RehearsalRecordPage(
-          store: widget.store,
-          collection: profession.id,
-          history: history,
-          record: record,
-          phase7: true,
-          originals: widget.originals,
-          readOnly: view,
-          onEditFields: () => _editFields(profession),
-        ),
-      ),
-    );
-  }
 
   Future<void> _viewRecords(
     RecordingCollection profession, {
@@ -1219,6 +1197,97 @@ class _ProfessionPageState extends State<_ProfessionPage> {
 }
 
 class RehearsalRecordPage extends StatefulWidget {
+  static Future<void> open(
+    BuildContext context, {
+    required ProfessionCreationStore store,
+    required String professionId,
+    required String recordId,
+    required bool view,
+    ManagedAttachmentFiles? originals,
+    Future<void> Function(RecordingCollection)? onEditFields,
+  }) async {
+    Future<
+      ({
+        RecordingCollection profession,
+        RecordingRecord record,
+        List<LayoutRevision> history,
+      })?
+    >
+    read() => store.repository.transaction((tx) async {
+      final profession = await tx.loadCollection(professionId);
+      final record = await tx.loadRecord(recordId);
+      if (profession == null ||
+          profession.deleted ||
+          record == null ||
+          record.deleted ||
+          record.collectionId != professionId) {
+        return null;
+      }
+      final history = await tx.loadLayouts(professionId);
+      return (profession: profession, record: record, history: history);
+    });
+
+    final initial = await read();
+    if (!context.mounted) return;
+    if (initial == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(editorStrings(context).recordChangeFailed)),
+      );
+      return;
+    }
+    var current = initial;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => StatefulBuilder(
+          builder: (route, setRouteState) {
+            Future<void> refresh() async {
+              final latest = await read();
+              if (!route.mounted) return;
+              if (latest == null) {
+                Navigator.of(route).pop();
+                return;
+              }
+              setRouteState(() => current = latest);
+            }
+
+            return RehearsalRecordPage(
+              key: ValueKey((
+                current.record.version,
+                current.history.last.version,
+              )),
+              store: store,
+              collection: professionId,
+              history: current.history,
+              record: current.record,
+              phase7: true,
+              originals: originals,
+              readOnly: view,
+              onEditFields: view && onEditFields != null
+                  ? () async {
+                      await onEditFields(current.profession);
+                      if (route.mounted) await refresh();
+                    }
+                  : null,
+              onEditRecord: view
+                  ? () async {
+                      await open(
+                        route,
+                        store: store,
+                        professionId: professionId,
+                        recordId: recordId,
+                        view: false,
+                        originals: originals,
+                      );
+                      if (route.mounted) await refresh();
+                    }
+                  : null,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   const RehearsalRecordPage({
     super.key,
     required this.store,
@@ -1229,10 +1298,12 @@ class RehearsalRecordPage extends StatefulWidget {
     this.originals,
     this.readOnly = false,
     this.onEditFields,
+    this.onEditRecord,
   });
   final bool phase7;
   final bool readOnly;
   final Future<void> Function()? onEditFields;
+  final Future<void> Function()? onEditRecord;
   final ProfessionCreationStore store;
   final String collection;
   final List<LayoutRevision> history;
@@ -1332,6 +1403,17 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
   );
   late final _labels = _recordFiles.loadLabels(_fields, _values);
   bool _busy = false;
+  bool _openingEditor = false;
+
+  Future<void> _editRecord() async {
+    if (_openingEditor) return;
+    setState(() => _openingEditor = true);
+    try {
+      await widget.onEditRecord!();
+    } finally {
+      if (mounted) setState(() => _openingEditor = false);
+    }
+  }
 
   Future<void> _save() async {
     if (_busy || _recordFiles.picking) return;
@@ -1437,6 +1519,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
           builder: (_, snapshot) => RecordingForm(
             fields: fields.map(_optionsForEditing).toList(),
             values: _values,
+            readOnly: widget.readOnly,
             onCustomOption: widget.store.evaluationsEnabled && !widget.readOnly
                 ? _addCustomOption
                 : null,
@@ -1468,7 +1551,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
             widget.readOnly
                 ? s.viewRecord
                 : widget.store.evaluationsEnabled
-                ? (widget.record == null ? s.newEntry : s.editEntry)
+                ? (widget.record == null ? s.newEntry : s.editRecord)
                 : (widget.record == null ? s.editorNewRecord : s.editorExample),
           ),
           actions: [
@@ -1485,6 +1568,7 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
           ],
         ),
         body: BoundedList(
+          key: widget.readOnly ? const PageStorageKey('view-record') : null,
           children: [
             if (_scoped && !widget.readOnly)
               TemplateEvaluationPanel(
@@ -1507,18 +1591,25 @@ class _RehearsalRecordPageState extends State<RehearsalRecordPage> {
             ],
           ],
         ),
-        bottomNavigationBar: !_maySave || widget.readOnly
-            ? null
-            : SafeArea(
+        bottomNavigationBar:
+            (widget.readOnly ? widget.onEditRecord != null : _maySave)
+            ? SafeArea(
                 top: false,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
-                  child: FilledButton(
-                    onPressed: _busy ? null : _save,
-                    child: Text(s.save),
-                  ),
+                  child: widget.readOnly
+                      ? FilledButton.icon(
+                          onPressed: _openingEditor ? null : _editRecord,
+                          icon: const Icon(Icons.edit_outlined),
+                          label: Text(s.editRecord),
+                        )
+                      : FilledButton(
+                          onPressed: _busy ? null : _save,
+                          child: Text(s.save),
+                        ),
                 ),
-              ),
+              )
+            : null,
       ),
     );
   }

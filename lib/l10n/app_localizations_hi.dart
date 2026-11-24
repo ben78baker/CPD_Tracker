@@ -112,6 +112,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get viewRecord => 'रिकॉर्ड देखें';
 
   @override
+  String get editRecord => 'रिकॉर्ड संपादित करें';
+
+  @override
   String get recordChangeFailed =>
       'रिकॉर्ड अपडेट नहीं हो सका। फिर से लोड करके दोबारा कोशिश करें।';
 
@@ -345,7 +348,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get add => 'Add';
 
   @override
-  String get noAttachmentsAdded => 'No attachments added.';
+  String get noAttachmentsAdded => 'कोई संलग्नक नहीं जोड़ा गया।';
 
   @override
   String get removeAttachmentTitle => 'Remove attachment?';

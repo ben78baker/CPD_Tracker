@@ -112,6 +112,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get viewRecord => 'Voir le dossier';
 
   @override
+  String get editRecord => 'Modifier le dossier';
+
+  @override
   String get recordChangeFailed =>
       'Impossible de modifier le dossier. Rechargez-le et réessayez.';
 

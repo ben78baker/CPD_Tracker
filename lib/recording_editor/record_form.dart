@@ -97,6 +97,7 @@ class RecordingFieldTile extends StatelessWidget {
     required this.field,
     this.value,
     this.onChanged,
+    this.readOnly = false,
     this.requireValue = false,
     this.sampleAttachmentId,
     this.attachmentLabels = const {},
@@ -109,6 +110,7 @@ class RecordingFieldTile extends StatelessWidget {
   final LayoutField field;
   final Object? value;
   final ValueChanged<Object?>? onChanged;
+  final bool readOnly;
   final bool requireValue;
   final String? sampleAttachmentId;
   final Map<String, String> attachmentLabels;
@@ -144,7 +146,7 @@ class RecordingFieldTile extends StatelessWidget {
     final locale = Localizations.localeOf(context);
     final type = EditorFieldType.of(field);
     final label = field.localizedLabel(locale.toLanguageTag());
-    final enabled = onChanged != null;
+    final enabled = !readOnly && onChanged != null;
     final definition = field.definition;
     final canAddOption =
         enabled && definition.allowCustomOptions && onCustomOption != null;
@@ -160,6 +162,13 @@ class RecordingFieldTile extends StatelessWidget {
         final date = value is String
             ? DateTime.tryParse(value as String)
             : null;
+        final formattedDate = date == null
+            ? null
+            : MaterialLocalizations.of(context).formatCompactDate(date);
+        if (readOnly) {
+          control = Text(formattedDate ?? '—');
+          break;
+        }
         control = Row(
           children: [
             Expanded(
@@ -181,13 +190,7 @@ class RecordingFieldTile extends StatelessWidget {
                         }
                       },
                 icon: Icon(type.icon),
-                label: Text(
-                  date == null
-                      ? decoration.hintText!
-                      : MaterialLocalizations.of(
-                          context,
-                        ).formatCompactDate(date),
-                ),
+                label: Text(formattedDate ?? decoration.hintText!),
               ),
             ),
             if (enabled && date != null)
@@ -200,6 +203,10 @@ class RecordingFieldTile extends StatelessWidget {
         );
       case EditorFieldType.single:
         final current = readChoiceSelection(value);
+        if (readOnly) {
+          control = Text(current?.text ?? '—');
+          break;
+        }
         final choices = _choices([?current]);
         final items = [
           for (final choice in choices.entries)
@@ -261,6 +268,14 @@ class RecordingFieldTile extends StatelessWidget {
             .map(readChoiceSelection)
             .nonNulls
             .toSet();
+        if (readOnly) {
+          control = Text(
+            selected.isEmpty
+                ? '—'
+                : selected.map((choice) => choice.text).join('\n'),
+          );
+          break;
+        }
         control = Wrap(
           spacing: 8,
           runSpacing: 4,
@@ -293,6 +308,14 @@ class RecordingFieldTile extends StatelessWidget {
         );
       case EditorFieldType.yesNo:
       case EditorFieldType.checkbox:
+        if (readOnly) {
+          control = Text(switch (value) {
+            true => s.editorYes,
+            false => s.editorNo,
+            _ => '—',
+          });
+          break;
+        }
         control = Wrap(
           spacing: 8,
           children: [
@@ -320,6 +343,25 @@ class RecordingFieldTile extends StatelessWidget {
       case EditorFieldType.file:
       case EditorFieldType.photograph:
         final attachments = (value as List?)?.cast<String>() ?? const [];
+        if (readOnly) {
+          control = attachments.isEmpty
+              ? Text(s.noAttachmentsAdded)
+              : Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final id in attachments)
+                      ActionChip(
+                        avatar: Icon(type.icon, size: 18),
+                        label: Text(attachmentLabels[id] ?? s.attachments),
+                        onPressed: openAttachment == null
+                            ? null
+                            : () => openAttachment!(id),
+                      ),
+                  ],
+                );
+          break;
+        }
         control = Wrap(
           spacing: 8,
           runSpacing: 4,
@@ -374,6 +416,17 @@ class RecordingFieldTile extends StatelessWidget {
         final displayed = type == EditorFieldType.decimal
             ? text.replaceFirst('.', separator)
             : text;
+        if (readOnly) {
+          final unit = decoration.suffixText;
+          control = Text(
+            displayed.isEmpty
+                ? '—'
+                : unit == null
+                ? displayed
+                : '$displayed $unit',
+          );
+          break;
+        }
         control = Semantics(
           label: label,
           child: TextFormField(
@@ -433,6 +486,7 @@ class RecordingForm extends StatelessWidget {
     this.headings = const [],
     required this.values,
     this.onChanged,
+    this.readOnly = false,
     this.sampleAttachmentId,
     this.attachmentLabels = const {},
     this.requiredIds,
@@ -446,6 +500,7 @@ class RecordingForm extends StatelessWidget {
   final List<SectionHeading> headings;
   final Map<String, Object> values;
   final void Function(String id, Object? value)? onChanged;
+  final bool readOnly;
   final String? sampleAttachmentId;
   final Map<String, String> attachmentLabels;
   final Set<String>? requiredIds;
@@ -470,6 +525,7 @@ class RecordingForm extends StatelessWidget {
           child: RecordingFieldTile(
             field: field,
             value: values[field.id],
+            readOnly: readOnly,
             requireValue: requiredIds?.contains(field.id) ?? field.required,
             sampleAttachmentId: sampleAttachmentId,
             attachmentLabels: attachmentLabels,
